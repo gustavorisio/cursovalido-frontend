@@ -55,4 +55,5 @@ Acesse o endereço exibido no terminal (geralmente `http://localhost:5173`).
 ---
 
 Contribuido e desenvolvido por: Gustavo Di Risio
+
 Orientador: Lucas Santos da Silva
