@@ -2,37 +2,38 @@ Repositorio FrontEnd https://github.com/gustavorisio/cursovalido-frontend
 
 Repositorio Backend https://github.com/gustavorisio/cursovalido-backend
 
-# Curso Válido - Front-end
+# Curso Válido — Front-end
 
-Repositório da interface web da plataforma **Curso Válido**, desenvolvida como Trabalho de Conclusão de Curso (TCC) para o Bacharelado em Engenharia de Software da Universidade de Mogi das Cruzes (UMC).
+Repositório da interface web do **Curso Válido**, meu Projeto Final de Curso (PFC) do Bacharelado em Engenharia de Software na Universidade de Mogi das Cruzes (UMC).
 
-Esta aplicação consome a API RESTful desenvolvida em Java (Spring Boot) para gerenciar a validação e o fluxo de cursos da plataforma.
+## O que é o projeto?
+O **Curso Válido** é uma plataforma web de aprendizagem focada na área de tecnologia. Diferente do que o nome pode sugerir inicialmente, não é um sistema de validação de diplomas do MEC. A ideia é ser um ambiente completo onde o usuário pode consumir conteúdos educacionais, acompanhar seu progresso, interagir com outros alunos e, ao final, emitir um certificado de conclusão do próprio curso feito na plataforma.
 
-## Tecnologias Utilizadas
+## Principais Funcionalidades (Interface)
+* **Ambiente de Aula e Vídeos**: Player integrado para consumo de videoaulas com acompanhamento de progresso.
+* **Gamificação**: Sistema de XP e níveis que o aluno conquista conforme assiste às aulas e faz avaliações.
+* **Comunidade (Fórum)**: Área exclusiva para alunos e professores criarem tópicos, tirarem dúvidas de programação e interagirem.
+* **Certificação**: Tela para emissão e consulta pública do certificado de conclusão gerado pela plataforma.
+* **Painel de Assinatura**: Interface que simula um fluxo de assinatura para liberação do acesso aos cursos.
 
-* **React (v19)**
-* **Vite**
-* **Tailwind CSS (v4)**
-* **ESLint**
+## Stack de Front-end
+
+* **React (v19)**: Construção da interface em formato SPA (Single Page Application).
+* **Vite**: Ferramenta de build e servidor de desenvolvimento local.
+* **Tailwind CSS**: Estilização responsiva (Mobile First) e ágil.
+* **ESLint**: Padronização e qualidade do código JavaScript/JSX.
 
 ---
 
-## Pré-requisitos
+## Como rodar o projeto na sua máquina
 
-* Node.js (LTS) instalado na máquina.
-* Git para controle de versão.
-
----
-
-## Como Rodar o Projeto
-
-1. Clone o repositório:
+1. Clone este repositório:
    ```bash
-   git clone https://github.com/gustavorisio/cursovalido-frontend.git
+   git clone https://github.com/SEU-USUARIO/cursovalido-frontend.git
    cd cursovalido-frontend
    ```
 
-2. Instale as dependências:
+2. Instale as dependências usando o npm:
    ```bash
    npm install
    ```
@@ -42,15 +43,16 @@ Esta aplicação consome a API RESTful desenvolvida em Java (Spring Boot) para g
    npm run dev
    ```
 
-Acesse o endereço exibido no terminal (geralmente `http://localhost:5173`).
+A aplicação vai rodar localmente, geralmente no endereço `http://localhost:5173`.
 
 ---
 
-## Scripts Disponíveis
+## Scripts do Projeto
 
-* `npm run dev` — Sobe o ambiente de desenvolvimento.
-* `npm run build` — Gera os arquivos otimizados para produção.
-* `npm run lint` — Executa a análise estática de código com o ESLint.
+* `npm run dev` — Sobe o ambiente para desenvolvimento.
+* `npm run build` — Gera o empacotamento otimizado para produção.
+* `npm run lint` — Checa a formatação e possíveis erros no código.
+
 
 ---
 
