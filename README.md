@@ -2,7 +2,7 @@ Repositorio FrontEnd https://github.com/gustavorisio/cursovalido-frontend
 
 Repositorio Backend https://github.com/gustavorisio/cursovalido-backend
 
-# Curso Válido — Front-end
+# Curso Válido - Front-end
 
 Repositório da interface web da plataforma **Curso Válido**, desenvolvida como Trabalho de Conclusão de Curso (TCC) para o Bacharelado em Engenharia de Software da Universidade de Mogi das Cruzes (UMC).
 
@@ -28,7 +28,7 @@ Esta aplicação consome a API RESTful desenvolvida em Java (Spring Boot) para g
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/SEU-USUARIO/cursovalido-frontend.git
+   git clone https://github.com/gustavorisio/cursovalido-frontend.git
    cd cursovalido-frontend
    ```
 
@@ -51,3 +51,10 @@ Acesse o endereço exibido no terminal (geralmente `http://localhost:5173`).
 * `npm run dev` — Sobe o ambiente de desenvolvimento.
 * `npm run build` — Gera os arquivos otimizados para produção.
 * `npm run lint` — Executa a análise estática de código com o ESLint.
+
+---
+
+Colaborador: Gustavo Di Risio
+Orientador: Lucas Santos da Silva
+
+---
