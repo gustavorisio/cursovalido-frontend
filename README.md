@@ -2,7 +2,7 @@ Repositorio FrontEnd https://github.com/gustavorisio/cursovalido-frontend
 
 Repositorio Backend https://github.com/gustavorisio/cursovalido-backend
 
-# Curso Válido — Front-end
+# Curso Válido - Front-end
 
 Repositório da interface web do **Curso Válido**, meu Projeto Final de Curso (PFC) do Bacharelado em Engenharia de Software na Universidade de Mogi das Cruzes (UMC).
 
@@ -29,7 +29,7 @@ O **Curso Válido** é uma plataforma web de aprendizagem focada na área de tec
 
 1. Clone este repositório:
    ```bash
-   git clone https://github.com/SEU-USUARIO/cursovalido-frontend.git
+   git clone https://github.com/gustavorisio/cursovalido-frontend.git
    cd cursovalido-frontend
    ```
 
@@ -49,9 +49,9 @@ A aplicação vai rodar localmente, geralmente no endereço `http://localhost:51
 
 ## Scripts do Projeto
 
-* `npm run dev` — Sobe o ambiente para desenvolvimento.
-* `npm run build` — Gera o empacotamento otimizado para produção.
-* `npm run lint` — Checa a formatação e possíveis erros no código.
+* `npm run dev` - Sobe o ambiente para desenvolvimento.
+* `npm run build` - Gera o empacotamento otimizado para produção.
+* `npm run lint` - Checa a formatação e possíveis erros no código.
 
 
 ---
