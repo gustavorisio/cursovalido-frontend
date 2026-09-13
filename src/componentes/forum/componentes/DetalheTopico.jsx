@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import ConfirmacaoModal from './ConfirmacaoModal';
 import FormularioComentario from './FormularioComentario';
 import ListaComentarios from './ListaComentarios';
 
@@ -33,6 +35,14 @@ export default function DetalheTopico({
   onCancelarEdicaoComentario,
   onVoltar
 }) {
+  const [confirmacao, setConfirmacao] = useState('');
+
+  async function confirmarAcao() {
+    if (confirmacao === 'fechar') await onFechar(topico);
+    if (confirmacao === 'apagar') await onExcluirTopico(topico);
+    setConfirmacao('');
+  }
+
   return (
     <div className="detalhe-topico">
       <button className="btn btn-link" onClick={onVoltar}>← Voltar para a lista</button>
@@ -58,12 +68,12 @@ export default function DetalheTopico({
                 </button>
               )}
               {podeGerenciarTopico(topico) && !topico.fechado && (
-                <button className="btn btn-secondary btn-small" type="button" onClick={() => onFechar(topico)}>
+                <button className="btn btn-secondary btn-small" type="button" onClick={() => setConfirmacao('fechar')}>
                   Fechar tópico
                 </button>
               )}
               {podeApagarTopico() && (
-                <button className="btn btn-danger btn-small" type="button" onClick={() => onExcluirTopico(topico)}>
+                <button className="btn btn-danger btn-small" type="button" onClick={() => setConfirmacao('apagar')}>
                   Apagar postagem
                 </button>
               )}
@@ -90,6 +100,16 @@ export default function DetalheTopico({
           onEnviar={onEnviarComentario}
           onCancelar={onCancelarEdicaoComentario}
           modoEdicao={Boolean(comentarioEditando)}
+        />
+      )}
+      {confirmacao && (
+        <ConfirmacaoModal
+          titulo={confirmacao === 'fechar' ? 'Fechar tópico' : 'Apagar postagem'}
+          mensagem={confirmacao === 'fechar'
+            ? 'O tópico não aceitará novas respostas.'
+            : 'Esta ação não poderá ser desfeita.'}
+          onConfirmar={confirmarAcao}
+          onCancelar={() => setConfirmacao('')}
         />
       )}
     </div>

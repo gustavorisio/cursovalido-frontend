@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import ConfirmacaoModal from './ConfirmacaoModal';
+
 function formatarData(valor) {
   if (!valor) return '--/--/----';
 
@@ -11,6 +14,13 @@ function formatarData(valor) {
 }
 
 export default function ListaComentarios({ comentarios, podeExcluir, podeEditar, onExcluir, onEditar }) {
+  const [confirmando, setConfirmando] = useState(null);
+
+  async function excluir(comentario) {
+    await onExcluir(comentario);
+    setConfirmando(null);
+  }
+
   return (
     <>
       {comentarios.map((comentario) => (
@@ -30,14 +40,20 @@ export default function ListaComentarios({ comentarios, podeExcluir, podeEditar,
               </button>
             )}
             {comentario.ativo !== false && podeExcluir(comentario) && (
-              <button className="btn btn-danger btn-small" type="button" onClick={() => onExcluir(comentario)}>
+              <button className="btn btn-danger btn-small" type="button" onClick={() => setConfirmando(comentario.id)}>
                 Apagar
               </button>
             )}
           </div>
-          <p className="content-text">
-            {comentario.ativo === false ? 'mensagem apagada' : comentario.conteudo}
-          </p>
+          <p className="content-text">{comentario.conteudo}</p>
+          {confirmando === comentario.id && (
+            <ConfirmacaoModal
+              titulo="Apagar comentário"
+              mensagem="Esta ação não poderá ser desfeita."
+              onConfirmar={() => excluir(comentario)}
+              onCancelar={() => setConfirmando(null)}
+            />
+          )}
         </div>
       ))}
     </>
