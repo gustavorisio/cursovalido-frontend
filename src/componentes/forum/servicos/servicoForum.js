@@ -15,28 +15,41 @@ async function buscarJson(caminho, opcoes = {}) {
     || globalThis.localStorage?.getItem('accessToken')
     || globalThis.localStorage?.getItem('token');
 
-  const headers = Object.assign({}, opcoes.headers);
+  const headers = { ...opcoes.headers };
   if (opcoes.body) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const config = Object.assign({}, opcoes, { headers });
+  const config = { ...opcoes, headers };
   const resposta = await fetch(`${URL_API}${caminho}`, config);
 
   const texto = await resposta.text();
-  let dados = null;
-  if (texto) {
-    try {
-      dados = JSON.parse(texto);
-    } catch {
-      dados = null;
-    }
-  }
-
   if (!resposta.ok) {
-    throw new ErroApi(resposta.status, dados?.erro || 'Não foi possível concluir a operação.');
+    let mensagem = `O servidor respondeu com o status ${resposta.status}.`;
+
+    if (texto) {
+      try {
+        const erro = JSON.parse(texto);
+        mensagem = erro?.erro || erro?.message || mensagem;
+      } catch {
+        mensagem = `O servidor respondeu com um erro ${resposta.status} em formato inválido.`;
+      }
+    }
+
+    throw new ErroApi(resposta.status, mensagem);
   }
 
-  return dados;
+  if (!texto) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(texto);
+  } catch {
+    throw new ErroApi(
+      resposta.status,
+      `A API retornou uma resposta inválida com o status ${resposta.status}.`
+    );
+  }
 }
 
 async function chamar(caminho, opcoes = {}) {
@@ -48,26 +61,14 @@ function cabecalho(usuario = { id: 1 }) {
   return { 'X-User-Id': String(usuario.id) };
 }
 
-export function buscarTopicos(page = PAGINA_PADRAO, size = TAMANHO_PAGINA_PADRAO, usuario) {
+export function buscarTopicos(page = PAGINA_PADRAO, size = TAMANHO_PAGINA_PADRAO, usuario, busca = '') {
   const parametros = new URLSearchParams({ page: String(page), size: String(size) });
+  if (busca.trim()) parametros.set('busca', busca.trim());
   return chamar(`/topicos?${parametros}`, { headers: cabecalho(usuario) });
 }
 
-export async function buscarTopicosPesquisa(usuario, size = 10) {
-  const topicos = [];
-  let page = 0;
-
-  while (true) {
-    const parametros = new URLSearchParams({ page: String(page), size: String(size) });
-    const resposta = await buscarJson(`/topicos?${parametros}`, { headers: cabecalho(usuario) });
-    const itens = Array.isArray(resposta) ? resposta : (resposta?.value ?? []);
-    itens.forEach((item) => topicos.push(item));
-
-    if (itens.length < size || itens.length === 0) break;
-    page += 1;
-  }
-
-  return topicos;
+export function buscarTopicosPesquisa(usuario, busca, size = TAMANHO_PAGINA_PADRAO) {
+  return buscarTopicos(0, size, usuario, busca);
 }
 
 export function buscarComentarios(idTopico, usuario) {
@@ -86,11 +87,7 @@ export function criarTopico(dados, usuario) {
   return chamar('/topicos', {
     method: 'POST',
     headers: cabecalho(usuario),
-    body: JSON.stringify(Object.assign({}, dados, {
-      idAutor: usuario.id,
-      nomeAutor: usuario.nome,
-      papelAutor: usuario.perfil
-    }))
+    body: JSON.stringify({ titulo: dados.titulo, descricao: dados.descricao })
   });
 }
 
@@ -113,13 +110,7 @@ export function criarComentario(idTopico, conteudo, usuario) {
   return chamar(`/topicos/${idTopico}/comentarios`, {
     method: 'POST',
     headers: cabecalho(usuario),
-    body: JSON.stringify({
-      conteudo,
-      idAutor: usuario.id,
-      nomeAutor: usuario.nome,
-      papelAutor: usuario.perfil,
-      topico: idTopico
-    })
+    body: JSON.stringify({ conteudo })
   });
 }
 
