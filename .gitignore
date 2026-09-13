@@ -11,6 +11,21 @@ node_modules
 dist
 dist-ssr
 *.local
+.vite
+.cache
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Test and coverage reports
+coverage
+playwright-report
+test-results
+
+# Temporary frontend reports
+reports
 
 # Environment variables and local secrets
 .env
