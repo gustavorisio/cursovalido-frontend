@@ -13,28 +13,31 @@ import {
 } from '../servicos/servicoForum';
 import { USUARIOS_MOCK } from '../dados/usuariosMock';
 
+const usuarioInicial = USUARIOS_MOCK[0];
+const MENSAGENS_ERRO = {
+  400: 'Os dados enviados são inválidos.',
+  403: 'Você não tem permissão para esta operação.',
+  404: 'O recurso solicitado não foi encontrado.',
+  409: 'A operação não pode ser concluída neste estado.'
+};
+
 function erroMsg(erro) {
   if (!erro?.status) return 'Não foi possível conectar à API do fórum.';
 
-  const mensagens = {
-    400: 'Os dados enviados são inválidos.',
-    403: 'Você não tem permissão para esta operação.',
-    404: 'O recurso solicitado não foi encontrado.',
-    409: 'A operação não pode ser concluída neste estado.'
-  };
-
-  return erro.message || mensagens[erro.status] || 'Não foi possível concluir a operação.';
+  return erro.message || MENSAGENS_ERRO[erro.status] || 'Não foi possível concluir a operação.';
 }
 
 function comNomes(topicos, usuarios) {
+  const nomes = new Map(usuarios.map((usuario) => [Number(usuario.id), usuario.nome]));
+
   return topicos.map((topico) => {
-    const usuario = usuarios.find((item) => Number(item.id) === Number(topico.idAutor));
-    return usuario ? { ...topico, nomeAutor: usuario.nome } : topico;
+    const nome = nomes.get(Number(topico.idAutor));
+    return nome ? { ...topico, nomeAutor: nome } : topico;
   });
 }
 
 export function useForum() {
-  const [usuarioAtual, setUsuarioAtual] = useState(USUARIOS_MOCK[0]);
+  const [usuarioAtual, setUsuarioAtual] = useState(usuarioInicial);
   const [topicos, setTopicos] = useState([]);
   const [topicoSelecionado, setTopicoSelecionado] = useState(null);
   const [comentarios, setComentarios] = useState([]);
@@ -50,8 +53,8 @@ export function useForum() {
   useEffect(() => {
     async function carregar() {
       const [topicosResult, usuariosResult] = await Promise.allSettled([
-        buscarTopicos(0, 10, USUARIOS_MOCK[0]),
-        buscarUsuarios(USUARIOS_MOCK[0])
+        buscarTopicos(0, 10, usuarioInicial),
+        buscarUsuarios(usuarioInicial)
       ]);
 
       let usuariosAtuais = USUARIOS_MOCK;
@@ -59,10 +62,7 @@ export function useForum() {
       if (usuariosResult.status === 'fulfilled') {
         const dados = usuariosResult.value;
         if (Array.isArray(dados) && dados.length > 0) {
-          usuariosAtuais = dados.map((usuario) => {
-            const usuarioMock = USUARIOS_MOCK.find((item) => item.id === usuario.id);
-            return usuarioMock ? { ...usuario, nome: usuarioMock.nome } : usuario;
-          });
+          usuariosAtuais = dados;
           setUsuarios(usuariosAtuais);
           setUsuarioAtual(usuariosAtuais[0]);
         }
@@ -193,7 +193,7 @@ export function useForum() {
   }
 
   async function excluirTopico(topico) {
-    if (!podeApagarTopico() || !window.confirm('Excluir esta postagem?')) return false;
+    if (!topico || !podeApagarTopico()) return false;
 
     try {
       await apagarTopico(topico.id, usuarioAtual);
@@ -210,31 +210,31 @@ export function useForum() {
   }
 
   async function fecharTopicoSelecionado(topico) {
-    if (!podeGerenciarTopico(topico) || topico.fechado || !window.confirm('Fechar este tópico para novas respostas?')) return;
+    if (!podeGerenciarTopico(topico) || topico.fechado) return false;
 
     try {
       await fecharTopico(topico.id, usuarioAtual);
       const topicoFechado = { ...topico, fechado: true };
       setTopicoSelecionado((atual) => atual?.id === topico.id ? topicoFechado : atual);
       setTopicos((listaAtual) => listaAtual.map((item) => item.id === topico.id ? topicoFechado : item));
+      return true;
     } catch (erro) {
       mostrarErro(erro);
+      return false;
     }
   }
 
   async function excluirComentarioSelecionado(comentario) {
-    if (!podeExcluirComentario(comentario) || !window.confirm('Excluir este comentário?')) return;
+    if (!podeExcluirComentario(comentario)) return false;
 
     try {
       await apagarComentario(comentario.id, usuarioAtual);
-      setComentarios((listaAtual) => listaAtual.map((item) => (
-        item.id === comentario.id
-          ? { ...item, conteudo: 'mensagem apagada', ativo: false }
-          : item
-      )));
+      await carregarComentarios(topicoSelecionado.id);
       await carregarTopicos();
+      return true;
     } catch (erro) {
       mostrarErro(erro);
+      return false;
     }
   }
 

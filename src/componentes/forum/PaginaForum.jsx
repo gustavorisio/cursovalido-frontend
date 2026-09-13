@@ -7,6 +7,92 @@ import { useForum } from './hooks/useForum';
 import { buscarTopicosPesquisa } from './servicos/servicoForum';
 import './Forum.css';
 
+function TelaLista({ topicos, usuarios, termo, buscando, onTermoChange, onPesquisar, onSelecionar, onNovaPostagem }) {
+  return (
+    <>
+      <div className="page-header">
+        <h2 className="page-title">Fórum de Dúvidas</h2>
+        <div className="page-actions">
+          <div className="barra-pesquisa">
+            <input
+              className="campo-pesquisa"
+              type="search"
+              aria-label="Pesquisar tópicos"
+              placeholder="Pesquisar tópicos"
+              value={termo}
+              onChange={onTermoChange}
+              onKeyDown={onPesquisar}
+            />
+            {buscando && <span className="status-pesquisa">Buscando...</span>}
+          </div>
+          <button className="btn btn-primary" type="button" onClick={onNovaPostagem}>
+            Nova Postagem
+          </button>
+        </div>
+      </div>
+      <ListaTopicos topicos={topicos} usuarios={usuarios} onSelecionar={onSelecionar} />
+    </>
+  );
+}
+
+function TelaPesquisa({ termo, resultados, usuarios, onVoltar, onSelecionar }) {
+  return (
+    <section className="pagina-pesquisa">
+      <button className="btn btn-link" type="button" onClick={onVoltar}>
+        ← Voltar para os tópicos
+      </button>
+      <div className="cabecalho-pesquisa">
+        <h3 className="titulo-pesquisa">Resultados para: <strong>{termo}</strong></h3>
+        <p className="resumo-pesquisa">{resultados.length} tópico(s) encontrado(s)</p>
+      </div>
+      {resultados.length > 0 ? (
+        <ListaTopicos topicos={resultados} usuarios={usuarios} onSelecionar={onSelecionar} />
+      ) : (
+        <div className="card vazio-pesquisa">Não foi encontrado nada com esse nome.</div>
+      )}
+    </section>
+  );
+}
+
+function TelaCriacaoEdicao({ titulo, descricao, editando, onMudarTitulo, onMudarDescricao, onSalvar, onCancelar }) {
+  return (
+    <FormularioTopico
+      titulo={titulo}
+      descricao={descricao}
+      onMudarTitulo={onMudarTitulo}
+      onMudarDescricao={onMudarDescricao}
+      onPublicar={onSalvar}
+      onCancelar={onCancelar}
+      modoEdicao={editando}
+    />
+  );
+}
+
+function TelaDetalhe({ topico, forum, texto, comentarioEmEdicao, onEditarTopico, onExcluirTopico, onEditarComentario, onMudarTexto, onEnviarComentario, onCancelarComentario, onFechar, onVoltar }) {
+  return (
+    <DetalheTopico
+      topico={topico}
+      comentarios={forum.comentarios}
+      podeGerenciarTopico={forum.podeGerenciarTopico}
+      podeEditarTopico={forum.podeEditarTopico}
+      podeEditarComentario={forum.podeEditarComentario}
+      podeApagarTopico={forum.podeApagarTopico}
+      podeExcluirComentario={forum.podeExcluirComentario}
+      onFechar={onFechar}
+      onEditarTopico={onEditarTopico}
+      onExcluirTopico={onExcluirTopico}
+      onExcluirComentario={forum.excluirComentarioSelecionado}
+      onEditarComentario={onEditarComentario}
+      textoComentario={texto}
+      onMudarComentario={onMudarTexto}
+      onEnviarComentario={onEnviarComentario}
+      comentarioEditando={comentarioEmEdicao}
+      onCancelarEdicaoComentario={onCancelarComentario}
+      onVoltar={onVoltar}
+    />
+  );
+}
+
 export default function PaginaForum() {
   const [tela, setTela] = useState('list');
   const [titulo, setTitulo] = useState('');
@@ -17,6 +103,7 @@ export default function PaginaForum() {
   const [buscando, setBuscando] = useState(false);
   const [editando, setEditando] = useState(false);
   const [comentarioEmEdicao, setComentarioEmEdicao] = useState(null);
+  const [erroTela, setErroTela] = useState('');
   const forum = useForum();
 
   function trocarUsuario(id) {
@@ -26,10 +113,11 @@ export default function PaginaForum() {
 
   async function publicar() {
     if (!titulo.trim() || !descricao.trim()) {
-      alert('Preencha o título e a descrição!');
+      setErroTela('Preencha o título e a descrição.');
       return;
     }
 
+    setErroTela('');
     const topico = await forum.salvarTopico(titulo, descricao);
     if (topico) {
       setTitulo('');
@@ -57,8 +145,12 @@ export default function PaginaForum() {
   }
 
   async function salvarEdicao() {
-    if (!titulo.trim() || !descricao.trim()) return;
+    if (!titulo.trim() || !descricao.trim()) {
+      setErroTela('Preencha o título e a descrição.');
+      return;
+    }
 
+    setErroTela('');
     const salvou = await forum.editarTopico(forum.topicoSelecionado.id, titulo, descricao);
     if (salvou) {
       setEditando(false);
@@ -87,24 +179,19 @@ export default function PaginaForum() {
 
     evento.preventDefault();
     const textoBusca = termo.trim();
-    if (!textoBusca) return;
+    if (!textoBusca) {
+      setErroTela('Digite um termo para pesquisar.');
+      return;
+    }
 
+    setErroTela('');
     setBuscando(true);
     try {
-      const topicos = await buscarTopicosPesquisa(forum.usuarioAtual);
-      const palavra = textoBusca.toLocaleLowerCase();
-      const encontrados = topicos.filter((topico) => {
-        const usuario = forum.usuarios.find((item) => Number(item.id) === Number(topico.idAutor));
-        const texto = [topico.titulo, topico.descricao, topico.nomeAutor, usuario?.nome]
-          .filter(Boolean)
-          .join(' ')
-          .toLocaleLowerCase();
-        return texto.includes(palavra);
-      });
-      setBusca(encontrados);
+      const topicos = await buscarTopicosPesquisa(forum.usuarioAtual, textoBusca);
+      setBusca(topicos);
       setTela('search');
     } catch (erro) {
-      alert(erro.message || 'Não foi possível pesquisar os tópicos.');
+      setErroTela(erro.message || 'Não foi possível pesquisar os tópicos.');
     } finally {
       setBuscando(false);
     }
@@ -125,96 +212,73 @@ export default function PaginaForum() {
             <button className="btn btn-link" type="button" onClick={forum.limparMensagem}>Fechar</button>
           </div>
         )}
-        <div className="page-header">
-          <h2 className="page-title">Fórum de Dúvidas</h2>
-          {tela === 'list' && (
-            <div className="page-actions">
-              <div className="barra-pesquisa">
-                <input
-                  className="campo-pesquisa"
-                  type="search"
-                  aria-label="Pesquisar tópicos"
-                  placeholder="Pesquisar tópicos"
-                  value={termo}
-                  onChange={(evento) => setTermo(evento.target.value)}
-                  onKeyDown={pesquisar}
-                />
-                {buscando && <span className="status-pesquisa">Buscando...</span>}
-              </div>
-              <button className="btn btn-primary" type="button" onClick={() => setTela('create')}>
-                Nova Postagem
-              </button>
-            </div>
-          )}
-        </div>
-
-        {tela === 'search' && (
-          <section className="pagina-pesquisa">
-            <button className="btn btn-link" type="button" onClick={() => setTela('list')}>
-              ← Voltar para os tópicos
-            </button>
-            <div className="cabecalho-pesquisa">
-              <h3 className="titulo-pesquisa">Resultados para: <strong>{termo}</strong></h3>
-              <p className="resumo-pesquisa">{busca.length} tópico(s) encontrado(s)</p>
-            </div>
-            {busca.length > 0 ? (
-              <ListaTopicos topicos={busca} usuarios={forum.usuarios} onSelecionar={(topico) => {
-                forum.selecionarTopico(topico);
-                setTela('detail');
-              }} />
-            ) : (
-              <div className="card vazio-pesquisa">Não foi encontrado nada com esse nome.</div>
-            )}
-          </section>
-        )}
-
-        {tela === 'create' && (
-          <FormularioTopico
-            titulo={titulo}
-            descricao={descricao}
-            onMudarTitulo={setTitulo}
-            onMudarDescricao={setDescricao}
-            onPublicar={publicar}
-            onCancelar={() => setTela('list')}
-          />
+        {erroTela && (
+          <div className="card aviso-erro" role="alert">
+            <span>{erroTela}</span>
+            <button className="btn btn-link" type="button" onClick={() => setErroTela('')}>Fechar</button>
+          </div>
         )}
 
         {tela === 'list' && (
-          <ListaTopicos topicos={forum.topicos} usuarios={forum.usuarios} onSelecionar={(topico) => {
-            forum.selecionarTopico(topico);
-            setTela('detail');
-          }} />
+          <TelaLista
+            topicos={forum.topicos}
+            usuarios={forum.usuarios}
+            termo={termo}
+            buscando={buscando}
+            onTermoChange={(evento) => setTermo(evento.target.value)}
+            onPesquisar={pesquisar}
+            onNovaPostagem={() => setTela('create')}
+            onSelecionar={(topico) => {
+              forum.selecionarTopico(topico);
+              setTela('detail');
+            }}
+          />
         )}
 
-        {tela === 'detail' && forum.topicoSelecionado && (
-          editando ? (
-            <FormularioTopico
-              titulo={titulo}
-              descricao={descricao}
-              onMudarTitulo={setTitulo}
-              onMudarDescricao={setDescricao}
-              onPublicar={salvarEdicao}
-              onCancelar={() => setEditando(false)}
-              modoEdicao
-            />
-          ) : <DetalheTopico
+        {tela === 'search' && (
+          <TelaPesquisa
+            termo={termo}
+            resultados={busca}
+            usuarios={forum.usuarios}
+            onVoltar={() => setTela('list')}
+            onSelecionar={(topico) => {
+              forum.selecionarTopico(topico);
+              setTela('detail');
+            }}
+          />
+        )}
+
+        {(tela === 'create' || (tela === 'detail' && editando)) && (
+          <TelaCriacaoEdicao
+            titulo={titulo}
+            descricao={descricao}
+            editando={editando}
+            onMudarTitulo={setTitulo}
+            onMudarDescricao={setDescricao}
+            onSalvar={tela === 'create' ? publicar : salvarEdicao}
+            onCancelar={() => {
+              if (editando) {
+                setEditando(false);
+                return;
+              }
+              setTela('list');
+            }}
+          />
+        )}
+
+        {tela === 'detail' && forum.topicoSelecionado && !editando && (
+          <TelaDetalhe
             topico={forum.topicoSelecionado}
-            comentarios={forum.comentarios}
-            podeGerenciarTopico={forum.podeGerenciarTopico}
-            podeEditarTopico={forum.podeEditarTopico}
-            podeEditarComentario={forum.podeEditarComentario}
-            podeApagarTopico={forum.podeApagarTopico}
-            podeExcluirComentario={forum.podeExcluirComentario}
+            forum={forum}
+            texto={texto}
+            comentarioEmEdicao={comentarioEmEdicao}
             onFechar={forum.fecharTopicoSelecionado}
             onEditarTopico={editarTopico}
             onExcluirTopico={excluir}
-            onExcluirComentario={forum.excluirComentarioSelecionado}
             onEditarComentario={editarComentario}
-            textoComentario={texto}
-            onMudarComentario={setTexto}
+            onMudarTexto={setTexto}
             onEnviarComentario={comentarioEmEdicao ? salvarComentarioEditado : enviar}
-            comentarioEditando={comentarioEmEdicao}
-            onCancelarEdicaoComentario={() => {
+            onCancelarComentario={() => {
               setComentarioEmEdicao(null);
               setTexto('');
             }}
