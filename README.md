@@ -20,12 +20,12 @@ O sistema é dividido em três principais funcionalidades:
 *   **Certificados:**
     *   Terminou tudo? Passou nas avaliações e assistiu as aulas? O sistema gera um certificado em PDF automaticamente.
     *   Para evitar fraudes, cada certificado ganha um ID único. Tem até uma rota pública para qualquer pessoa consultar se aquele certificado é real e válido.
-    *   O documento serve exclusivamente para comprovar a conclusão dos cursos da nossa plataforma.
+    *   O documento serve exclusivamente para comprovar a conclusão dos cursos da plataforma web.
 *   **Fórum (Comunidade):**
     *   Um espaço para todo mundo (Alunos, Professores e Admins) trocar uma ideia, tirar dúvidas de código e criar uma base de conhecimento massa.
     *   As postagens e comentários têm um limite de 5000 caracteres.
-    *   Só o próprio autor pode editar o que escreveu. Se o assunto morrer, o autor ou um admin podem "fechar" o tópico, bloqueando novos comentários.
-    *   Fizemos tudo com *soft delete* (exclusão lógica). Se alguém apagar um tópico ou comentário, ele só fica inativo no banco de dados e some das consultas, para mantermos o histórico íntegro.
+    *   Só o próprio autor pode editar o que escreveu no tópico ou comentário. O autor ou um admin podem "fechar" o tópico, bloqueando novos comentários.
+    *   Se alguém apagar um tópico ou comentário, ele só fica inativo no banco de dados e some das consultas, para manter o histórico íntegro.
 
 ## Stack de Front-end
 
