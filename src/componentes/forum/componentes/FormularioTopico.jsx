@@ -1,7 +1,7 @@
-export default function FormularioTopico({ titulo, descricao, onMudarTitulo, onMudarDescricao, onPublicar, onCancelar, modoEdicao = false }) {
+export default function FormularioTopico({ titulo, descricao, onMudarTitulo, onMudarDescricao, onPublicar, onCancelar, modoEdicao = false, desabilitado = false }) {
   return (
     <div className="formulario-container">
-      <button className="btn btn-link" onClick={onCancelar}>← Cancelar</button>
+      <button className="btn btn-link" disabled={desabilitado} onClick={onCancelar}>← Cancelar</button>
 
       <div className="card">
         <input
@@ -22,7 +22,7 @@ export default function FormularioTopico({ titulo, descricao, onMudarTitulo, onM
           {descricao.length}/5000
         </div>
         <div className="acoes-formulario">
-          <button className="btn btn-primary" onClick={onPublicar}>{modoEdicao ? 'Salvar alterações' : 'Publicar'}</button>
+          <button className="btn btn-primary" disabled={desabilitado} onClick={onPublicar}>{desabilitado ? 'Salvando...' : modoEdicao ? 'Salvar alterações' : 'Publicar'}</button>
         </div>
       </div>
     </div>

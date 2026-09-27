@@ -1,3 +1,5 @@
+import { perfilDoUsuario } from '../hooks/useForum';
+
 function formatarData(valor) {
   if (!valor) return '--/--/----';
 
@@ -38,6 +40,10 @@ export default function ListaTopicos({ topicos, usuarios, onSelecionar }) {
               <span className="meta-value">
                 {usuarios.find((usuario) => Number(usuario.id) === Number(topico.idAutor))?.nome ?? topico.nomeAutor}
               </span>
+            </div>
+            <div className="meta-group">
+              <span className="meta-label">Perfil</span>
+              <span className="meta-value">{topico.perfilAutor ?? topico.perfil ?? topico.nomePerfil ?? topico.autor?.perfil ?? topico.autor?.tipoPerfil ?? perfilDoUsuario(usuarios.find((usuario) => Number(usuario.id ?? usuario.idUsuario) === Number(topico.idAutor ?? topico.idUsuario ?? topico.autor?.id ?? topico.autor?.idUsuario))) ?? 'Não informado'}</span>
             </div>
             <div className="meta-group">
               <span className="meta-label">Criado em</span>

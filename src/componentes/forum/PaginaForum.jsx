@@ -3,295 +3,69 @@ import CabecalhoForum from './componentes/CabecalhoForum';
 import DetalheTopico from './componentes/DetalheTopico';
 import FormularioTopico from './componentes/FormularioTopico';
 import ListaTopicos from './componentes/ListaTopicos';
-import { useForum } from './hooks/useForum';
-import { buscarTopicosPesquisa } from './servicos/servicoForum';
-import './Forum.css';
-
-function TelaLista({ topicos, usuarios, termo, buscando, onTermoChange, onPesquisar, onSelecionar, onNovaPostagem }) {
-  return (
-    <>
-      <div className="page-header">
-        <h2 className="page-title">Fórum de Dúvidas</h2>
-        <div className="page-actions">
-          <div className="barra-pesquisa">
-            <input
-              className="campo-pesquisa"
-              type="search"
-              aria-label="Pesquisar tópicos"
-              placeholder="Pesquisar tópicos"
-              value={termo}
-              onChange={onTermoChange}
-              onKeyDown={onPesquisar}
-            />
-            {buscando && <span className="status-pesquisa">Buscando...</span>}
-          </div>
-          <button className="btn btn-primary" type="button" onClick={onNovaPostagem}>
-            Nova Postagem
-          </button>
-        </div>
-      </div>
-      <ListaTopicos topicos={topicos} usuarios={usuarios} onSelecionar={onSelecionar} />
-    </>
-  );
-}
-
-function TelaPesquisa({ termo, resultados, usuarios, onVoltar, onSelecionar }) {
-  return (
-    <section className="pagina-pesquisa">
-      <button className="btn btn-link" type="button" onClick={onVoltar}>
-        ← Voltar para os tópicos
-      </button>
-      <div className="cabecalho-pesquisa">
-        <h3 className="titulo-pesquisa">Resultados para: <strong>{termo}</strong></h3>
-        <p className="resumo-pesquisa">{resultados.length} tópico(s) encontrado(s)</p>
-      </div>
-      {resultados.length > 0 ? (
-        <ListaTopicos topicos={resultados} usuarios={usuarios} onSelecionar={onSelecionar} />
-      ) : (
-        <div className="card vazio-pesquisa">Não foi encontrado nada com esse nome.</div>
-      )}
-    </section>
-  );
-}
-
-function TelaCriacaoEdicao({ titulo, descricao, editando, onMudarTitulo, onMudarDescricao, onSalvar, onCancelar }) {
-  return (
-    <FormularioTopico
-      titulo={titulo}
-      descricao={descricao}
-      onMudarTitulo={onMudarTitulo}
-      onMudarDescricao={onMudarDescricao}
-      onPublicar={onSalvar}
-      onCancelar={onCancelar}
-      modoEdicao={editando}
-    />
-  );
-}
-
-function TelaDetalhe({ topico, forum, texto, comentarioEmEdicao, onEditarTopico, onExcluirTopico, onEditarComentario, onMudarTexto, onEnviarComentario, onCancelarComentario, onFechar, onVoltar }) {
-  return (
-    <DetalheTopico
-      topico={topico}
-      comentarios={forum.comentarios}
-      podeGerenciarTopico={forum.podeGerenciarTopico}
-      podeEditarTopico={forum.podeEditarTopico}
-      podeEditarComentario={forum.podeEditarComentario}
-      podeApagarTopico={forum.podeApagarTopico}
-      podeExcluirComentario={forum.podeExcluirComentario}
-      onFechar={onFechar}
-      onEditarTopico={onEditarTopico}
-      onExcluirTopico={onExcluirTopico}
-      onExcluirComentario={forum.excluirComentarioSelecionado}
-      onEditarComentario={onEditarComentario}
-      textoComentario={texto}
-      onMudarComentario={onMudarTexto}
-      onEnviarComentario={onEnviarComentario}
-      comentarioEditando={comentarioEmEdicao}
-      onCancelarEdicaoComentario={onCancelarComentario}
-      onVoltar={onVoltar}
-    />
-  );
-}
+import Rodape from '../comuns/Rodape';
+import { perfilDoUsuario, useForum } from './hooks/useForum';
 
 export default function PaginaForum() {
-  const [tela, setTela] = useState('list');
+  const forum = useForum();
+  const [tela, setTela] = useState('lista');
+  const [termo, setTermo] = useState('');
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [texto, setTexto] = useState('');
-  const [termo, setTermo] = useState('');
-  const [busca, setBusca] = useState([]);
-  const [buscando, setBuscando] = useState(false);
-  const [editando, setEditando] = useState(false);
-  const [comentarioEmEdicao, setComentarioEmEdicao] = useState(null);
+  const [comentarioEditando, setComentarioEditando] = useState(null);
   const [erroTela, setErroTela] = useState('');
-  const forum = useForum();
-
-  function trocarUsuario(id) {
-    const usuario = forum.usuarios.find((item) => item.id === id);
-    if (usuario) forum.setUsuarioAtual(usuario);
-  }
-
-  async function publicar() {
-    if (!titulo.trim() || !descricao.trim()) {
-      setErroTela('Preencha o título e a descrição.');
-      return;
-    }
-
-    setErroTela('');
-    const topico = await forum.salvarTopico(titulo, descricao);
-    if (topico) {
-      setTitulo('');
-      setDescricao('');
-      setTela('detail');
-    }
-  }
-
-  async function enviar() {
-    if (!texto.trim()) return;
-
-    const salvou = await forum.salvarComentario(texto);
-    if (salvou) setTexto('');
-  }
-
-  async function excluir() {
-    const excluiu = await forum.excluirTopico(forum.topicoSelecionado);
-    if (excluiu) setTela('list');
-  }
-
-  function editarTopico() {
-    setTitulo(forum.topicoSelecionado.titulo);
-    setDescricao(forum.topicoSelecionado.descricao);
-    setEditando(true);
-  }
-
-  async function salvarEdicao() {
-    if (!titulo.trim() || !descricao.trim()) {
-      setErroTela('Preencha o título e a descrição.');
-      return;
-    }
-
-    setErroTela('');
-    const salvou = await forum.editarTopico(forum.topicoSelecionado.id, titulo, descricao);
-    if (salvou) {
-      setEditando(false);
-      setTitulo('');
-      setDescricao('');
-    }
-  }
-
-  function editarComentario(comentario) {
-    setComentarioEmEdicao(comentario);
-    setTexto(comentario.conteudo);
-  }
-
-  async function salvarComentarioEditado() {
-    if (!comentarioEmEdicao || !texto.trim()) return;
-
-    const salvou = await forum.editarComentario(comentarioEmEdicao, texto);
-    if (salvou) {
-      setComentarioEmEdicao(null);
-      setTexto('');
-    }
-  }
+  const [processando, setProcessando] = useState(false);
 
   async function pesquisar(evento) {
-    if (evento.key !== 'Enter') return;
-
     evento.preventDefault();
-    const textoBusca = termo.trim();
-    if (!textoBusca) {
-      setErroTela('Digite um termo para pesquisar.');
-      return;
-    }
+    await forum.carregarTopicos(0, termo);
+  }
 
-    setErroTela('');
-    setBuscando(true);
-    try {
-      const topicos = await buscarTopicosPesquisa(forum.usuarioAtual, textoBusca);
-      setBusca(topicos);
-      setTela('search');
-    } catch (erro) {
-      setErroTela(erro.message || 'Não foi possível pesquisar os tópicos.');
-    } finally {
-      setBuscando(false);
+  async function publicar(evento) {
+    evento.preventDefault();
+    if (!titulo.trim() || !descricao.trim()) { setErroTela('Preencha o título e a descrição.'); return; }
+    setProcessando(true);
+    const criado = await forum.salvarTopico(titulo, descricao);
+    setProcessando(false);
+    if (criado) { setTitulo(''); setDescricao(''); setTela('lista'); }
+  }
+
+  async function editarTopico(evento) {
+    evento.preventDefault();
+    setProcessando(true);
+    const atualizado = await forum.editarTopico(forum.topicoSelecionado.id, titulo, descricao);
+    setProcessando(false);
+    if (atualizado) {
+      setTitulo(''); setDescricao(''); setTela('detalhe');
     }
   }
 
-  return (
-    <div className="app-container">
-      <CabecalhoForum
-        usuarios={forum.usuarios}
-        usuarioAtual={forum.usuarioAtual}
-        onMudarUsuario={trocarUsuario}
-      />
+  async function enviarComentario(evento) {
+    evento.preventDefault();
+    if (!texto.trim()) return;
+    setProcessando(true);
+    const sucesso = comentarioEditando
+      ? await forum.editarComentario(comentarioEditando, texto)
+      : await forum.salvarComentario(texto);
+    setProcessando(false);
+    if (sucesso) { setTexto(''); setComentarioEditando(null); }
+  }
 
-      <main className="main-content">
-        {forum.mensagemErro && (
-          <div className="card aviso-erro" role="alert">
-            <span>{forum.mensagemErro}</span>
-            <button className="btn btn-link" type="button" onClick={forum.limparMensagem}>Fechar</button>
-          </div>
-        )}
-        {erroTela && (
-          <div className="card aviso-erro" role="alert">
-            <span>{erroTela}</span>
-            <button className="btn btn-link" type="button" onClick={() => setErroTela('')}>Fechar</button>
-          </div>
-        )}
+  function abrirEdicao() {
+    setTitulo(forum.topicoSelecionado.titulo); setDescricao(forum.topicoSelecionado.descricao); setTela('edicao');
+  }
 
-        {tela === 'list' && (
-          <TelaLista
-            topicos={forum.topicos}
-            usuarios={forum.usuarios}
-            termo={termo}
-            buscando={buscando}
-            onTermoChange={(evento) => setTermo(evento.target.value)}
-            onPesquisar={pesquisar}
-            onNovaPostagem={() => setTela('create')}
-            onSelecionar={(topico) => {
-              forum.selecionarTopico(topico);
-              setTela('detail');
-            }}
-          />
-        )}
+  function selecionar(topico) { forum.selecionarTopico(topico); setTela('detalhe'); }
 
-        {tela === 'search' && (
-          <TelaPesquisa
-            termo={termo}
-            resultados={busca}
-            usuarios={forum.usuarios}
-            onVoltar={() => setTela('list')}
-            onSelecionar={(topico) => {
-              forum.selecionarTopico(topico);
-              setTela('detail');
-            }}
-          />
-        )}
-
-        {(tela === 'create' || (tela === 'detail' && editando)) && (
-          <TelaCriacaoEdicao
-            titulo={titulo}
-            descricao={descricao}
-            editando={editando}
-            onMudarTitulo={setTitulo}
-            onMudarDescricao={setDescricao}
-            onSalvar={tela === 'create' ? publicar : salvarEdicao}
-            onCancelar={() => {
-              if (editando) {
-                setEditando(false);
-                return;
-              }
-              setTela('list');
-            }}
-          />
-        )}
-
-        {tela === 'detail' && forum.topicoSelecionado && !editando && (
-          <TelaDetalhe
-            topico={forum.topicoSelecionado}
-            forum={forum}
-            texto={texto}
-            comentarioEmEdicao={comentarioEmEdicao}
-            onFechar={forum.fecharTopicoSelecionado}
-            onEditarTopico={editarTopico}
-            onExcluirTopico={excluir}
-            onEditarComentario={editarComentario}
-            onMudarTexto={setTexto}
-            onEnviarComentario={comentarioEmEdicao ? salvarComentarioEditado : enviar}
-            onCancelarComentario={() => {
-              setComentarioEmEdicao(null);
-              setTexto('');
-            }}
-            onVoltar={() => setTela('list')}
-          />
-        )}
-      </main>
-
-      <footer className="footer">
-        <span>Termos de Uso</span>
-        <span>Contato</span>
-        <span>Sobre o curso_valido.dev</span>
-      </footer>
-    </div>
-  );
+  return <div className="app-container"><CabecalhoForum /><main className="main-content">
+    {(forum.mensagemErro || erroTela) && <div className="card aviso-erro" role="alert">{forum.mensagemErro || erroTela}<button className="btn btn-link" type="button" onClick={() => { forum.limparMensagem(); setErroTela(''); }}>Fechar</button></div>}
+    {tela === 'lista' && <>
+      <div className="page-header"><h1 className="page-title">Fórum de dúvidas</h1><div className="page-actions"><form className="barra-pesquisa" onSubmit={pesquisar}><input className="campo-pesquisa" type="search" aria-label="Pesquisar por título" placeholder="Buscar por título" value={termo} onChange={(evento) => setTermo(evento.target.value)} /></form><button className="btn btn-primary" type="button" onClick={() => setTela('criacao')}>Novo tópico</button></div></div>
+      {forum.carregando ? <div className="card empty-list">Carregando tópicos...</div> : <ListaTopicos topicos={forum.topicos} usuarios={forum.usuarios} onSelecionar={selecionar} />}
+      {forum.totalPaginas > 1 && <div className="paginacao"><button className="btn btn-secondary" disabled={forum.pagina === 0 || forum.carregando} onClick={() => forum.carregarTopicos(forum.pagina - 1, termo)}>Anterior</button><span>Página {forum.pagina + 1} de {forum.totalPaginas}</span><button className="btn btn-secondary" disabled={forum.pagina + 1 >= forum.totalPaginas || forum.carregando} onClick={() => forum.carregarTopicos(forum.pagina + 1, termo)}>Próxima</button></div>}
+    </>}
+    {(tela === 'criacao' || tela === 'edicao') && <FormularioTopico titulo={titulo} descricao={descricao} onMudarTitulo={setTitulo} onMudarDescricao={setDescricao} onPublicar={tela === 'criacao' ? publicar : editarTopico} onCancelar={() => setTela(tela === 'edicao' ? 'detalhe' : 'lista')} modoEdicao={tela === 'edicao'} desabilitado={processando} />}
+    {tela === 'detalhe' && forum.topicoSelecionado && <DetalheTopico topico={{ ...forum.topicoSelecionado, perfilAutor: forum.topicoSelecionado.perfilAutor ?? perfilDoUsuario(forum.usuarios.find((usuario) => Number(usuario.id) === Number(forum.topicoSelecionado.idAutor))) }} comentarios={forum.comentarios.map((comentario) => ({ ...comentario, perfilAutor: comentario.perfilAutor ?? perfilDoUsuario(forum.usuarios.find((usuario) => Number(usuario.id) === Number(comentario.idAutor))) }))} podeGerenciarTopico={forum.podeGerenciarTopico} podeArquivarTopico={forum.podeArquivarTopico} podeEditarTopico={forum.podeEditarTopico} podeEditarComentario={forum.podeEditarComentario} podeApagarTopico={forum.podeApagarTopico} podeExcluirComentario={forum.podeExcluirComentario} onFechar={forum.fecharTopicoSelecionado} onArquivar={forum.arquivarTopicoSelecionado} onEditarTopico={abrirEdicao} onExcluirTopico={async () => { if (await forum.excluirTopico(forum.topicoSelecionado)) setTela('lista'); }} onExcluirComentario={forum.excluirComentarioSelecionado} onEditarComentario={(comentario) => { setComentarioEditando(comentario); setTexto(comentario.conteudo); }} textoComentario={texto} onMudarComentario={setTexto} onEnviarComentario={enviarComentario} comentarioEditando={comentarioEditando} onCancelarEdicaoComentario={() => { setComentarioEditando(null); setTexto(''); }} onVoltar={() => setTela('lista')} desabilitado={processando} />}
+  </main><Rodape /></div>;
 }

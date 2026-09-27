@@ -28,7 +28,11 @@ export default function ListaComentarios({ comentarios, podeExcluir, podeEditar,
           <div className="topic-meta comment-header">
             <div className="meta-group">
               <span className="meta-label">Autor</span>
-              <span className="meta-value">{comentario.nomeAutor}</span>
+              <span className="meta-value">{comentario.nomeAutor ?? comentario.autor?.nome}</span>
+            </div>
+            <div className="meta-group">
+              <span className="meta-label">Perfil</span>
+              <span className="meta-value">{comentario.perfilAutor ?? comentario.perfil ?? comentario.nomePerfil ?? comentario.autor?.perfil ?? comentario.autor?.tipoPerfil ?? 'Não informado'}</span>
             </div>
             <div className="meta-group">
               <span className="meta-label">Respondido em</span>
