@@ -1,56 +1,55 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import PaginaForum from './componentes/forum/PaginaForum';
-import CabecalhoForum from './componentes/forum/componentes/CabecalhoForum';
-import { USUARIOS_MOCK } from './componentes/forum/dados/usuariosMock';
-import './componentes/forum/Forum.css';
+import Inicio from './paginas/Inicio';
+import Login from './paginas/Login';
+import Cadastro from './paginas/Cadastro';
+import TermosDeUso from './paginas/TermosDeUso';
+import PoliticaDePrivacidade from './paginas/PoliticaDePrivacidade';
+import ConfirmacaoEmail from './paginas/ConfirmacaoEmail';
+import SolicitarAlteracaoSenha from './paginas/SolicitarAlteracaoSenha';
+import AlterarSenha from './paginas/AlterarSenha';
+import Configuracoes from './paginas/Configuracoes';
+import Administracao from './paginas/Administracao';
+import CadastroConvite from './paginas/CadastroConvite';
+import RotaProtegida from './componentes/autenticacao/RotaProtegida';
+import { AutenticacaoProvedor } from './contextos/ContextoAutenticacao';
 
-function Home() {
-  return (
-    <div className="app-container">
-      <CabecalhoForum
-        usuarios={USUARIOS_MOCK}
-        usuarioAtual={USUARIOS_MOCK[0]}
-        onMudarUsuario={() => {}}
-      />
+function RedirecionarTermosPendentes() {
+  const navegar = useNavigate();
 
-      <main className="main-content home-content">
-        <section className="home-intro">
-          <p className="home-eyebrow">Curso válido</p>
-          <h1 className="home-title">Aprenda no seu ritmo</h1>
-          <p className="home-description">
-            Conteúdos, aulas e discussões para evoluir na área de tecnologia.
-          </p>
-        </section>
+  useEffect(() => {
+    function redirecionar() {
+      navegar('/termos-aceite?reativacao=true', { replace: true });
+    }
+    globalThis.addEventListener?.('curso-valido-termos-pendentes', redirecionar);
+    return () => globalThis.removeEventListener?.('curso-valido-termos-pendentes', redirecionar);
+  }, [navegar]);
 
-        <section className="video-section" aria-label="Vídeo em destaque">
-          <div className="video-frame">
-            <iframe
-              src="https://www.youtube.com/embed/e15WSmF2Ams"
-              title="Vídeo em destaque do Curso Válido"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
-          </div>
-        </section>
-      </main>
-
-      <footer className="footer">
-        <span>Termos de Uso</span>
-        <span>Contato</span>
-        <span>Sobre o curso_valido.dev</span>
-      </footer>
-    </div>
-  );
+  return null;
 }
 
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-100">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/forum" element={<PaginaForum />} />
-        </Routes>
+      <div className="min-h-screen bg-page">
+        <AutenticacaoProvedor><RedirecionarTermosPendentes /><Routes>
+          <Route path="/" element={<Inicio />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/convites/cadastro" element={<CadastroConvite />} />
+          <Route path="/confirmacao-email" element={<ConfirmacaoEmail />} />
+          <Route path="/solicitar-alteracao-senha" element={<SolicitarAlteracaoSenha />} />
+          <Route path="/redefinir-senha" element={<AlterarSenha />} />
+          <Route path="/termos" element={<TermosDeUso />} />
+          <Route path="/termos-aceite" element={<TermosDeUso />} />
+          <Route path="/termos-aceite.html" element={<TermosDeUso />} />
+          <Route path="/privacidade" element={<PoliticaDePrivacidade />} />
+          <Route path="/politica-privacidade.html" element={<PoliticaDePrivacidade />} />
+          <Route element={<RotaProtegida />}><Route path="/forum" element={<PaginaForum />} /><Route path="/configuracoes" element={<Configuracoes />} /></Route>
+          <Route element={<RotaProtegida perfis={['ADMINISTRADOR']} />}><Route path="/administracao" element={<Administracao />} /></Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes></AutenticacaoProvedor>
       </div>
     </BrowserRouter>
   );

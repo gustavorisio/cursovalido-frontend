@@ -1,25 +1,19 @@
 import { Link } from 'react-router-dom';
+import { useAutenticacao } from '../../../contextos/useAutenticacao';
 
-export default function CabecalhoForum({ usuarios, usuarioAtual, onMudarUsuario }) {
+export default function CabecalhoForum() {
+  const { sessao, sair } = useAutenticacao();
+  const ehAdministrador = sessao?.perfil === 'ADMINISTRADOR';
+
   return (
     <header className="header">
-      <Link className="brand-link" to="/">curso.valido.dev</Link>
+      <Link className="brand-link" to="/forum">Curso Válido</Link>
       <nav className="nav-group">
-        <Link className="nav-link" to="/">Início</Link>
         <Link className="nav-link active" to="/forum">Fórum</Link>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '10px' }}>
-          <span style={{ color: '#aaa', fontSize: '12px' }}>Usuário -</span>
-          <select
-            className="user-select"
-            value={usuarioAtual.id}
-            onChange={(evento) => onMudarUsuario(Number(evento.target.value))}
-          >
-            {usuarios.map((usuario) => (
-              <option key={usuario.id} value={usuario.id}>{usuario.nome}</option>
-            ))}
-          </select>
-        </div>
+        {ehAdministrador && <Link className="nav-link" to="/administracao">Administração</Link>}
+        <Link className="nav-link" to="/configuracoes">Configurações</Link>
+        <span className="identidade-usuario">{sessao?.nome} · {sessao?.perfil}</span>
+        <button className="btn btn-secondary btn-small" type="button" onClick={sair}>Sair</button>
       </nav>
     </header>
   );

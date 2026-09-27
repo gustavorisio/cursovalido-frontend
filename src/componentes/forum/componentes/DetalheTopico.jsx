@@ -19,11 +19,13 @@ export default function DetalheTopico({
   topico,
   comentarios,
   podeGerenciarTopico,
+  podeArquivarTopico = podeApagarTopico,
   podeEditarTopico,
   podeEditarComentario,
   podeApagarTopico,
   podeExcluirComentario,
   onFechar,
+  onArquivar,
   onEditarTopico,
   onExcluirTopico,
   onExcluirComentario,
@@ -34,11 +36,13 @@ export default function DetalheTopico({
   comentarioEditando,
   onCancelarEdicaoComentario,
   onVoltar
+  , desabilitado = false
 }) {
   const [confirmacao, setConfirmacao] = useState('');
 
   async function confirmarAcao() {
     if (confirmacao === 'fechar') await onFechar(topico);
+    if (confirmacao === 'arquivar') await onArquivar(topico);
     if (confirmacao === 'apagar') await onExcluirTopico(topico);
     setConfirmacao('');
   }
@@ -53,14 +57,18 @@ export default function DetalheTopico({
           <div className="topic-meta meta-detalhe">
             <div className="meta-group">
               <span className="meta-label">Autor</span>
-              <span className="meta-value">{topico.nomeAutor}</span>
+              <span className="meta-value">{topico.nomeAutor ?? topico.autor?.nome}</span>
+            </div>
+            <div className="meta-group">
+              <span className="meta-label">Perfil</span>
+              <span className="meta-value">{topico.perfilAutor ?? topico.perfil ?? topico.nomePerfil ?? topico.autor?.perfil ?? topico.autor?.tipoPerfil ?? 'Não informado'}</span>
             </div>
             <div className="meta-group">
               <span className="meta-label">Publicado em</span>
               <span className="meta-value">{formatarData(topico.criadoEm)}</span>
             </div>
           </div>
-          {(podeGerenciarTopico(topico) || podeApagarTopico()) && (
+          {(podeGerenciarTopico(topico) || podeApagarTopico(topico)) && (
             <div className="acoes-topico">
               {podeEditarTopico(topico) && (
                 <button className="btn btn-secondary btn-small" type="button" onClick={() => onEditarTopico(topico)}>
@@ -72,7 +80,12 @@ export default function DetalheTopico({
                   Fechar tópico
                 </button>
               )}
-              {podeApagarTopico() && (
+              {podeArquivarTopico(topico) && !topico.arquivado && (
+                <button className="btn btn-secondary btn-small" type="button" onClick={() => setConfirmacao('arquivar')}>
+                  Arquivar tópico
+                </button>
+              )}
+              {podeApagarTopico(topico) && (
                 <button className="btn btn-danger btn-small" type="button" onClick={() => setConfirmacao('apagar')}>
                   Apagar postagem
                 </button>
@@ -100,14 +113,15 @@ export default function DetalheTopico({
           onEnviar={onEnviarComentario}
           onCancelar={onCancelarEdicaoComentario}
           modoEdicao={Boolean(comentarioEditando)}
+          desabilitado={desabilitado}
         />
       )}
       {confirmacao && (
         <ConfirmacaoModal
-          titulo={confirmacao === 'fechar' ? 'Fechar tópico' : 'Apagar postagem'}
+          titulo={confirmacao === 'fechar' ? 'Fechar tópico' : confirmacao === 'arquivar' ? 'Arquivar tópico' : 'Apagar postagem'}
           mensagem={confirmacao === 'fechar'
             ? 'O tópico não aceitará novas respostas.'
-            : 'Esta ação não poderá ser desfeita.'}
+            : confirmacao === 'arquivar' ? 'O tópico será arquivado e sairá da listagem ativa.' : 'Esta ação não poderá ser desfeita.'}
           onConfirmar={confirmarAcao}
           onCancelar={() => setConfirmacao('')}
         />
