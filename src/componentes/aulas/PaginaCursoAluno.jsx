@@ -1,0 +1,54 @@
+import { useCallback } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import LayoutAulas from './componentes/LayoutAulas';
+import EstadoCarregamento from './componentes/EstadoCarregamento';
+import useCarregamento from './hooks/useCarregamento';
+import * as servico from './servicos/servicoAluno';
+
+export default function PaginaCursoAluno() {
+  const { idCurso } = useParams();
+  return <CursoAluno key={idCurso} idCurso={idCurso} />;
+}
+
+function CursoAluno({ idCurso }) {
+  const carregar = useCallback(async () => {
+    const [curso, modulos] = await Promise.all([servico.buscarCurso(idCurso), servico.listarModulos(idCurso)]);
+    const conteudo = await Promise.all(modulos.map(async (modulo) => {
+      const aulas = await servico.listarAulas(modulo.id);
+      const aulasComProgresso = await Promise.all(aulas.map(async (aula) => ({
+        ...aula,
+        progresso: await servico.buscarProgresso(aula.id),
+      })));
+      return { ...modulo, aulas: aulasComProgresso };
+    }));
+    return { curso, modulos: conteudo };
+  }, [idCurso]);
+  const carga = useCarregamento(carregar);
+
+  return <LayoutAulas>
+    <Link className="btn btn-link" to="/aluno/cursos">← Voltar aos cursos</Link>
+    <EstadoCarregamento carga={carga} />
+    {carga.carregando ? null : carga.erro ? null : carga.dados ? <>
+      <header className="aulas-apresentacao">
+        <span className="aulas-etiqueta">Seu curso</span>
+        <h1 className="page-title">{carga.dados.curso.titulo}</h1>
+        <p className="texto-suave">{carga.dados.curso.descricao}</p>
+        <div className="aulas-indicadores"><span>{carga.dados.modulos.length} módulos</span><span>{carga.dados.modulos.reduce((total, modulo) => total + modulo.aulas.length, 0)} aulas</span></div>
+      </header>
+      <h2 className="titulo-respostas">Módulos e aulas</h2>
+      {carga.dados.modulos.length === 0 ? <div className="card empty-list">Este curso ainda não possui módulos disponíveis.</div> : null}
+      {carga.dados.modulos.map((modulo) => <section className="card aulas-modulo" key={modulo.id}>
+        <header className="aulas-modulo-cabecalho"><span className="aulas-numero">{String(modulo.ordem).padStart(2, '0')}</span><div><span className="aulas-etiqueta">Módulo · {modulo.aulas.length} aulas</span><h2 className="topic-title">{modulo.titulo}</h2></div></header>
+        <p className="content-text">{modulo.descricao}</p>
+        {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível neste módulo.</p> : null}
+        {modulo.aulas.map((aula) => <div className="aulas-linha" key={aula.id}>
+          <div>
+            <span className="aulas-etiqueta">Aula {aula.ordem}</span><h3>{aula.titulo}</h3>
+            <p className="texto-suave">{aula.progresso.concluida ? 'Concluída' : aula.progresso.posicaoSegundos > 0 ? `Em andamento · posição salva: ${aula.progresso.posicaoSegundos}s` : 'Não iniciada'}</p>
+          </div>
+          <Link className="btn btn-secondary" to={`/aluno/cursos/${idCurso}/aulas/${aula.id}`}>{aula.progresso.posicaoSegundos > 0 ? 'Continuar aula' : 'Abrir aula'}</Link>
+        </div>)}
+      </section>)}
+    </> : null}
+  </LayoutAulas>;
+}
