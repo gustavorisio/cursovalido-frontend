@@ -36,6 +36,7 @@ export default function DetalheTopico({
   comentarioEditando,
   onCancelarEdicaoComentario,
   onVoltar
+  , comentariosBloqueados = false
   , desabilitado = false
 }) {
   const [confirmacao, setConfirmacao] = useState('');
@@ -106,7 +107,7 @@ export default function DetalheTopico({
         onEditar={onEditarComentario}
       />
 
-      {!topico.fechado && (
+      {comentariosBloqueados ? <p className="mensagem-erro" role="status">Você está temporária ou permanentemente impedido de enviar comentários. Consulte a restrição no cabeçalho.</p> : !topico.fechado ? (
         <FormularioComentario
           texto={textoComentario}
           onMudarTexto={onMudarComentario}
@@ -115,7 +116,7 @@ export default function DetalheTopico({
           modoEdicao={Boolean(comentarioEditando)}
           desabilitado={desabilitado}
         />
-      )}
+      ) : null}
       {confirmacao && (
         <ConfirmacaoModal
           titulo={confirmacao === 'fechar' ? 'Fechar tópico' : confirmacao === 'arquivar' ? 'Arquivar tópico' : 'Apagar postagem'}
