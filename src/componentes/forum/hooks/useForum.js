@@ -4,6 +4,7 @@ import {
   buscarTopicos, buscarUsuarios, criarComentario, criarTopico, fecharTopico, arquivarTopico
 } from '../servicos/servicoForum';
 import { useAutenticacao } from '../../../contextos/useAutenticacao';
+import { useRestricoes } from '../../../contextos/useRestricoes';
 
 const TAMANHO_PAGINA = 5;
 
@@ -34,7 +35,10 @@ export function perfilDoUsuario(usuario) {
 }
 
 export function useForum() {
-  const { sessao, autenticado, sair } = useAutenticacao();
+  const { sessao, autenticado } = useAutenticacao();
+  const { bloqueado } = useRestricoes();
+  const topicosBloqueados = bloqueado('TOPICOS');
+  const comentariosBloqueados = bloqueado('COMENTARIOS');
   const [topicos, setTopicos] = useState([]);
   const [pagina, setPagina] = useState(0);
   const [totalPaginas, setTotalPaginas] = useState(1);
@@ -45,13 +49,13 @@ export function useForum() {
   const [carregando, setCarregando] = useState(false);
 
   const tratarErro = useCallback((erro) => {
-    if (erro?.status === 401) sair();
     const mensagem = mensagemDoErro(erro);
     setMensagemErro(mensagem);
     return mensagem;
-  }, [sair]);
+  }, []);
 
   const carregarTopicos = useCallback(async (numeroPagina = 0, busca = '') => {
+    if (topicosBloqueados) { setTopicos([]); setComentarios([]); setTopicoSelecionado(null); return; }
     setCarregando(true);
     try {
       const resultado = listaDaResposta(await buscarTopicos(numeroPagina, TAMANHO_PAGINA, busca));
@@ -59,7 +63,7 @@ export function useForum() {
       setPagina(numeroPagina);
       setTotalPaginas(resultado.totalPaginas);
     } catch (erro) { tratarErro(erro); } finally { setCarregando(false); }
-  }, [tratarErro]);
+  }, [tratarErro, topicosBloqueados]);
 
   useEffect(() => {
     if (!autenticado) return undefined;
@@ -69,21 +73,25 @@ export function useForum() {
   }, [autenticado, carregarTopicos, tratarErro]);
 
   async function carregarComentarios(idTopico) {
+    if (comentariosBloqueados) return;
     try { setComentarios(await buscarComentarios(idTopico) || []); } catch (erro) { tratarErro(erro); }
   }
 
   async function selecionarTopico(topico) {
+    if (topicosBloqueados) return;
     setTopicoSelecionado(topico);
     setComentarios([]);
     await carregarComentarios(topico.id);
   }
 
   async function salvarTopico(titulo, descricao) {
+    if (topicosBloqueados) return null;
     try { const novo = await criarTopico({ titulo, descricao }); await carregarTopicos(pagina); return novo; }
     catch (erro) { tratarErro(erro); return null; }
   }
 
   async function salvarComentario(texto) {
+    if (comentariosBloqueados) return false;
     if (!topicoSelecionado || topicoSelecionado.fechado) return false;
     try { await criarComentario(topicoSelecionado.id, texto); await carregarComentarios(topicoSelecionado.id); return true; }
     catch (erro) { tratarErro(erro); return false; }
@@ -92,14 +100,20 @@ export function useForum() {
   function ehAutor(item) {
     return Number(idDoAutor(item)) === Number(sessao?.idUsuario ?? sessao?.id);
   }
-  function podeEditarTopico(topico) { return ehAutor(topico); }
-  function podeEditarComentario(comentario) { return ehAutor(comentario); }
+  function podeEditarTopico(topico) {
+    if (topicosBloqueados) return false;
+    return ehAutor(topico);
+  }
+  function podeEditarComentario(comentario) {
+    if (comentariosBloqueados) return false;
+    return ehAutor(comentario);
+  }
   function ehAdministrador() { return ['ADMINISTRADOR', 'ADMIN', 'ROLE_ADMIN'].includes(sessao?.perfil); }
   function ehProfessor() { return ['PROFESSOR', 'PROF', 'ROLE_PROFESSOR'].includes(sessao?.perfil); }
-  function podeGerenciarTopico(topico) { return ehAdministrador() || ehAutor(topico); }
-  function podeArquivarTopico(topico) { return ehAdministrador() || (ehProfessor() && ehAutor(topico)); }
-  function podeApagarTopico() { return ehAdministrador(); }
-  function podeExcluirComentario(comentario) { return ehAdministrador() || ehAutor(comentario); }
+  function podeGerenciarTopico(topico) { return !topicosBloqueados && (ehAdministrador() || ehAutor(topico)); }
+  function podeArquivarTopico(topico) { return !topicosBloqueados && (ehAdministrador() || (ehProfessor() && ehAutor(topico))); }
+  function podeApagarTopico() { return !topicosBloqueados && ehAdministrador(); }
+  function podeExcluirComentario(comentario) { return !comentariosBloqueados && (ehAdministrador() || ehAutor(comentario)); }
 
   async function editarTopico(idTopico, titulo, descricao) {
     const atual = topicos.find((item) => Number(item.id) === Number(idTopico));
@@ -147,6 +161,7 @@ export function useForum() {
   }
 
   return {
+    topicosBloqueados, comentariosBloqueados,
     sessao, topicos, usuarios, pagina, totalPaginas, carregando, topicoSelecionado, comentarios, mensagemErro,
     limparMensagem: () => setMensagemErro(''), carregarTopicos, selecionarTopico, salvarTopico, salvarComentario,
     editarTopico, editarComentario, excluirTopico, fecharTopicoSelecionado, arquivarTopicoSelecionado,

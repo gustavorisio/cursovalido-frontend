@@ -25,8 +25,6 @@ export default function Configuracoes() {
     try {
       await excluirConta();
       sair();
-      localStorage.clear();
-      sessionStorage.clear();
       navegar('/cadastro', { replace: true, state: { mensagem: 'Conta excluída com sucesso. Para utilizar a plataforma novamente, realize um novo cadastro.' } });
     }
     catch (falha) { setErro(falha.message); setCarregando(false); }

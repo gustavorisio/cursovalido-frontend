@@ -35,6 +35,17 @@ export default function Login() {
     setDados((atuais) => ({ ...atuais, [campo]: valor }));
   }
 
+  function cancelarSegundoFator() {
+    sair();
+    setSegundoFator(false);
+    setCodigo('');
+    setDados({ email: '', senha: '' });
+    setErro('');
+    setMensagemReenvio('');
+    setExibirReenvio2fa(false);
+    setSegundosReenvio2fa(0);
+  }
+
   async function enviar(evento) {
     evento.preventDefault();
     setErro('');
@@ -124,6 +135,7 @@ export default function Login() {
         <h1>Entrar na plataforma</h1>
         <p className="texto-suave">Acesse o fórum e continue sua jornada de aprendizagem.</p>
         <FormularioLogin dados={dados} codigo={codigo} segundoFator={segundoFator} erro={erro} carregando={carregando} mensagem={mensagemReenvio || localizacao.state?.mensagem} onAlterar={alterar} onCodigo={setCodigo} onEnviar={enviar} />
+        {segundoFator ? <button className="btn btn-link" type="button" disabled={carregando} onClick={cancelarSegundoFator}>Cancelar login e usar outra conta</button> : null}
         {contaNaoConfirmada && <button className="botao-destaque" type="button" disabled={reenviando} onClick={reenviar}>{reenviando ? 'Enviando...' : 'Reenviar confirmação'}</button>}
         {segundoFator && exibirReenvio2fa && <button className="botao-destaque botao-reenvio-2fa" type="button" disabled={reenviando2fa || segundosReenvio2fa > 0} onClick={reenviarCodigo}>{reenviando2fa ? 'Reenviando...' : segundosReenvio2fa > 0 ? `Reenviar código novamente em ${segundosReenvio2fa}s` : 'Reenviar código'}</button>}
         <p className="texto-rodape-formulario">Ainda não possui cadastro? <Link to="/cadastro">Criar conta de aluno</Link></p>
