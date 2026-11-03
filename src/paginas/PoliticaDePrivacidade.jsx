@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Rodape from '../componentes/comuns/Rodape';
-import { buscarPoliticaAtiva } from '../servicos/servicoAutenticacao';
+import { buscarPrivacidadeAtiva } from '../servicos/servicoAutenticacao';
 import { URL_BACKEND } from '../servicos/api';
 import { useAutenticacao } from '../contextos/useAutenticacao';
 
@@ -23,9 +23,9 @@ export default function PoliticaDePrivacidade() {
   async function carregarDocumento() {
     setCarregando(true); setErro('');
     try {
-      const politica = await buscarPoliticaAtiva();
-      setVersao(politica.versao);
-      setDataPublicacao(politica.dataPublicacao || '');
+      const politica = await buscarPrivacidadeAtiva();
+      setVersao(politica?.versao ?? '');
+      setDataPublicacao(politica?.dataPublicacao || '');
     } catch (falha) {
       if (falha.status === 401) {
         navegar('/login', { replace: true });
@@ -38,10 +38,10 @@ export default function PoliticaDePrivacidade() {
 
   useEffect(() => {
     let ativo = true;
-    buscarPoliticaAtiva().then((politica) => {
+    buscarPrivacidadeAtiva().then((politica) => {
       if (!ativo) return;
-      setVersao(politica.versao);
-      setDataPublicacao(politica.dataPublicacao || '');
+      setVersao(politica?.versao ?? '');
+      setDataPublicacao(politica?.dataPublicacao || '');
     }).catch((falha) => {
       if (!ativo) return;
       if (falha.status === 401) {

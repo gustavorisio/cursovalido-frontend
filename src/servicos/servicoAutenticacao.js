@@ -48,6 +48,17 @@ export function publicarPolitica(nome, versao, conteudo) {
   });
 }
 
+export function buscarPrivacidadeAtiva() {
+  return requisitar('/politicas/privacidade/ativa', { semAutenticacao: true });
+}
+
+export function publicarPrivacidade(nome, versao, conteudo) {
+  return requisitar('/politicas/privacidade', {
+    method: 'POST',
+    body: JSON.stringify({ nome, versao, conteudo }),
+  });
+}
+
 export function confirmarEmail(token) {
   return requisitar('/autenticacao/confirmar-email', {
     method: 'POST',
