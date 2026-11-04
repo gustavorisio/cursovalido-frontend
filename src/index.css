@@ -480,3 +480,56 @@
     @apply flex flex-wrap gap-2;
   }
 }
+/* Administração: navegação, ferramentas e listas de usuários. */
+@layer components {
+  .administracao { max-width: 1200px; }
+  .administracao-cabecalho { padding: 28px; box-shadow: none; }
+  .administracao-cabecalho .page-title { margin: 8px 0 18px; font-weight: 650; }
+  .administracao-etiqueta { color: var(--color-muted); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+  .administracao-navegacao { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 24px; padding: 8px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-surface); }
+  .administracao-navegacao a { padding: 10px 14px; border-radius: 6px; color: var(--color-muted); font-size: 14px; text-decoration: none; }
+  .administracao-navegacao a:hover, .administracao-navegacao a.active { color: var(--color-brand-950); background: #21262d; }
+  .administracao-navegacao a.active { box-shadow: inset 0 -2px var(--color-brand-700); }
+  .administracao .titulo-detalhe { margin: 0 0 10px; font-weight: 600; }
+  .administracao-ferramentas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; margin-top: 24px; }
+  .administracao-ferramenta { display: flex; flex-direction: column; gap: 14px; min-height: 190px; padding: 22px; border: 1px solid var(--color-line); border-radius: 10px; background: #161b22; text-decoration: none; transition: border-color .15s, background .15s; }
+  .administracao-ferramenta:hover { border-color: var(--color-accent); background: #1b2330; }
+  .administracao-ferramenta h3 { display: flex; justify-content: space-between; gap: 12px; margin: 0; color: var(--color-brand-950); font-size: 17px; font-weight: 600; }
+  .administracao-ferramenta p { margin: 0; color: var(--color-muted); font-size: 14px; line-height: 1.7; }
+  .administracao-abrir { margin-top: auto; font-size: 13px; font-weight: 600; }
+  .administracao .formulario-publico { max-width: 860px; gap: 20px; }
+  .administracao .formulario-publico .btn { justify-self: start; }
+  .administracao .formulario-publico .input-field { margin-bottom: 0; }
+  .administracao .formulario-publico textarea { line-height: 1.7; }
+  .administracao-registro { padding: 20px 0; margin: 0; align-items: center; }
+  .administracao-registro p { min-width: 0; overflow-wrap: anywhere; }
+  .administracao-resumo { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+  .administracao-resumo > span { padding: 14px 18px; border: 1px solid var(--color-line); border-radius: 8px; color: var(--color-muted); font-size: 14px; }
+  .administracao-resumo strong { color: var(--color-brand-950); font-size: 20px; margin-right: 6px; }
+  .pesquisa-conteudo { display: grid; gap: 8px; width: 100%; max-width: 480px; margin: 20px 0 24px; }
+  .pesquisa-conteudo label { font-size: 14px; font-weight: 600; color: var(--color-brand-950); }
+  .moderacao-lista { display: grid; gap: 12px; }
+  .moderacao-usuario { padding: 20px; border: 1px solid var(--color-line); border-radius: 8px; background: #161b22; min-width: 0; }
+  .moderacao-usuario .post-heading { align-items: center; border-bottom: none; margin: 0; padding: 0; }
+  .moderacao-usuario .post-heading > div { min-width: 0; }
+  .moderacao-usuario .topic-title { font-size: 17px; font-weight: 600; }
+  .moderacao-usuario .texto-suave { margin: 8px 0; font-size: 14px; overflow-wrap: anywhere; }
+  .administracao-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+  .administracao-badges span, .administracao-contagem { padding: 3px 8px; border: 1px solid var(--color-line); border-radius: 20px; font-size: 11px; color: var(--color-muted); }
+  .administracao-badges .status-ativo { color: #7ee787; border-color: #238636; }
+  .moderacao-formulario { padding: 22px; background: #161b22; border: 1px solid var(--color-accent); border-radius: 8px; margin-bottom: 24px; }
+  .moderacao-restricao { display: grid; gap: 10px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--color-line); }
+  .moderacao-restricao .btn { justify-self: start; }
+  .documento-navegacao { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 24px; }
+  .modal-fundo { z-index: 100; overflow-y: auto; }
+  .modal-caixa { max-height: calc(100dvh - 40px); overflow-y: auto; }
+  .modal-caixa h3 { font-size: 20px; font-weight: 600; margin-bottom: 12px; }
+  .modal-caixa p { color: var(--color-muted); line-height: 1.7; }
+  .btn:focus-visible, .administracao a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+  @media (max-width: 640px) {
+    .administracao .card { padding: 18px; }
+    .administracao-navegacao a { flex: 1 1 auto; text-align: center; padding: 10px; }
+    .moderacao-usuario .post-heading { align-items: stretch; }
+    .administracao-resumo > span { flex: 1 1 100%; }
+  }
+}
