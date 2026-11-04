@@ -1,3 +1,5 @@
+import PesquisaConteudo from './componentes/PesquisaConteudo';
+import { correspondeAoNome } from './servicos/pesquisaConteudo';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import LayoutAulas from './componentes/LayoutAulas';
@@ -15,10 +17,12 @@ export default function PaginaCatalogo() {
   const [novasMatriculas, setNovasMatriculas] = useState([]);
   const [somenteMatriculados, setSomenteMatriculados] = useState(false);
   const [processando, setProcessando] = useState(null);
+  const [busca, setBusca] = useState('');
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
   const matriculas = [...(carga.dados?.matriculas ?? []), ...novasMatriculas];
   const cursos = (carga.dados?.cursos ?? []).filter((curso) => {
+    if (!correspondeAoNome(curso.titulo, busca)) return false;
     if (!somenteMatriculados) return true;
     return matriculas.some((item) => item.idCurso === curso.id);
   });
@@ -53,9 +57,10 @@ export default function PaginaCatalogo() {
     </header>
     {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
     {mensagem ? <p className="mensagem-sucesso" role="status">{mensagem}</p> : null}
+    <PesquisaConteudo valor={busca} onAlterar={setBusca} />
     <EstadoCarregamento carga={carga} />
     {carga.carregando ? null : carga.erro ? null : <>
-      {cursos.length === 0 ? <div className="card empty-list">{somenteMatriculados ? 'Você ainda não possui matrículas em cursos disponíveis.' : 'Nenhum curso disponível no momento.'}</div> : null}
+      {cursos.length === 0 ? <div className="card empty-list">{busca.trim() ? 'Nenhum curso encontrado para esta pesquisa.' : somenteMatriculados ? 'Você ainda não possui matrículas em cursos disponíveis.' : 'Nenhum curso disponível no momento.'}</div> : null}
       <div className="aulas-grade">
       {cursos.map((curso) => {
         const matriculado = matriculas.some((item) => item.idCurso === curso.id);

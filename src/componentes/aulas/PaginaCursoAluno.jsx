@@ -1,4 +1,6 @@
-import { useCallback } from 'react';
+import PesquisaConteudo from './componentes/PesquisaConteudo';
+import { correspondeAoNome } from './servicos/pesquisaConteudo';
+import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import LayoutAulas from './componentes/LayoutAulas';
 import EstadoCarregamento from './componentes/EstadoCarregamento';
@@ -24,6 +26,8 @@ function CursoAluno({ idCurso }) {
     return { curso, modulos: conteudo };
   }, [idCurso]);
   const carga = useCarregamento(carregar);
+  const [busca, setBusca] = useState('');
+  const modulos = carga.dados?.modulos.map((modulo) => ({ ...modulo, aulas: modulo.aulas.filter((aula) => correspondeAoNome(aula.titulo, busca)) })).filter((modulo) => !busca.trim() || modulo.aulas.length > 0) ?? [];
 
   return <LayoutAulas>
     <Link className="btn btn-link" to="/aluno/cursos">← Voltar aos cursos</Link>
@@ -36,8 +40,10 @@ function CursoAluno({ idCurso }) {
         <div className="aulas-indicadores"><span>{carga.dados.modulos.length} módulos</span><span>{carga.dados.modulos.reduce((total, modulo) => total + modulo.aulas.length, 0)} aulas</span></div>
       </header>
       <h2 className="titulo-respostas">Módulos e aulas</h2>
+      <PesquisaConteudo valor={busca} onAlterar={setBusca} label="Pesquisar aula por nome" />
+      {busca.trim() && modulos.length === 0 && <p className="card empty-list" role="status">Nenhuma aula encontrada para esta pesquisa.</p>}
       {carga.dados.modulos.length === 0 ? <div className="card empty-list">Este curso ainda não possui módulos disponíveis.</div> : null}
-      {carga.dados.modulos.map((modulo) => <section className="card aulas-modulo" key={modulo.id}>
+      {modulos.map((modulo) => <section className="card aulas-modulo" key={modulo.id}>
         <header className="aulas-modulo-cabecalho"><span className="aulas-numero">{String(modulo.ordem).padStart(2, '0')}</span><div><span className="aulas-etiqueta">Módulo · {modulo.aulas.length} aulas</span><h2 className="topic-title">{modulo.titulo}</h2></div></header>
         <p className="content-text">{modulo.descricao}</p>
         {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível neste módulo.</p> : null}

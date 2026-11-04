@@ -1,3 +1,5 @@
+import PesquisaConteudo from './componentes/PesquisaConteudo';
+import { correspondeAoNome } from './servicos/pesquisaConteudo';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import CabecalhoForum from '../forum/componentes/CabecalhoForum';
@@ -24,6 +26,7 @@ function GestaoConteudo({ idCurso, idModulo }) {
   const tipo = idModulo ? 'aula' : idCurso ? 'modulo' : 'curso';
   const nome = tipo === 'modulo' ? 'módulo' : tipo;
   const titulo = tipo === 'curso' ? 'Meus cursos' : tipo === 'modulo' ? 'Módulos do curso' : 'Aulas do módulo';
+  const [busca, setBusca] = useState('');
   const [itens, setItens] = useState([]);
   const [curso, setCurso] = useState(null);
   const [modulo, setModulo] = useState(null);
@@ -135,10 +138,12 @@ function GestaoConteudo({ idCurso, idModulo }) {
           </div>
           <p className="texto-suave">{tipo === 'curso' ? 'Organize seus cursos e crie uma jornada de aprendizagem.' : tipo === 'modulo' ? 'Organize os módulos na sequência em que devem ser estudados.' : 'Adicione vídeos e organize as aulas deste módulo.'}</p>
         </header>
+        <PesquisaConteudo valor={busca} onAlterar={setBusca} label={tipo === 'curso' ? 'Pesquisar curso por nome' : tipo === 'aula' ? 'Pesquisar aula por nome' : 'Pesquisar módulo por nome'} />
         {carregando ? <div className="card empty-list" role="status">Carregando...</div> : falhaCarga ? <div className="card empty-list"><button className="btn btn-secondary" type="button" onClick={() => { setCarregando(true); setErro(''); setTentativa(tentativa + 1); }}>Tentar novamente</button></div> : <>
           {itens.length === 0 ? <div className="card empty-list">Nenhum conteúdo cadastrado. Cadastre o primeiro {nome}.</div> : null}
+          {itens.length > 0 && !itens.some((item) => correspondeAoNome(item.titulo, busca)) && <p className="card empty-list" role="status">Nenhum conteúdo encontrado para esta pesquisa.</p>}
           <div className="aulas-grade">
-          {itens.map((item) => <article className="card aulas-cartao" key={item.id}>
+          {itens.filter((item) => correspondeAoNome(item.titulo, busca)).map((item) => <article className="card aulas-cartao" key={item.id}>
             <span className="aulas-etiqueta">{nome}{tipo === 'curso' ? '' : ` ${item.ordem}`}</span>
             <div className="aulas-cartao-corpo">
               <h2 className="topic-title">{item.titulo}</h2>
@@ -157,7 +162,7 @@ function GestaoConteudo({ idCurso, idModulo }) {
           </div>
         </>}
       </>}
-      {excluindo ? <ConfirmacaoModal titulo={`Excluir ${nome}`} mensagem={`Deseja excluir “${excluindo.titulo}”? O conteúdo será inativado.${tipo === 'aula' ? '' : ' O acesso ao conteúdo vinculado também será bloqueado.'}`} onConfirmar={excluir} onCancelar={() => { if (!processando) setExcluindo(null); }} /> : null}
+      {excluindo ? <ConfirmacaoModal titulo={`Excluir ${nome}`} processando={processando} mensagem={`Deseja excluir “${excluindo.titulo}”? O conteúdo será inativado.${tipo === 'aula' ? '' : ' O acesso ao conteúdo vinculado também será bloqueado.'}`} onConfirmar={excluir} onCancelar={() => { if (!processando) setExcluindo(null); }} /> : null}
     </main>
     <Rodape />
   </div>;

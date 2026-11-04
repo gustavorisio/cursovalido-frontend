@@ -1,4 +1,6 @@
-import { useCallback } from 'react';
+import PesquisaConteudo from './componentes/PesquisaConteudo';
+import { correspondeAoNome } from './servicos/pesquisaConteudo';
+import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import LayoutAulas from './componentes/LayoutAulas';
 import EstadoCarregamento from './componentes/EstadoCarregamento';
@@ -29,9 +31,13 @@ function ConsultaAulas({ idCurso, idAula }) {
   }, [idCurso, idAula]);
   const carga = useCarregamento(carregar);
   const dados = carga.dados;
+  const [busca, setBusca] = useState('');
+  const cursos = dados?.cursos?.filter((curso) => correspondeAoNome(curso.titulo, busca));
+  const modulos = dados?.modulos?.map((modulo) => ({ ...modulo, aulas: modulo.aulas.filter((aula) => correspondeAoNome(aula.titulo, busca)) })).filter((modulo) => !busca.trim() || modulo.aulas.length > 0);
 
   return <LayoutAulas>
     <nav className="acoes-topico" aria-label="Navegação dos cursos">
+      <Link className="btn btn-secondary" to="/administracao">← Administração</Link>
       <Link className="btn btn-link" to="/administracao/cursos">Cursos</Link>
       {dados?.curso ? <Link className="btn btn-link" to={`/administracao/cursos/${idCurso}`}>→ {dados.curso.titulo}</Link> : null}
     </nav>
@@ -41,12 +47,13 @@ function ConsultaAulas({ idCurso, idAula }) {
       <p className="texto-suave">{dados?.aula ? 'Confira o vídeo e o conteúdo desta aula.' : dados?.curso ? 'Explore os módulos e visualize as aulas deste curso.' : 'Consulte os cursos disponíveis e acompanhe a organização das aulas.'}</p>
       {dados?.curso ? <div className="aulas-indicadores"><span>{dados.modulos.length} módulos</span><span>{dados.modulos.reduce((total, modulo) => total + modulo.aulas.length, 0)} aulas</span></div> : null}
     </header>
+    {!idAula && <PesquisaConteudo valor={busca} onAlterar={setBusca} label={idCurso ? 'Pesquisar aula por nome' : 'Pesquisar curso por nome'} />}
     <EstadoCarregamento carga={carga} />
     {carga.carregando ? null : carga.erro ? null : dados ? <>
       {dados.cursos ? <>
-        {dados.cursos.length === 0 ? <div className="card empty-list">Nenhum curso disponível.</div> : null}
+        {cursos.length === 0 ? <div className="card empty-list">Nenhum curso encontrado.</div> : null}
         <div className="aulas-grade">
-        {dados.cursos.map((curso) => <article className="card aulas-cartao" key={curso.id}>
+        {cursos.map((curso) => <article className="card aulas-cartao" key={curso.id}>
           <span className="aulas-etiqueta">Curso</span>
           <div className="aulas-cartao-corpo">
             <h2 className="topic-title">{curso.titulo}</h2>
@@ -61,8 +68,8 @@ function ConsultaAulas({ idCurso, idAula }) {
         <p className="content-text">{dados.aula.descricao}</p>
       </section> : dados.curso ? <>
         <p className="card content-text">{dados.curso.descricao}</p>
-        {dados.modulos.length === 0 ? <div className="card empty-list">Nenhum módulo disponível.</div> : null}
-        {dados.modulos.map((modulo) => <section className="card aulas-modulo" key={modulo.id}>
+        {modulos.length === 0 ? <div className="card empty-list">Nenhum módulo disponível.</div> : null}
+        {modulos.map((modulo) => <section className="card aulas-modulo" key={modulo.id}>
           <header className="aulas-modulo-cabecalho"><span className="aulas-numero">{String(modulo.ordem).padStart(2, '0')}</span><div><span className="aulas-etiqueta">Módulo · {modulo.aulas.length} aulas</span><h2 className="topic-title">{modulo.titulo}</h2></div></header>
           <p className="content-text">{modulo.descricao}</p>
           {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível.</p> : null}
