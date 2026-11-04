@@ -1,20 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Rodape from '../componentes/comuns/Rodape';
+import { useNavigate } from 'react-router-dom';
+import DocumentoLegal from '../componentes/comuns/DocumentoLegal';
 import { aceitarTermosNovamente, buscarPoliticaAtiva } from '../servicos/servicoAutenticacao';
-import { URL_BACKEND } from '../servicos/api';
 import { useAutenticacao } from '../contextos/useAutenticacao';
 
 export default function TermosDeUso() {
   const [versao, setVersao] = useState('');
-  const [erroDocumento, setErroDocumento] = useState(false);
   const [dataPublicacao, setDataPublicacao] = useState('');
   const [aceitePendente, setAceitePendente] = useState(() => sessionStorage.getItem('curso-valido-token-termos') || '');
   const [aceito, setAceito] = useState(false);
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(false);
-  const [carregandoDocumento, setCarregandoDocumento] = useState(true);
+  const [carregandoMetadados, setCarregandoMetadados] = useState(true);
   const navegar = useNavigate();
   const { autenticado, sair } = useAutenticacao();
 
@@ -24,7 +22,7 @@ export default function TermosDeUso() {
   }
 
   async function carregarDocumento() {
-    setCarregandoDocumento(true);
+    setCarregandoMetadados(true);
     setErro('');
     try {
       const politica = await buscarPoliticaAtiva();
@@ -38,7 +36,7 @@ export default function TermosDeUso() {
       setVersao('');
       setDataPublicacao('');
       setErro('Não foi possível carregar os documentos atuais. Tente novamente.');
-    } finally { setCarregandoDocumento(false); }
+    } finally { setCarregandoMetadados(false); }
   }
 
   useEffect(() => {
@@ -56,7 +54,7 @@ export default function TermosDeUso() {
       setVersao('');
       setDataPublicacao('');
       setErro('Não foi possível carregar os documentos atuais. Tente novamente.');
-    }).finally(() => ativo && setCarregandoDocumento(false));
+    }).finally(() => ativo && setCarregandoMetadados(false));
     return () => { ativo = false; };
   }, [navegar]);
 
@@ -88,5 +86,8 @@ export default function TermosDeUso() {
     } finally { setCarregando(false); }
   }
 
-  return <div className="pagina-publica"><main className="pagina-documento"><button className="btn btn-link" type="button" onClick={voltar}>← Voltar</button><h1>Termos de Aceite</h1>{carregandoDocumento && <p className="texto-suave">Carregando a versão atual...</p>}{erro && <><div className="mensagem-erro" role="alert">{erro}</div><button className="btn btn-secondary" type="button" onClick={carregarDocumento}>Buscar novamente</button></>}{mensagem && <div className="mensagem-sucesso" role="status">{mensagem}</div>}{versao && <p className="texto-suave">Versão vigente: {versao}{dataPublicacao && ` · Publicada em: ${new Intl.DateTimeFormat('pt-BR').format(new Date(dataPublicacao))}`}</p>}<p className="texto-suave"><Link to="/politica-privacidade.html">Política de Privacidade</Link></p>{aceitePendente && versao && <section className="mensagem-cadastro-concluido"><h2>Aceite necessário</h2><p>É necessário aceitar os documentos atuais para acessar a conta.</p><label className="checkbox"><input type="checkbox" checked={aceito} onChange={(evento) => setAceito(evento.target.checked)} />Li e aceito os Termos de Aceite e a Política de Privacidade.</label><button className="botao-destaque" type="button" disabled={!aceito || carregando || carregandoDocumento} onClick={aceitar}>{carregando ? 'Enviando...' : 'Aceitar termos e voltar ao login'}</button></section>}<div className="relative mt-6">{!erroDocumento && <iframe title="Termos de Aceite" src={`${URL_BACKEND}/termos-aceite.html`} className="documento-iframe" onLoad={() => setCarregandoDocumento(false)} onError={() => { setCarregandoDocumento(false); setErroDocumento(true); }} />}{carregandoDocumento && <p className="texto-suave">Carregando o documento...</p>}{erroDocumento && <div className="mensagem-erro" role="alert">Não foi possível carregar os Termos de Aceite. Verifique se o backend está ativo.</div>}</div></main><Rodape /></div>;
+  return <DocumentoLegal tipo="termos" versao={versao} dataPublicacao={dataPublicacao} carregando={carregandoMetadados} erro={erro} onVoltar={voltar} onRecarregar={carregarDocumento}>
+    {mensagem && <div className="mensagem-sucesso" role="status">{mensagem}</div>}
+    {aceitePendente && versao && <section className="mensagem-cadastro-concluido"><h2>Aceite necessário</h2><p>É necessário aceitar os documentos atuais para acessar a conta.</p><label className="checkbox"><input type="checkbox" checked={aceito} onChange={(evento) => setAceito(evento.target.checked)} />Li e aceito os Termos de Aceite e a Política de Privacidade.</label><button className="botao-destaque" type="button" disabled={!aceito || carregando || carregandoMetadados} onClick={aceitar}>{carregando ? 'Enviando...' : 'Aceitar termos e voltar ao login'}</button></section>}
+  </DocumentoLegal>;
 }

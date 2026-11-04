@@ -1,4 +1,6 @@
-export const URL_API = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+import { obterTokenSessao, tokenValido } from './sessaoNavegador';
+
+export const URL_API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api';
 export const URL_BACKEND = URL_API.replace(/\/api\/?$/, '');
 
 export class ErroApi extends Error {
@@ -8,18 +10,6 @@ export class ErroApi extends Error {
     this.status = status;
     this.codigo = dados?.codigo;
     this.dados = dados;
-  }
-}
-
-function tokenValido(token) {
-  if (typeof token !== 'string' || token.split('.').length !== 3) return false;
-  try {
-    const partePayload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const payloadComPadding = partePayload.padEnd(Math.ceil(partePayload.length / 4) * 4, '=');
-    const dados = JSON.parse(atob(payloadComPadding));
-    return !dados.exp || dados.exp * 1000 > Date.now();
-  } catch {
-    return false;
   }
 }
 
@@ -40,11 +30,11 @@ function formatarMensagem(dados) {
 
 export async function requisitar(caminho, opcoes = {}) {
   const { semAutenticacao = false, tokenAutenticacao, ...opcoesFetch } = opcoes;
-  const token = tokenAutenticacao || sessionStorage.getItem('token');
+  const token = tokenAutenticacao ?? obterTokenSessao();
   const cabecalhos = { Accept: 'application/json', ...opcoesFetch.headers };
 
   if (opcoesFetch.body || !semAutenticacao) cabecalhos['Content-Type'] = 'application/json';
-  const tokenParaEnviar = tokenAutenticacao || token;
+  const tokenParaEnviar = token;
   if (!semAutenticacao && tokenValido(tokenParaEnviar)) cabecalhos.Authorization = `Bearer ${tokenParaEnviar}`;
 
   let resposta;
@@ -60,6 +50,14 @@ export async function requisitar(caminho, opcoes = {}) {
     throw new ErroApi(0, 'Não foi possível conectar ao servidor.');
   }
 
+  if (!semAutenticacao) {
+    if (tokenAutenticacao === undefined) {
+      if (obterTokenSessao() !== token) {
+        throw new ErroApi(409, 'A sessão desta requisição foi encerrada.', { codigo: 'SESSAO_ALTERADA' });
+      }
+    }
+  }
+
   const texto = await resposta.text();
   let dados = null;
   if (texto) {
@@ -71,17 +69,24 @@ export async function requisitar(caminho, opcoes = {}) {
   }
 
   if (import.meta.env.DEV) {
-    console.debug('[API] response', { ...detalhesRequisicao, status: resposta.status, body: dados });
+    console.debug('[API] response', { ...detalhesRequisicao, status: resposta.status });
   }
 
   if (!resposta.ok) {
+    if (['EMAIL_JA_CADASTRADO', 'PERFIL_CONVITE_INVALIDO'].includes(dados?.codigo)) {
+      throw new ErroApi(resposta.status, formatarMensagem(dados) ?? 'Não foi possível enviar o convite.', dados);
+    }
+    if (['CONTA_SUSPENSA', 'FORUM_SUSPENSO', 'TOPICOS_SUSPENSOS', 'COMENTARIOS_SUSPENSOS'].includes(dados?.codigo)) {
+      globalThis.dispatchEvent?.(new CustomEvent('curso-valido-restricoes-alteradas'));
+      throw new ErroApi(resposta.status, formatarMensagem(dados) ?? 'Há uma restrição ativa na sua conta.', dados);
+    }
     if (resposta.status === 403 && !semAutenticacao && dados?.codigo === 'TERMOS_NAO_ACEITOS') {
       globalThis.dispatchEvent?.(new CustomEvent('curso-valido-termos-pendentes', {
-        detail: { token: dados?.token || dados?.jwt || dados?.accessToken }
+        detail: { token: dados?.token ?? dados?.jwt ?? dados?.accessToken, tokenOrigem: tokenParaEnviar }
       }));
     }
     if (resposta.status === 401 && !semAutenticacao) {
-      globalThis.dispatchEvent?.(new CustomEvent('curso-valido-sessao-expirada'));
+      globalThis.dispatchEvent?.(new CustomEvent('curso-valido-sessao-expirada', { detail: { token: tokenParaEnviar } }));
     }
     const mensagem = (resposta.status === 403 && !['EMAIL_NAO_CONFIRMADO', 'TERMOS_NAO_ACEITOS'].includes(dados?.codigo)
       ? 'Você não tem permissão para esta operação.'

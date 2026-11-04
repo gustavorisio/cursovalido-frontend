@@ -1,24 +1,21 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, NavLink } from 'react-router-dom';
 import CabecalhoForum from '../componentes/forum/componentes/CabecalhoForum';
+import ConfirmacaoModal from '../componentes/forum/componentes/ConfirmacaoModal';
 import Rodape from '../componentes/comuns/Rodape';
+import ModeracaoUsuarios from '../componentes/administracao/ModeracaoUsuarios';
 import {
   aprovarConvite, buscarConvites, buscarConvitesPendentes, cancelarConvite,
   criarConvite, rejeitarConvite, removerPendenciaConvite, reenviarConvite,
-  buscarPoliticasAtivas, publicarPolitica
+  buscarPoliticasAtivas, publicarPolitica, buscarPrivacidadeAtiva, publicarPrivacidade,
 } from '../servicos/servicoAutenticacao';
-import { buscarUsuarios } from '../componentes/forum/servicos/servicoForum';
+import { buscarPermissoesAdministrativas, buscarUsuariosAdministrativos } from '../servicos/servicoAdministracao';
 import { useAutenticacao } from '../contextos/useAutenticacao';
 
-function perfilDoUsuario(usuario) {
-  const perfil = usuario?.perfil ?? usuario?.tipoPerfil ?? usuario?.role ?? usuario?.tipoUsuario;
-  if (typeof perfil === 'object') return perfil.nome ?? perfil.descricao ?? perfil.codigo ?? 'Não informado';
-  return perfil || 'Não informado';
-}
-
-export default function Administracao() {
+export default function Administracao({ tela = 'geral' }) {
   const { sessao } = useAutenticacao();
   const [usuarios, setUsuarios] = useState([]);
+  const [principal, setPrincipal] = useState(false);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [convites, setConvites] = useState([]);
@@ -27,74 +24,166 @@ export default function Administracao() {
   const [perfil, setPerfil] = useState('PROFESSOR');
   const [mensagem, setMensagem] = useState('');
   const [processando, setProcessando] = useState(false);
+  const [confirmacao, setConfirmacao] = useState(null);
   const [politica, setPolitica] = useState(null);
-  const [nomePolitica, setNomePolitica] = useState('Termos de Uso e Politica de Privacidade');
+  const [nomePolitica, setNomePolitica] = useState(tela === 'privacidade' ? 'Política de Privacidade' : 'Termos de Aceite');
   const [versaoPolitica, setVersaoPolitica] = useState('');
   const [conteudoPolitica, setConteudoPolitica] = useState('');
 
-  async function carregarDados() {
-    setCarregando(true); setErro('');
+  const carregarDados = useCallback(async () => {
+    setCarregando(true);
     try {
-      const [listaUsuarios, listaConvites, listaPendentes, politicasAtivas] = await Promise.all([buscarUsuarios(), buscarConvites(), buscarConvitesPendentes(), buscarPoliticasAtivas()]);
-      setUsuarios(Array.isArray(listaUsuarios) ? listaUsuarios : listaUsuarios?.content || listaUsuarios?.itens || []);
-      setConvites(Array.isArray(listaConvites) ? listaConvites : listaConvites?.content || listaConvites?.itens || []);
-      setPendentes(Array.isArray(listaPendentes) ? listaPendentes : listaPendentes?.content || listaPendentes?.itens || []);
-      const politicaAtual = Array.isArray(politicasAtivas) ? politicasAtivas[0] : politicasAtivas;
-      setPolitica(politicaAtual || null);
-    } catch (falha) { setErro(falha.message || 'Não foi possível carregar os dados administrativos.'); }
-    finally { setCarregando(false); }
-  }
+      const permissoes = await buscarPermissoesAdministrativas();
+      setPrincipal(permissoes.principal);
+      const tarefas = [];
+      if (tela === 'usuarios') tarefas.push(buscarUsuariosAdministrativos().then(setUsuarios));
+      if (permissoes.principal && tela === 'termos') {
+        tarefas.push(buscarPoliticasAtivas().then((politicas) => {
+          const atual = politicas[0] ?? null;
+          setPolitica(atual);
+          if (atual) { setNomePolitica(atual.nome); setConteudoPolitica(atual.conteudo); }
+        }));
+      }
+      if (permissoes.principal && tela === 'privacidade') {
+        tarefas.push(buscarPrivacidadeAtiva().then((atual) => {
+          setPolitica(atual);
+          if (atual) { setNomePolitica(atual.nome); setConteudoPolitica(atual.conteudo); }
+        }));
+      }
+      if (permissoes.principal && tela === 'convites') {
+        tarefas.push(buscarConvites().then(setConvites), buscarConvitesPendentes().then(setPendentes));
+      }
+      const resultados = await Promise.allSettled(tarefas);
+      const falhas = resultados.filter((resultado) => resultado.status === 'rejected');
+      if (falhas.length > 0) setErro(falhas.map((resultado) => resultado.reason.message).join(' '));
+    } catch (falha) {
+      setPrincipal(false);
+      setErro(falha.message);
+    } finally {
+      setCarregando(false);
+    }
+  }, [tela]);
 
-  useEffect(() => {
-    queueMicrotask(carregarDados);
-  }, []);
+  useEffect(() => { queueMicrotask(carregarDados); }, [carregarDados]);
 
-  async function convidar(evento) {
-    evento.preventDefault(); setProcessando(true); setErro(''); setMensagem('');
-    try { await criarConvite(email, perfil); setEmail(''); setMensagem('Convite enviado com sucesso.'); await carregarDados(); }
-    catch (falha) { setErro(falha.status === 409 ? 'E-mail já utilizado ou convite já existente.' : falha.message); }
-    finally { setProcessando(false); }
-  }
-
-  async function executar(acao, id, confirmacao, sucesso) {
-    if (!window.confirm(confirmacao)) return;
-    setProcessando(true); setErro(''); setMensagem('');
-    try { await acao(id); setMensagem(sucesso); await carregarDados(); }
-    catch (falha) { setErro(falha.message); }
-    finally { setProcessando(false); }
-  }
-
-  async function publicar(evento) {
-    evento.preventDefault();
-    if (!window.confirm('Publicar uma nova versão arquivará a atual e exigirá novo aceite de todos os usuários. Deseja continuar?')) return;
-    setProcessando(true); setErro(''); setMensagem('');
+  async function acionar(acao, sucesso) {
+    setProcessando(true);
+    setErro('');
+    setMensagem('');
     try {
-      await publicarPolitica(nomePolitica, versaoPolitica, conteudoPolitica);
-      setVersaoPolitica(''); setConteudoPolitica('');
-      setMensagem('Nova versão publicada. Os usuários deverão aceitar os termos novamente.');
+      await acao();
+      setMensagem(sucesso);
       await carregarDados();
-    } catch (falha) { setErro(falha.message); }
-    finally { setProcessando(false); }
+    } catch (falha) {
+      setErro(falha.message);
+    } finally {
+      setProcessando(false);
+      setConfirmacao(null);
+    }
   }
 
-  return <div className="app-container"><CabecalhoForum /><main className="main-content">
-    <section className="card configuracoes-conta">
-      <h1 className="page-title">Administração</h1>
+  function solicitar(acao, texto, sucesso) {
+    if (processando) return;
+    setConfirmacao({ acao, texto, sucesso });
+  }
+
+  function convidar(evento) {
+    evento.preventDefault();
+    acionar(async () => { await criarConvite(email.trim(), perfil); setEmail(''); }, 'Convite enviado com sucesso.');
+  }
+
+  function publicar(evento) {
+    evento.preventDefault();
+    solicitar(async () => {
+      const publicarDocumento = tela === 'privacidade' ? publicarPrivacidade : publicarPolitica;
+      await publicarDocumento(nomePolitica, versaoPolitica, conteudoPolitica);
+      setVersaoPolitica('');
+      setConteudoPolitica('');
+    }, 'Publicar esta versão arquivará a atual e exigirá novo aceite na próxima autenticação. As sessões abertas continuarão funcionando. Deseja continuar?', 'Nova versão publicada. O novo aceite será solicitado na próxima autenticação.');
+  }
+
+  return <div className="app-container"><CabecalhoForum /><main className="main-content administracao">
+    <section className="card configuracoes-conta administracao-cabecalho">
+      <span className="administracao-etiqueta">Gestão da plataforma</span>
+      <h1 className="page-title">{({ termos: 'Termos de Aceite', privacidade: 'Política de Privacidade', usuarios: 'Moderação de usuários', convites: 'Convites' })[tela] ?? 'Administração'}</h1>
+      {tela !== 'geral' ? <Link className="btn btn-secondary" to="/administracao">Voltar à administração</Link> : null}
       <p className="texto-suave">Administrador: {sessao?.nome}</p>
-      <p className="texto-suave">Perfil: {sessao?.perfil}</p>
-      <div className="acoes-configuracoes"><Link className="btn btn-secondary" to="/forum">Acessar fórum</Link></div>
     </section>
-    {erro && <div className="mensagem-erro" role="alert">{erro}</div>}
-    {mensagem && <div className="mensagem-sucesso" role="status">{mensagem}</div>}
-    <section className="card configuracoes-conta"><h2>Convidar professor ou administrador</h2><form className="formulario-publico" onSubmit={convidar}><label>E-mail<input required type="email" value={email} onChange={(evento) => setEmail(evento.target.value)} /></label><label>Perfil<select value={perfil} onChange={(evento) => setPerfil(evento.target.value)}><option value="PROFESSOR">Professor</option><option value="ADMINISTRADOR">Administrador</option></select></label><button className="btn btn-primary" disabled={processando}>{processando ? 'Enviando...' : 'Enviar convite'}</button></form></section>
-    <section className="card configuracoes-conta"><h2>Termos e LGPD</h2>{politica ? <p className="texto-suave">Versão vigente: {politica.versao}</p> : <p className="texto-suave">Nenhuma versão publicada.</p>}<form className="formulario-publico" onSubmit={publicar}><label>Nome do documento<input required maxLength={255} value={nomePolitica} onChange={(evento) => setNomePolitica(evento.target.value)} /></label><label>Nova versão<input required maxLength={30} placeholder="Ex.: 2.0" value={versaoPolitica} onChange={(evento) => setVersaoPolitica(evento.target.value)} /></label><label>Conteúdo<textarea required maxLength={10000} rows={12} value={conteudoPolitica} onChange={(evento) => setConteudoPolitica(evento.target.value)} /></label><button className="btn btn-primary" disabled={processando}>{processando ? 'Publicando...' : 'Publicar nova versão'}</button></form></section>
-    <section className="card configuracoes-conta"><h2>Convites enviados</h2>{convites.length === 0 ? <p className="texto-suave">Nenhum convite encontrado.</p> : <ul>{convites.map((convite) => <li key={convite.id}><strong>{convite.email}</strong> · {convite.perfil} · {convite.status} · confirmado: {convite.emailConfirmado ? 'sim' : 'não'}<div><button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => executar(reenviarConvite, convite.id, 'Tem certeza que deseja reenviar este convite?', 'Convite reenviado com sucesso.')}>Reenviar</button><button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => executar(cancelarConvite, convite.id, 'Tem certeza que deseja cancelar este convite?', 'Convite cancelado.')}>Cancelar</button></div></li>)}</ul>}</section>
-    <section className="card configuracoes-conta"><h2>Cadastros aguardando aprovação</h2>{pendentes.length === 0 ? <p className="texto-suave">Nenhum cadastro pendente.</p> : <ul>{pendentes.map((pendente) => <li key={pendente.id}><strong>{pendente.nomeCompleto || pendente.email}</strong> · {pendente.email} · {pendente.perfil}<div><button className="btn btn-primary btn-small" type="button" disabled={processando} onClick={() => executar(aprovarConvite, pendente.id, 'Tem certeza que deseja aprovar este cadastro?', 'Cadastro aprovado com sucesso.')}>Aprovar</button><button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => executar(rejeitarConvite, pendente.id, 'Tem certeza que deseja rejeitar este cadastro?', 'Cadastro rejeitado.')}>Rejeitar</button><button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => executar(removerPendenciaConvite, pendente.id, 'Tem certeza que deseja remover esta pendência?', 'Pendência removida.')}>Remover</button></div></li>)}</ul>}</section>
-    <section className="card configuracoes-conta">
-      <h2>Usuários do fórum</h2>
-      {!erro && null}
-      {carregando && <p className="texto-suave">Carregando usuários...</p>}
-      {!carregando && !erro && <ul>{usuarios.map((usuario) => <li key={usuario.id ?? usuario.idUsuario}>{usuario.nome ?? usuario.nomeCompleto ?? 'Nome não informado'} · {perfilDoUsuario(usuario)}</li>)}</ul>}
-    </section>
+    <nav className="administracao-navegacao" aria-label="Ferramentas administrativas">
+      <NavLink end to="/administracao">Visão geral</NavLink>
+      <NavLink to="/administracao/usuarios">Usuários</NavLink>
+      <NavLink to="/administracao/cursos">Cursos e aulas</NavLink>
+      {principal && <><NavLink to="/administracao/termos">Termos de Aceite</NavLink><NavLink to="/administracao/privacidade">Privacidade</NavLink><NavLink to="/administracao/convites">Convites</NavLink></>}
+    </nav>
+    {erro ? <div className="mensagem-erro" role="alert">{erro}<div><button className="btn btn-secondary" type="button" disabled={carregando} onClick={() => { setErro(''); carregarDados(); }}>Tentar novamente</button></div></div> : null}
+    {mensagem ? <div className="mensagem-sucesso" role="status">{mensagem}</div> : null}
+    {carregando ? <p className="texto-suave" role="status">Carregando administração...</p> : <>
+      {tela === 'geral' ? <section className="card configuracoes-conta">
+        <h2 className="titulo-detalhe">Ferramentas administrativas</h2>
+        <p className="texto-suave">Escolha uma ferramenta para gerenciar a plataforma.</p>
+        <div className="administracao-ferramentas">
+          {[
+            { rota: 'usuarios', titulo: 'Moderação de usuários', descricao: 'Consulte contas, aplique restrições e acompanhe a equipe.' },
+            { rota: 'cursos', titulo: 'Cursos e aulas', descricao: 'Explore o catálogo, os módulos e as aulas publicados.' },
+            ...(principal ? [
+              { rota: 'termos', titulo: 'Termos de Aceite', descricao: 'Revise o documento vigente e publique novas versões.' },
+              { rota: 'privacidade', titulo: 'Política de Privacidade', descricao: 'Gerencie o documento e as informações sobre tratamento de dados.' },
+              { rota: 'convites', titulo: 'Convites', descricao: 'Convide a equipe e revise os cadastros que aguardam aprovação.' },
+            ] : []),
+          ].map((item) => <Link key={item.rota} className="administracao-ferramenta" to={'/administracao/' + item.rota}><h3>{item.titulo}<span aria-hidden="true">↗</span></h3><p>{item.descricao}</p><span className="administracao-abrir">Acessar ferramenta →</span></Link>)}
+        </div>
+      </section> : null}
+      {['termos', 'privacidade', 'convites'].includes(tela) && !principal ? <p className="mensagem-erro" role="alert">Esta tela está disponível apenas para o administrador principal.</p> : null}
+      {principal ? <>
+        {tela === 'convites' ? <>
+        <section className="card configuracoes-conta">
+          <h2 className="titulo-detalhe">Convidar professor ou administrador</h2>
+          <form className="formulario-publico" onSubmit={convidar}>
+            <label>E-mail<input required type="email" maxLength={254} value={email} onChange={(evento) => setEmail(evento.target.value)} /></label>
+            <label>Perfil<select value={perfil} onChange={(evento) => setPerfil(evento.target.value)}><option value="PROFESSOR">Professor</option><option value="ADMINISTRADOR">Administrador</option></select></label>
+            <button className="btn btn-primary" disabled={processando}>{processando ? 'Enviando...' : 'Enviar convite'}</button>
+          </form>
+        </section>
+        </> : null}
+        {['termos', 'privacidade'].includes(tela) ? <section className="card configuracoes-conta">
+          <h2 className="titulo-detalhe">{tela === 'privacidade' ? 'Editar política de privacidade' : 'Editar termos'}</h2>
+          <p className="texto-suave">Versão vigente: {politica?.versao ?? 'Nenhuma versão publicada'}</p>
+          <form className="formulario-publico" onSubmit={publicar}>
+            <label>Nome do documento<input required maxLength={255} value={nomePolitica} onChange={(evento) => setNomePolitica(evento.target.value)} /></label>
+            <label>Nova versão<input required maxLength={30} value={versaoPolitica} onChange={(evento) => setVersaoPolitica(evento.target.value)} /></label>
+            <p className="texto-suave">O conteúdo pode ser escrito em texto simples ou HTML básico (títulos, parágrafos e listas).</p>
+            <label>Conteúdo<textarea className="input-field" required maxLength={10000} rows={12} value={conteudoPolitica} onChange={(evento) => setConteudoPolitica(evento.target.value)} /></label>
+            <button className="btn btn-primary" disabled={processando}>Publicar nova versão</button>
+          </form>
+        </section> : null}
+        {tela === 'convites' ? <>
+        <section className="card configuracoes-conta">
+          <h2 className="titulo-detalhe">Convites enviados</h2>
+          {convites.length === 0 ? <p className="texto-suave">Nenhum convite pendente.</p> : null}
+          {convites.map((convite) => <div className="post-heading administracao-registro" key={convite.id}>
+            <p>{convite.email} · {convite.perfil} · {convite.status}</p>
+            <div className="acoes-topico">
+              <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => reenviarConvite(convite.id), 'Reenviar o convite? O link anterior deixará de funcionar.', 'Convite reenviado.')}>Reenviar</button>
+              <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => solicitar(() => cancelarConvite(convite.id), 'Cancelar este convite?', 'Convite cancelado.')}>Cancelar</button>
+            </div>
+          </div>)}
+        </section>
+        <section className="card configuracoes-conta">
+          <h2 className="titulo-detalhe">Cadastros aguardando aprovação</h2>
+          {pendentes.length === 0 ? <p className="texto-suave">Nenhum cadastro pendente.</p> : null}
+          {pendentes.map((item) => <div className="post-heading administracao-registro" key={item.id}>
+            <p>{item.nomeCompleto ?? item.email} · {item.email} · {item.perfil}</p>
+            <div className="acoes-topico">
+              <button className="btn btn-primary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => aprovarConvite(item.id), 'Aprovar este cadastro?', 'Cadastro aprovado.')}>Aprovar</button>
+              <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => rejeitarConvite(item.id), 'Rejeitar este cadastro?', 'Cadastro rejeitado.')}>Rejeitar</button>
+              <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => solicitar(() => removerPendenciaConvite(item.id), 'Remover esta pendência?', 'Pendência removida.')}>Remover</button>
+            </div>
+          </div>)}
+        </section>
+        </> : null}
+      </> : null}
+      {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios} processando={processando} onExecutar={solicitar} /> : null}
+    </>}
+    {confirmacao ? <ConfirmacaoModal titulo="Confirmar ação" processando={processando} mensagem={confirmacao.texto} onConfirmar={() => { if (!processando) acionar(confirmacao.acao, confirmacao.sucesso); }} onCancelar={() => { if (!processando) setConfirmacao(null); }} /> : null}
   </main><Rodape /></div>;
 }
