@@ -33,18 +33,20 @@ export default function ModeracaoUsuarios({ usuarios, processando, onExecutar })
   const termo = busca.trim().toLowerCase();
   const resultados = termo ? usuarios.filter((usuario) => `${usuario.nome} ${usuario.email} ${usuario.perfil}`.toLowerCase().includes(termo)) : [];
   const equipe = usuarios.filter((usuario) => ['PROFESSOR', 'ADMINISTRADOR'].includes(usuario.perfil));
-  const grupos = [
-    ...(termo ? [{ titulo: 'Resultados da busca', lista: resultados, vazio: 'Nenhum usuário encontrado.' }] : []),
+  const alunos = usuarios.filter((usuario) => !['PROFESSOR', 'ADMINISTRADOR'].includes(usuario.perfil));
+  const grupos = termo ? [{ titulo: 'Resultados da busca', lista: resultados, vazio: 'Nenhum usuário encontrado.' }] : [
+    { titulo: 'Alunos', lista: alunos, vazio: 'Nenhum aluno cadastrado.' },
     { titulo: 'Professores e administradores', lista: equipe, vazio: 'Nenhum professor ou administrador cadastrado.' },
   ];
 
-  return <section className="card configuracoes-conta">
+  return <section className="card configuracoes-conta moderacao-usuarios">
     <h2 className="titulo-detalhe">Moderação de usuários</h2>
     <p className="texto-suave">Restrinja a conta inteira ou apenas ações do fórum. Restrições temporárias expiram automaticamente; permanentes podem ser revogadas.</p>
-    <label htmlFor="buscar-usuario">Buscar usuário</label>
-    <input id="buscar-usuario" className="input-field" type="search" value={busca} onChange={(evento) => setBusca(evento.target.value)} placeholder="Nome, e-mail ou perfil" />
+    <div className="administracao-resumo"><span><strong>{usuarios.length}</strong> contas</span><span><strong>{equipe.length}</strong> membros da equipe</span><span><strong>{usuarios.filter((usuario) => usuario.suspensoes.length > 0).length}</strong> com restrições</span></div>
+    <div className="pesquisa-conteudo"><label htmlFor="buscar-usuario">Buscar usuário</label>
+    <input id="buscar-usuario" className="campo-pesquisa" type="search" value={busca} onChange={(evento) => setBusca(evento.target.value)} placeholder="Nome, e-mail ou perfil" /></div>
     {!termo ? <p className="texto-suave">Digite um nome, e-mail ou perfil para encontrar um usuário.</p> : null}
-    {selecionado ? <form className="formulario-publico" onSubmit={solicitar}>
+    {selecionado ? <form className="formulario-publico moderacao-formulario" onSubmit={solicitar}>
       <h3>Restringir {selecionado.nome}</h3>
       {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
       <fieldset disabled={processando}>
@@ -59,20 +61,21 @@ export default function ModeracaoUsuarios({ usuarios, processando, onExecutar })
       </fieldset>
     </form> : null}
     {grupos.map(({ titulo, lista, vazio }) => <section key={titulo} aria-label={titulo}>
-    <h3 className="titulo-respostas">{titulo}</h3>
+    <h3 className="titulo-respostas">{titulo} <span className="administracao-contagem">{lista.length}</span></h3>
+    <div className="moderacao-lista">
     {lista.length === 0 ? <p className="texto-suave">{vazio}</p> : null}
-    {lista.map((usuario) => <article key={usuario.id} className="card">
+    {lista.map((usuario) => <article key={usuario.id} className="moderacao-usuario">
       <div className="post-heading">
-        <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">{usuario.email} · {usuario.perfil} · {usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</p></div>
+        <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">{usuario.email}</p><div className="administracao-badges"><span>{usuario.perfil}</span><span className={usuario.ativo ? 'status-ativo' : ''}>{usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</span></div></div>
         {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => { setSelecionado(usuario); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
       </div>
       {usuario.suspensoes.length === 0 ? <p className="texto-suave">Sem restrições vigentes.</p> : null}
-      {usuario.suspensoes.map((item) => <div key={item.id}>
+      {usuario.suspensoes.map((item) => <div className="moderacao-restricao" key={item.id}>
         <p className="content-text"><strong>{ESCOPOS[item.escopo]}</strong> · {item.expiraEm ? `Até ${new Date(item.expiraEm).toLocaleString('pt-BR')}` : 'Permanente'}</p>
         <p className="content-text">Motivo: {item.motivo}</p>
         {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => onExecutar(() => revogarSuspensao(usuario.id, item.id), `Revogar esta restrição de ${usuario.nome}?`, 'Restrição revogada.')}>Revogar restrição</button> : null}
       </div>)}
     </article>)}
-    </section>)}
+    </div></section>)}
   </section>;
 }

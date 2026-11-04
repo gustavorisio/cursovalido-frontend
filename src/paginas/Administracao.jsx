@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import CabecalhoForum from '../componentes/forum/componentes/CabecalhoForum';
 import ConfirmacaoModal from '../componentes/forum/componentes/ConfirmacaoModal';
 import Rodape from '../componentes/comuns/Rodape';
@@ -26,7 +26,7 @@ export default function Administracao({ tela = 'geral' }) {
   const [processando, setProcessando] = useState(false);
   const [confirmacao, setConfirmacao] = useState(null);
   const [politica, setPolitica] = useState(null);
-  const [nomePolitica, setNomePolitica] = useState(tela === 'privacidade' ? 'Política de Privacidade' : 'Termos de Uso e Política de Privacidade');
+  const [nomePolitica, setNomePolitica] = useState(tela === 'privacidade' ? 'Política de Privacidade' : 'Termos de Aceite');
   const [versaoPolitica, setVersaoPolitica] = useState('');
   const [conteudoPolitica, setConteudoPolitica] = useState('');
 
@@ -102,24 +102,35 @@ export default function Administracao({ tela = 'geral' }) {
     }, 'Publicar esta versão arquivará a atual e exigirá novo aceite na próxima autenticação. As sessões abertas continuarão funcionando. Deseja continuar?', 'Nova versão publicada. O novo aceite será solicitado na próxima autenticação.');
   }
 
-  return <div className="app-container"><CabecalhoForum /><main className="main-content">
-    <section className="card configuracoes-conta">
-      <h1 className="page-title">{({ termos: 'Termos e LGPD', privacidade: 'Política de Privacidade', usuarios: 'Moderação de usuários', convites: 'Convites' })[tela] ?? 'Administração'}</h1>
+  return <div className="app-container"><CabecalhoForum /><main className="main-content administracao">
+    <section className="card configuracoes-conta administracao-cabecalho">
+      <span className="administracao-etiqueta">Gestão da plataforma</span>
+      <h1 className="page-title">{({ termos: 'Termos de Aceite', privacidade: 'Política de Privacidade', usuarios: 'Moderação de usuários', convites: 'Convites' })[tela] ?? 'Administração'}</h1>
       {tela !== 'geral' ? <Link className="btn btn-secondary" to="/administracao">Voltar à administração</Link> : null}
       <p className="texto-suave">Administrador: {sessao?.nome}</p>
     </section>
+    <nav className="administracao-navegacao" aria-label="Ferramentas administrativas">
+      <NavLink end to="/administracao">Visão geral</NavLink>
+      <NavLink to="/administracao/usuarios">Usuários</NavLink>
+      <NavLink to="/administracao/cursos">Cursos e aulas</NavLink>
+      {principal && <><NavLink to="/administracao/termos">Termos de Aceite</NavLink><NavLink to="/administracao/privacidade">Privacidade</NavLink><NavLink to="/administracao/convites">Convites</NavLink></>}
+    </nav>
     {erro ? <div className="mensagem-erro" role="alert">{erro}<div><button className="btn btn-secondary" type="button" disabled={carregando} onClick={() => { setErro(''); carregarDados(); }}>Tentar novamente</button></div></div> : null}
     {mensagem ? <div className="mensagem-sucesso" role="status">{mensagem}</div> : null}
     {carregando ? <p className="texto-suave" role="status">Carregando administração...</p> : <>
       {tela === 'geral' ? <section className="card configuracoes-conta">
         <h2 className="titulo-detalhe">Ferramentas administrativas</h2>
-        <div className="acoes-configuracoes">
-          <Link className="btn btn-primary" to="/administracao/usuarios">Moderação de usuários</Link>
-          {principal ? <>
-            <Link className="btn btn-primary" to="/administracao/termos">Termos e LGPD</Link>
-            <Link className="btn btn-primary" to="/administracao/privacidade">Editar política de privacidade</Link>
-            <Link className="btn btn-primary" to="/administracao/convites">Gerenciar convites</Link>
-          </> : null}
+        <p className="texto-suave">Escolha uma ferramenta para gerenciar a plataforma.</p>
+        <div className="administracao-ferramentas">
+          {[
+            { rota: 'usuarios', titulo: 'Moderação de usuários', descricao: 'Consulte contas, aplique restrições e acompanhe a equipe.' },
+            { rota: 'cursos', titulo: 'Cursos e aulas', descricao: 'Explore o catálogo, os módulos e as aulas publicados.' },
+            ...(principal ? [
+              { rota: 'termos', titulo: 'Termos de Aceite', descricao: 'Revise o documento vigente e publique novas versões.' },
+              { rota: 'privacidade', titulo: 'Política de Privacidade', descricao: 'Gerencie o documento e as informações sobre tratamento de dados.' },
+              { rota: 'convites', titulo: 'Convites', descricao: 'Convide a equipe e revise os cadastros que aguardam aprovação.' },
+            ] : []),
+          ].map((item) => <Link key={item.rota} className="administracao-ferramenta" to={'/administracao/' + item.rota}><h3>{item.titulo}<span aria-hidden="true">↗</span></h3><p>{item.descricao}</p><span className="administracao-abrir">Acessar ferramenta →</span></Link>)}
         </div>
       </section> : null}
       {['termos', 'privacidade', 'convites'].includes(tela) && !principal ? <p className="mensagem-erro" role="alert">Esta tela está disponível apenas para o administrador principal.</p> : null}
@@ -140,6 +151,7 @@ export default function Administracao({ tela = 'geral' }) {
           <form className="formulario-publico" onSubmit={publicar}>
             <label>Nome do documento<input required maxLength={255} value={nomePolitica} onChange={(evento) => setNomePolitica(evento.target.value)} /></label>
             <label>Nova versão<input required maxLength={30} value={versaoPolitica} onChange={(evento) => setVersaoPolitica(evento.target.value)} /></label>
+            <p className="texto-suave">O conteúdo pode ser escrito em texto simples ou HTML básico (títulos, parágrafos e listas).</p>
             <label>Conteúdo<textarea className="input-field" required maxLength={10000} rows={12} value={conteudoPolitica} onChange={(evento) => setConteudoPolitica(evento.target.value)} /></label>
             <button className="btn btn-primary" disabled={processando}>Publicar nova versão</button>
           </form>
@@ -148,7 +160,7 @@ export default function Administracao({ tela = 'geral' }) {
         <section className="card configuracoes-conta">
           <h2 className="titulo-detalhe">Convites enviados</h2>
           {convites.length === 0 ? <p className="texto-suave">Nenhum convite pendente.</p> : null}
-          {convites.map((convite) => <div className="post-heading" key={convite.id}>
+          {convites.map((convite) => <div className="post-heading administracao-registro" key={convite.id}>
             <p>{convite.email} · {convite.perfil} · {convite.status}</p>
             <div className="acoes-topico">
               <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => reenviarConvite(convite.id), 'Reenviar o convite? O link anterior deixará de funcionar.', 'Convite reenviado.')}>Reenviar</button>
@@ -159,7 +171,7 @@ export default function Administracao({ tela = 'geral' }) {
         <section className="card configuracoes-conta">
           <h2 className="titulo-detalhe">Cadastros aguardando aprovação</h2>
           {pendentes.length === 0 ? <p className="texto-suave">Nenhum cadastro pendente.</p> : null}
-          {pendentes.map((item) => <div className="post-heading" key={item.id}>
+          {pendentes.map((item) => <div className="post-heading administracao-registro" key={item.id}>
             <p>{item.nomeCompleto ?? item.email} · {item.email} · {item.perfil}</p>
             <div className="acoes-topico">
               <button className="btn btn-primary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => aprovarConvite(item.id), 'Aprovar este cadastro?', 'Cadastro aprovado.')}>Aprovar</button>
@@ -172,6 +184,6 @@ export default function Administracao({ tela = 'geral' }) {
       </> : null}
       {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios} processando={processando} onExecutar={solicitar} /> : null}
     </>}
-    {confirmacao ? <ConfirmacaoModal titulo="Confirmar ação" mensagem={confirmacao.texto} onConfirmar={() => { if (!processando) acionar(confirmacao.acao, confirmacao.sucesso); }} onCancelar={() => { if (!processando) setConfirmacao(null); }} /> : null}
+    {confirmacao ? <ConfirmacaoModal titulo="Confirmar ação" processando={processando} mensagem={confirmacao.texto} onConfirmar={() => { if (!processando) acionar(confirmacao.acao, confirmacao.sucesso); }} onCancelar={() => { if (!processando) setConfirmacao(null); }} /> : null}
   </main><Rodape /></div>;
 }
