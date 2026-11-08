@@ -43,3 +43,7 @@ export function salvarPosicao(idAula, posicaoSegundos, opcoes = {}) {
 export function concluirAula(idAula, opcoes = {}) {
   return requisitar(`/aluno/aulas/${idAula}/conclusao`, { ...opcoes, method: 'POST' });
 }
+
+export function listarCatalogoPublico() {
+  return requisitar('/catalogo/cursos', { semAutenticacao: true });
+}

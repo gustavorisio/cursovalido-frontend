@@ -26,3 +26,13 @@ export function listarAulas(idModulo) {
 export function buscarAula(id) {
   return requisitar(`/administracao/aulas/${id}`);
 }
+
+export function editarAula(id, dados) {
+  return requisitar('/administracao/aulas/' + id, { method: 'PUT', body: JSON.stringify(dados) });
+}
+export function arquivarAula(id) {
+  return requisitar('/administracao/aulas/' + id + '/arquivar', { method: 'PUT' });
+}
+export function reabrirAula(id) {
+  return requisitar('/administracao/aulas/' + id + '/reabrir', { method: 'PUT' });
+}
