@@ -2,7 +2,7 @@ import { requisitar } from './api';
 
 export function cadastrarUsuario(dados) {
   const { nomeCompleto, email, senha, cpf, dataNascimento, telefone,
-    cep, logradouro, bairro, cidade, estado, declarouMaiorIdade,
+    declarouMaiorIdade,
     aceitouTermosLgpd, versaoTermos } = dados;
   return requisitar('/autenticacao/cadastro', {
     method: 'POST',
@@ -14,7 +14,7 @@ export function cadastrarUsuario(dados) {
       cpf,
       dataNascimento,
       telefone,
-      endereco: { cep, logradouro, bairro, cidade, estado },
+
       declarouMaiorIdade,
       aceitouTermosLgpd,
       versaoTermos
@@ -22,9 +22,6 @@ export function cadastrarUsuario(dados) {
   });
 }
 
-export function consultarEndereco(cep) {
-  return requisitar(`/enderecos/consultar/${cep}`, { semAutenticacao: true });
-}
 
 export function buscarPoliticasAtivas() {
   return requisitar('/politicas/ativas', { semAutenticacao: true });
@@ -119,8 +116,15 @@ export function aceitarTermosNovamente(token, versaoTermos) {
   });
 }
 
-export function excluirConta() {
-  return requisitar('/autenticacao/conta', { method: 'DELETE' });
+export function solicitarExclusaoConta() {
+  return requisitar('/autenticacao/conta/solicitar-exclusao', { method: 'POST' });
+}
+
+export function excluirConta(codigo) {
+  if (typeof codigo !== 'string' || !/^[0-9]{6}$/.test(codigo)) {
+    throw new Error('Informe o código de seis dígitos enviado ao seu e-mail.');
+  }
+  return requisitar('/autenticacao/conta', { method: 'DELETE', body: JSON.stringify({ codigo }) });
 }
 
 export function criarConvite(email, perfil) {
@@ -163,7 +167,7 @@ export function confirmarEmailConvite(token) {
 
 export function completarCadastroConvite(token, cadastro) {
   const { nomeCompleto, email, senha, cpf, dataNascimento, telefone,
-    cep, logradouro, bairro, cidade, estado, declarouMaiorIdade,
+    declarouMaiorIdade,
     aceitouTermosLgpd, versaoTermos } = cadastro;
   return requisitar('/convites/completar-cadastro', {
     method: 'POST', semAutenticacao: true, body: JSON.stringify({
@@ -175,11 +179,30 @@ export function completarCadastroConvite(token, cadastro) {
         cpf,
         dataNascimento,
         telefone,
-        endereco: { cep, logradouro, bairro, cidade, estado },
+
         declarouMaiorIdade,
         aceitouTermosLgpd,
         versaoTermos
       }
     })
   });
+}
+
+export async function buscarMeusDados() {
+  const dados = await requisitar('/autenticacao/meus-dados', { cache: 'no-store' });
+  if (!dados || Array.isArray(dados) || !dados.id || !dados.email || !dados.nomeCompleto) {
+    throw new Error('Não foi possível carregar seus dados pessoais. Tente novamente.');
+  }
+  return dados;
+}
+
+export async function baixarDadosPessoais() {
+  const dados = await requisitar('/autenticacao/exportar-dados', { cache: 'no-store' });
+  if (!dados?.id || !dados.email) throw new Error('Não foi possível exportar seus dados pessoais.');
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = 'meus-dados-pessoais.json';
+  document.body.appendChild(link);
+  try { link.click(); } finally { link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000); }
 }

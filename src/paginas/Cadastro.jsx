@@ -2,23 +2,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormularioCadastro from '../componentes/autenticacao/FormularioCadastro';
 import Rodape from '../componentes/comuns/Rodape';
-import { buscarPoliticaAtiva, cadastrarUsuario, consultarEndereco } from '../servicos/servicoAutenticacao';
+import { buscarPoliticaAtiva, cadastrarUsuario } from '../servicos/servicoAutenticacao';
 import { validarIdade } from './validacoesCadastro';
 
 const VALOR_PADRAO = {
   nomeCompleto: '', email: '', senha: '', cpf: '', dataNascimento: '', telefone: '',
-  cep: '', logradouro: '', bairro: '', cidade: '', estado: '', declarouMaiorIdade: false,
+  declarouMaiorIdade: false,
   aceitouTermosLgpd: false, versaoTermos: ''
 };
-const CAMPOS_OBRIGATORIOS = ['nomeCompleto', 'email', 'senha', 'cpf', 'dataNascimento', 'telefone', 'cep', 'logradouro', 'bairro', 'cidade', 'estado'];
+const CAMPOS_OBRIGATORIOS = ['nomeCompleto', 'email', 'senha', 'cpf', 'dataNascimento', 'telefone'];
 
 export default function Cadastro() {
   const navegar = useNavigate();
   const localizacao = useLocation();
   const [dados, setDados] = useState(VALOR_PADRAO);
   const [erro, setErro] = useState('');
-  const [mensagemCep, setMensagemCep] = useState('');
-  const [carregandoCep, setCarregandoCep] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [carregandoPolitica, setCarregandoPolitica] = useState(true);
   const [erroPolitica, setErroPolitica] = useState('');
@@ -55,24 +53,6 @@ export default function Cadastro() {
     return () => { ativo = false; };
   }, []);
 
-  useEffect(() => {
-    const cep = dados.cep.replace(/\D/g, '');
-    if (cep.length !== 8) {
-      queueMicrotask(() => setMensagemCep(cep ? 'Informe um CEP com oito números.' : ''));
-      return undefined;
-    }
-    let ativo = true;
-    queueMicrotask(() => { setCarregandoCep(true); setMensagemCep('Consultando endereço...'); });
-    consultarEndereco(cep).then((endereco) => {
-      if (!ativo) return;
-      if (!endereco) { setMensagemCep('CEP não encontrado.'); return; }
-      setDados((atuais) => ({ ...atuais, logradouro: endereco.logradouro || '', bairro: endereco.bairro || '', cidade: endereco.cidade || endereco.localidade || '', estado: endereco.estado || endereco.uf || '' }));
-      setMensagemCep('Endereço preenchido.');
-    }).catch((falha) => {
-      if (ativo) setMensagemCep(falha.status === 404 ? 'CEP não encontrado.' : 'Falha temporária na consulta do CEP.');
-    }).finally(() => ativo && setCarregandoCep(false));
-    return () => { ativo = false; };
-  }, [dados.cep]);
 
   function alterar(campo, valor) {
     setDados((atuais) => ({ ...atuais, [campo]: valor }));
@@ -86,7 +66,7 @@ export default function Cadastro() {
     if (!formularioValido) { setErro('Preencha todos os campos obrigatórios e aceite os termos.'); return; }
     setCarregando(true); setErro('');
     try {
-      await cadastrarUsuario({ ...dados, cpf: dados.cpf.replace(/\D/g, ''), cep: dados.cep.replace(/\D/g, '') });
+      await cadastrarUsuario({ ...dados, cpf: dados.cpf.replace(/\D/g, '') });
       setCadastroConcluido(true);
     } catch (falha) { setErro(falha.message); } finally { setCarregando(false); }
   }
@@ -107,7 +87,7 @@ export default function Cadastro() {
             <p>O R.A. será gerado automaticamente pelo sistema após a ativação.</p>
             <button className="botao-destaque" type="button" onClick={() => navegar('/login')}>Ir para o login</button>
           </section>
-        ) : <FormularioCadastro dados={dados} idade={idade} mensagemCep={mensagemCep} carregandoCep={carregandoCep} carregando={carregando} formularioValido={formularioValido} onAlterar={alterar} onEnviar={enviar} erro={erro} />}
+        ) : <FormularioCadastro dados={dados} idade={idade} carregando={carregando} formularioValido={formularioValido} onAlterar={alterar} onEnviar={enviar} erro={erro} />}
         <p className="texto-rodape-formulario">Já possui uma conta? <Link to="/login">Entrar</Link></p>
       </main><Rodape />
     </div>
