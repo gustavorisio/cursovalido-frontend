@@ -2,7 +2,6 @@ import PesquisaConteudo from './componentes/PesquisaConteudo';
 import { correspondeAoNome } from './servicos/pesquisaConteudo';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import CabecalhoForum from '../forum/componentes/CabecalhoForum';
 import ConfirmacaoModal from '../forum/componentes/ConfirmacaoModal';
 import Rodape from '../comuns/Rodape';
 import FormularioConteudo from './componentes/FormularioConteudo';
@@ -121,7 +120,7 @@ function GestaoConteudo({ idCurso, idModulo }) {
   }
 
   return <div className="app-container">
-    <CabecalhoForum />
+    
     <main className="main-content pagina-aulas">
       <nav className="acoes-topico" aria-label="Navegação dos cursos">
         <Link className="btn btn-link" to="/professor/cursos">Meus cursos</Link>

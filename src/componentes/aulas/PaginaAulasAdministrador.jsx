@@ -1,3 +1,5 @@
+import FormularioConteudo from './componentes/FormularioConteudo';
+import ConfirmacaoModal from '../forum/componentes/ConfirmacaoModal';
 import PesquisaConteudo from './componentes/PesquisaConteudo';
 import { correspondeAoNome } from './servicos/pesquisaConteudo';
 import { useCallback, useState } from 'react';
@@ -31,13 +33,46 @@ function ConsultaAulas({ idCurso, idAula }) {
   }, [idCurso, idAula]);
   const carga = useCarregamento(carregar);
   const dados = carga.dados;
+  const [editando, setEditando] = useState(null);
+  const [confirmacao, setConfirmacao] = useState(null);
+  const [processando, setProcessando] = useState(false);
+  const [erroAcao, setErroAcao] = useState('');
+  const [mensagem, setMensagem] = useState('');
   const [busca, setBusca] = useState('');
   const cursos = dados?.cursos?.filter((curso) => correspondeAoNome(curso.titulo, busca));
   const modulos = dados?.modulos?.map((modulo) => ({ ...modulo, aulas: modulo.aulas.filter((aula) => correspondeAoNome(aula.titulo, busca)) })).filter((modulo) => !busca.trim() || modulo.aulas.length > 0);
 
+  async function executar(acao, sucesso) {
+    if (processando) return;
+    setProcessando(true); setErroAcao(''); setMensagem('');
+    try { await acao(); setEditando(null); setConfirmacao(null); setMensagem(sucesso); carga.tentarNovamente(); }
+    catch (falha) { setErroAcao(falha.message); }
+    finally { setProcessando(false); }
+  }
+  async function abrirEdicao(aula) {
+    if (processando) return;
+    setProcessando(true); setErroAcao(''); setMensagem('');
+    try { setEditando(await servico.buscarAula(aula.id)); }
+    catch (falha) { setErroAcao(falha.message); }
+    finally { setProcessando(false); }
+  }
+
+  function formulario(aula) {
+    return editando?.id === aula.id ? <FormularioConteudo key={editando.id} tipo="aula" item={editando} processando={processando} onCancelar={() => setEditando(null)} onSalvar={valores => executar(() => servico.editarAula(editando.id, valores), 'Aula atualizada.')} /> : null;
+  }
+
+  function acoes(aula) {
+    return <div className="acoes-topico">
+      <button className="btn btn-secondary" type="button" disabled={processando} onClick={() => abrirEdicao(aula)}>Editar aula</button>
+      <button className="btn btn-secondary" type="button" disabled={processando} onClick={() => setConfirmacao(aula)}>{aula.ativo === false ? 'Reabrir aula' : 'Arquivar aula'}</button>
+    </div>;
+  }
+
   return <LayoutAulas>
+    {erroAcao && <p className="mensagem-erro" role="alert">{erroAcao}</p>}
+    {mensagem && <p role="status">{mensagem}</p>}
+    {confirmacao && <ConfirmacaoModal titulo={confirmacao.ativo === false ? 'Reabrir aula' : 'Arquivar aula'} mensagem={confirmacao.ativo === false ? 'A aula voltará a ficar disponível aos alunos matriculados.' : 'A aula ficará indisponível para os alunos. Você poderá reabri-la depois.'} processando={processando} onCancelar={() => { if (!processando) setConfirmacao(null); }} onConfirmar={() => executar(() => confirmacao.ativo === false ? servico.reabrirAula(confirmacao.id) : servico.arquivarAula(confirmacao.id), confirmacao.ativo === false ? 'Aula reaberta.' : 'Aula arquivada.')} />}
     <nav className="acoes-topico" aria-label="Navegação dos cursos">
-      <Link className="btn btn-secondary" to="/administracao">← Administração</Link>
       <Link className="btn btn-link" to="/administracao/cursos">Cursos</Link>
       {dados?.curso ? <Link className="btn btn-link" to={`/administracao/cursos/${idCurso}`}>→ {dados.curso.titulo}</Link> : null}
     </nav>
@@ -63,7 +98,8 @@ function ConsultaAulas({ idCurso, idAula }) {
         </article>)}
         </div>
       </> : null}
-      {dados.aula ? <section className="card">
+      {dados.aula ? editando ? formulario(dados.aula) : <section className="card aulas-detalhe">
+        <p className="aulas-etiqueta">{dados.aula.ativo === false ? 'Arquivada' : 'Disponível'}</p>{acoes(dados.aula)}
         <PlayerAula videoId={dados.aula.youtubeVideoId} />
         <p className="content-text">{dados.aula.descricao}</p>
       </section> : dados.curso ? <>
@@ -73,9 +109,11 @@ function ConsultaAulas({ idCurso, idAula }) {
           <header className="aulas-modulo-cabecalho"><span className="aulas-numero">{String(modulo.ordem).padStart(2, '0')}</span><div><span className="aulas-etiqueta">Módulo · {modulo.aulas.length} aulas</span><h2 className="topic-title">{modulo.titulo}</h2></div></header>
           <p className="content-text">{modulo.descricao}</p>
           {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível.</p> : null}
-          {modulo.aulas.map((aula) => <div className="aulas-linha" key={aula.id}>
-            <div><span className="aulas-etiqueta">Aula {aula.ordem}</span><h3>{aula.titulo}</h3></div>
-            <Link className="btn btn-secondary" to={`/administracao/cursos/${idCurso}/aulas/${aula.id}`}>Visualizar aula</Link>
+          {modulo.aulas.map((aula) => <div key={aula.id}>
+            {editando?.id === aula.id ? formulario(aula) : <div className="aulas-linha">
+            <div><span className="aulas-etiqueta">Aula {aula.ordem}{aula.ativo === false ? ' · Arquivada' : ''}</span><h3>{aula.titulo}</h3></div>
+            <Link className="btn btn-secondary" to={`/administracao/cursos/${idCurso}/aulas/${aula.id}`}>Visualizar aula</Link>{acoes(aula)}
+          </div>}
           </div>)}
         </section>)}
       </> : null}
