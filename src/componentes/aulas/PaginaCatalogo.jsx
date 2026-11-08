@@ -1,18 +1,22 @@
+import { useAutenticacao } from '../../contextos/useAutenticacao';
 import PesquisaConteudo from './componentes/PesquisaConteudo';
 import { correspondeAoNome } from './servicos/pesquisaConteudo';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import LayoutAulas from './componentes/LayoutAulas';
 import EstadoCarregamento from './componentes/EstadoCarregamento';
 import useCarregamento from './hooks/useCarregamento';
 import * as servico from './servicos/servicoAluno';
 
-async function carregarCatalogo() {
-  const [cursos, matriculas] = await Promise.all([servico.listarCatalogo(), servico.listarMatriculas()]);
-  return { cursos, matriculas };
-}
 
 export default function PaginaCatalogo() {
+  const { autenticado, sessao } = useAutenticacao();
+  const aluno = autenticado && sessao?.perfil === 'ALUNO';
+  const carregarCatalogo = useCallback(async () => {
+    if (!aluno) return { cursos: await servico.listarCatalogoPublico(), matriculas: [] };
+    const [cursos, matriculas] = await Promise.all([servico.listarCatalogo(), servico.listarMatriculas()]);
+    return { cursos, matriculas };
+  }, [aluno]);
   const carga = useCarregamento(carregarCatalogo);
   const [novasMatriculas, setNovasMatriculas] = useState([]);
   const [somenteMatriculados, setSomenteMatriculados] = useState(false);
@@ -28,7 +32,7 @@ export default function PaginaCatalogo() {
   });
 
   async function matricular(curso) {
-    if (processando !== null) return;
+    if (!aluno || processando !== null) return;
     setProcessando(curso.id);
     setErro('');
     setMensagem('');
@@ -48,12 +52,12 @@ export default function PaginaCatalogo() {
       <span className="aulas-etiqueta">Sua jornada de aprendizagem</span>
     <div className="page-header">
       <h1 className="page-title">Cursos</h1>
-      <div className="page-actions">
+      {aluno && <div className="page-actions">
         <button className={somenteMatriculados ? 'btn btn-secondary' : 'btn btn-primary'} type="button" aria-pressed={!somenteMatriculados} onClick={() => setSomenteMatriculados(false)}>Catálogo</button>
         <button className={somenteMatriculados ? 'btn btn-primary' : 'btn btn-secondary'} type="button" aria-pressed={somenteMatriculados} onClick={() => setSomenteMatriculados(true)}>Minhas matrículas</button>
-      </div>
+      </div>}
     </div>
-      <p className="texto-suave">Explore os cursos gratuitos ou retome seus estudos nas suas matrículas.</p>
+      <p className="texto-suave">{autenticado ? 'Explore os cursos gratuitos ou retome seus estudos nas suas matrículas.' : 'Conheça os cursos disponíveis. Entre na sua conta para acessar módulos e aulas.'}</p>
     </header>
     {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
     {mensagem ? <p className="mensagem-sucesso" role="status">{mensagem}</p> : null}
@@ -72,7 +76,7 @@ export default function PaginaCatalogo() {
           </div>
           <footer className="aulas-cartao-acoes">
             <div className="acoes-topico">
-              {matriculado ? <Link className="btn btn-primary" to={`/aluno/cursos/${curso.id}`}>Acessar curso</Link> : <button className="btn btn-primary" type="button" disabled={processando !== null} onClick={() => matricular(curso)}>{processando === curso.id ? 'Matriculando...' : 'Matricular-se gratuitamente'}</button>}
+              {!autenticado ? <Link className="btn btn-primary" to="/login">Entrar para acessar</Link> : !aluno ? <Link className="btn btn-primary" to="/cursos">Ir para meus cursos</Link> : matriculado ? <Link className="btn btn-primary" to={`/aluno/cursos/${curso.id}`}>Acessar curso</Link> : <button className="btn btn-primary" type="button" disabled={processando !== null} onClick={() => matricular(curso)}>{processando === curso.id ? 'Matriculando...' : 'Matricular-se gratuitamente'}</button>}
             </div>
           </footer>
         </article>;
