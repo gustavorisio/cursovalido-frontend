@@ -1,3 +1,5 @@
+import PerfilAutor from './PerfilAutor';
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import ConfirmacaoModal from './ConfirmacaoModal';
 import FormularioComentario from './FormularioComentario';
@@ -16,6 +18,7 @@ function formatarData(valor) {
 }
 
 export default function DetalheTopico({
+  autenticado = true,
   topico,
   comentarios,
   podeGerenciarTopico,
@@ -60,10 +63,7 @@ export default function DetalheTopico({
               <span className="meta-label">Autor</span>
               <span className="meta-value">{topico.nomeAutor ?? topico.autor?.nome}</span>
             </div>
-            <div className="meta-group">
-              <span className="meta-label">Perfil</span>
-              <span className="meta-value">{topico.perfilAutor ?? topico.perfil ?? topico.nomePerfil ?? topico.autor?.perfil ?? topico.autor?.tipoPerfil ?? 'Não informado'}</span>
-            </div>
+            <PerfilAutor perfil={topico.perfilAutor ?? topico.perfil ?? topico.nomePerfil ?? topico.autor?.perfil ?? topico.autor?.tipoPerfil} />
             <div className="meta-group">
               <span className="meta-label">Publicado em</span>
               <span className="meta-value">{formatarData(topico.criadoEm)}</span>
@@ -107,7 +107,7 @@ export default function DetalheTopico({
         onEditar={onEditarComentario}
       />
 
-      {comentariosBloqueados ? <p className="mensagem-erro" role="status">Você está temporária ou permanentemente impedido de enviar comentários. Consulte a restrição no cabeçalho.</p> : !topico.fechado ? (
+      {!autenticado ? <p className="card">Faça login para responder e participar. <Link to="/login">Entrar</Link></p> : comentariosBloqueados ? <p className="mensagem-erro" role="status">Você está temporária ou permanentemente impedido de enviar comentários. Consulte a restrição no cabeçalho.</p> : !topico.fechado ? (
         <FormularioComentario
           texto={textoComentario}
           onMudarTexto={onMudarComentario}
