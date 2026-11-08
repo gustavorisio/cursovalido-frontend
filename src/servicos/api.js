@@ -47,7 +47,10 @@ export async function requisitar(caminho, opcoes = {}) {
   try {
     resposta = await fetch(`${URL_API}${caminho}`, { ...opcoesFetch, headers: cabecalhos });
   } catch {
-    throw new ErroApi(0, 'Não foi possível conectar ao servidor.');
+    if (opcoesFetch.signal?.aborted) {
+      throw new ErroApi(0, 'O tempo de espera terminou. Tente novamente em instantes.', { codigo: 'TEMPO_ESGOTADO' });
+    }
+    throw new ErroApi(0, 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.', { codigo: 'FALHA_CONEXAO' });
   }
 
   if (!semAutenticacao) {
@@ -73,6 +76,20 @@ export async function requisitar(caminho, opcoes = {}) {
   }
 
   if (!resposta.ok) {
+    const mensagensServico = {
+      LIMITE_SUPORTE_ATINGIDO: 'Já existe uma solicitação recente para este IP ou e-mail. Aguarde 24 horas após o último envio para enviar novamente.',
+      SUPORTE_INDISPONIVEL: 'O suporte está temporariamente indisponível. Tente novamente mais tarde.',
+      SERVICO_EMAIL_INDISPONIVEL: 'Não foi possível enviar o e-mail. Tente novamente em instantes.',
+    };
+    if (Object.hasOwn(mensagensServico, dados?.codigo)) {
+      throw new ErroApi(resposta.status, mensagensServico[dados.codigo], dados);
+    }
+    const contaExcluida = resposta.status === 409
+      && formatarMensagem(dados) === 'E-mail ou CPF bloqueado por 15 dias apos a exclusao da conta.';
+    if (contaExcluida) {
+      throw new ErroApi(resposta.status,
+        'O e-mail ou CPF informado está vinculado a uma conta excluída. Por isso, esses dados ficam bloqueados para novos cadastros por 15 dias após a exclusão.', dados);
+    }
     if (['EMAIL_JA_CADASTRADO', 'PERFIL_CONVITE_INVALIDO'].includes(dados?.codigo)) {
       throw new ErroApi(resposta.status, formatarMensagem(dados) ?? 'Não foi possível enviar o convite.', dados);
     }
