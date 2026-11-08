@@ -10,7 +10,7 @@ export default function RotaProtegida({ perfis }) {
   }
 
   if (perfis && !perfis.includes(sessao?.perfil)) {
-    return <Navigate to="/forum" replace />;
+    return <Navigate to="/cursos" replace />;
   }
 
   return <Outlet />;

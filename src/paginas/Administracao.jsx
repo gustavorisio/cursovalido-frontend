@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import CabecalhoForum from '../componentes/forum/componentes/CabecalhoForum';
 import ConfirmacaoModal from '../componentes/forum/componentes/ConfirmacaoModal';
 import Rodape from '../componentes/comuns/Rodape';
 import ModeracaoUsuarios from '../componentes/administracao/ModeracaoUsuarios';
+import VoltarAdministracao from '../componentes/administracao/VoltarAdministracao';
 import {
   aprovarConvite, buscarConvites, buscarConvitesPendentes, cancelarConvite,
   criarConvite, rejeitarConvite, removerPendenciaConvite, reenviarConvite,
@@ -11,6 +11,7 @@ import {
 } from '../servicos/servicoAutenticacao';
 import { buscarPermissoesAdministrativas, buscarUsuariosAdministrativos } from '../servicos/servicoAdministracao';
 import { useAutenticacao } from '../contextos/useAutenticacao';
+
 
 export default function Administracao({ tela = 'geral' }) {
   const { sessao } = useAutenticacao();
@@ -102,36 +103,31 @@ export default function Administracao({ tela = 'geral' }) {
     }, 'Publicar esta versão arquivará a atual e exigirá novo aceite na próxima autenticação. As sessões abertas continuarão funcionando. Deseja continuar?', 'Nova versão publicada. O novo aceite será solicitado na próxima autenticação.');
   }
 
-  return <div className="app-container"><CabecalhoForum /><main className="main-content administracao">
+  return <div className="app-container"><main className="main-content administracao">
+    {tela !== 'geral' && <VoltarAdministracao />}
     <section className="card configuracoes-conta administracao-cabecalho">
       <span className="administracao-etiqueta">Gestão da plataforma</span>
       <h1 className="page-title">{({ termos: 'Termos de Aceite', privacidade: 'Política de Privacidade', usuarios: 'Moderação de usuários', convites: 'Convites' })[tela] ?? 'Administração'}</h1>
-      {tela !== 'geral' ? <Link className="btn btn-secondary" to="/administracao">Voltar à administração</Link> : null}
       <p className="texto-suave">Administrador: {sessao?.nome}</p>
     </section>
     <nav className="administracao-navegacao" aria-label="Ferramentas administrativas">
-      <NavLink end to="/administracao">Visão geral</NavLink>
       <NavLink to="/administracao/usuarios">Usuários</NavLink>
-      <NavLink to="/administracao/cursos">Cursos e aulas</NavLink>
       {principal && <><NavLink to="/administracao/termos">Termos de Aceite</NavLink><NavLink to="/administracao/privacidade">Privacidade</NavLink><NavLink to="/administracao/convites">Convites</NavLink></>}
+      <NavLink to="/administracao/dashboard">Dashboard</NavLink>
     </nav>
     {erro ? <div className="mensagem-erro" role="alert">{erro}<div><button className="btn btn-secondary" type="button" disabled={carregando} onClick={() => { setErro(''); carregarDados(); }}>Tentar novamente</button></div></div> : null}
     {mensagem ? <div className="mensagem-sucesso" role="status">{mensagem}</div> : null}
     {carregando ? <p className="texto-suave" role="status">Carregando administração...</p> : <>
-      {tela === 'geral' ? <section className="card configuracoes-conta">
-        <h2 className="titulo-detalhe">Ferramentas administrativas</h2>
-        <p className="texto-suave">Escolha uma ferramenta para gerenciar a plataforma.</p>
-        <div className="administracao-ferramentas">
-          {[
-            { rota: 'usuarios', titulo: 'Moderação de usuários', descricao: 'Consulte contas, aplique restrições e acompanhe a equipe.' },
-            { rota: 'cursos', titulo: 'Cursos e aulas', descricao: 'Explore o catálogo, os módulos e as aulas publicados.' },
-            ...(principal ? [
-              { rota: 'termos', titulo: 'Termos de Aceite', descricao: 'Revise o documento vigente e publique novas versões.' },
-              { rota: 'privacidade', titulo: 'Política de Privacidade', descricao: 'Gerencie o documento e as informações sobre tratamento de dados.' },
-              { rota: 'convites', titulo: 'Convites', descricao: 'Convide a equipe e revise os cadastros que aguardam aprovação.' },
-            ] : []),
-          ].map((item) => <Link key={item.rota} className="administracao-ferramenta" to={'/administracao/' + item.rota}><h3>{item.titulo}<span aria-hidden="true">↗</span></h3><p>{item.descricao}</p><span className="administracao-abrir">Acessar ferramenta →</span></Link>)}
-        </div>
+      {tela === 'geral' ? <section className="card configuracoes-conta" aria-labelledby="perfil-administrador">
+        <h2 className="titulo-detalhe" id="perfil-administrador">Meu perfil administrativo</h2>
+        <p className="texto-suave">Dados do administrador conectado à plataforma.</p>
+        <dl className="administracao-perfil">
+          <div><dt>Nome</dt><dd>{sessao?.nome ?? 'Não informado'}</dd></div>
+          <div><dt>Perfil</dt><dd>Administrador</dd></div>
+          <div><dt>Identificação da conta</dt><dd>{sessao?.idUsuario ?? 'Não informada'}</dd></div>
+          <div><dt>Permissão administrativa</dt><dd>{principal ? 'Administrador principal' : 'Administrador'}</dd></div>
+        </dl>
+        <Link className="btn btn-secondary" to="/configuracoes">Configurações da minha conta</Link>
       </section> : null}
       {['termos', 'privacidade', 'convites'].includes(tela) && !principal ? <p className="mensagem-erro" role="alert">Esta tela está disponível apenas para o administrador principal.</p> : null}
       {principal ? <>

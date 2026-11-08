@@ -1,0 +1,33 @@
+.layout-adminlte[data-bs-theme] { --lte-sidebar-width: 250px; --bs-body-bg: var(--color-page); --bs-body-color: var(--color-brand-950); --bs-border-color: var(--color-line); color: var(--color-brand-950); background: var(--color-page); }
+.layout-adminlte .app-header, .layout-adminlte .app-sidebar, .layout-adminlte .app-footer { background: var(--color-surface); color: var(--color-brand-950); border-color: var(--color-line); }
+.layout-adminlte .app-main { background: var(--color-page); }
+.layout-adminlte .dashboard-retorno { padding: 24px 24px 0; }
+.layout-adminlte .administracao-retorno { margin-bottom: 0; }
+.layout-adminlte .app-content-header { padding: 24px 16px 0; }
+.layout-adminlte .app-content { padding: 0 16px 24px; }
+.layout-adminlte .app-header .container-fluid { gap: 16px; }
+.layout-adminlte .dashboard-conta { display: flex; align-items: center; gap: 16px; }
+.layout-adminlte .sidebar-brand { height: auto; padding: 24px; border-bottom: 1px solid var(--color-line); }
+.layout-adminlte .brand-link { color: #3fb950; }
+.layout-adminlte .dashboard-marca { display: block; color: var(--color-muted); font-size: .6rem; letter-spacing: .18em; margin-top: 6px; }
+.layout-adminlte .sidebar-wrapper { padding: 18px 12px; }
+.layout-adminlte .sidebar-menu .nav-link { color: var(--color-brand-950); padding: 12px; }
+.layout-adminlte .sidebar-menu .nav-link.active { background: #16321e; color: #3fb950; }
+.layout-adminlte .sidebar-menu .nav-link:hover { background: var(--color-hover); }
+.layout-adminlte .dashboard-sidebar-nota { color: var(--color-muted); padding: 32px 12px; font-size: .85rem; }
+.layout-adminlte .app-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.layout-adminlte .breadcrumb a { color: #58a6ff; }
+.layout-adminlte .dashboard-pular { position: absolute; top: -100px; z-index: 1100; background: var(--color-surface); padding: 16px; }
+.layout-adminlte .dashboard-pular:focus { top: 0; }
+.layout-adminlte .dashboard-menu-fundo { display: none; }
+@media (min-width: 992px) {
+  .layout-adminlte .app-header button[aria-controls] { display: none; }
+}
+@media (max-width: 991.98px) {
+  .layout-adminlte .app-wrapper { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'lte-app-header' 'lte-app-main' 'lte-app-footer'; }
+  .layout-adminlte .app-sidebar { display: none; }
+  .layout-adminlte.sidebar-open .app-sidebar { display: flex; position: fixed; inset: 0 auto 0 0; margin: 0; overflow-y: auto; z-index: 1040; }
+  .layout-adminlte .dashboard-menu-fundo { display: block; position: fixed; inset: 0; background: #0009; border: 0; z-index: 1039; }
+  .layout-adminlte .app-content, .layout-adminlte .app-content-header { padding-inline: 0; }
+  .layout-adminlte .dashboard-conta > span { display: none; }
+}
