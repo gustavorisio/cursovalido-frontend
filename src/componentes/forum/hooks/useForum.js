@@ -66,9 +66,8 @@ export function useForum() {
   }, [tratarErro, topicosBloqueados]);
 
   useEffect(() => {
-    if (!autenticado) return undefined;
     queueMicrotask(() => carregarTopicos(0));
-    buscarUsuarios().then(setUsuarios).catch(tratarErro);
+    if (autenticado) buscarUsuarios().then(setUsuarios).catch(tratarErro);
     return undefined;
   }, [autenticado, carregarTopicos, tratarErro]);
 
@@ -85,20 +84,20 @@ export function useForum() {
   }
 
   async function salvarTopico(titulo, descricao) {
-    if (topicosBloqueados) return null;
+    if (!autenticado || topicosBloqueados) return null;
     try { const novo = await criarTopico({ titulo, descricao }); await carregarTopicos(pagina); return novo; }
     catch (erro) { tratarErro(erro); return null; }
   }
 
   async function salvarComentario(texto) {
-    if (comentariosBloqueados) return false;
+    if (!autenticado || comentariosBloqueados) return false;
     if (!topicoSelecionado || topicoSelecionado.fechado) return false;
     try { await criarComentario(topicoSelecionado.id, texto); await carregarComentarios(topicoSelecionado.id); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
   function ehAutor(item) {
-    return Number(idDoAutor(item)) === Number(sessao?.idUsuario ?? sessao?.id);
+    return autenticado && Number(idDoAutor(item)) === Number(sessao?.idUsuario ?? sessao?.id);
   }
   function podeEditarTopico(topico) {
     if (topicosBloqueados) return false;
@@ -108,8 +107,8 @@ export function useForum() {
     if (comentariosBloqueados) return false;
     return ehAutor(comentario);
   }
-  function ehAdministrador() { return ['ADMINISTRADOR', 'ADMIN', 'ROLE_ADMIN'].includes(sessao?.perfil); }
-  function ehProfessor() { return ['PROFESSOR', 'PROF', 'ROLE_PROFESSOR'].includes(sessao?.perfil); }
+  function ehAdministrador() { return autenticado && ['ADMINISTRADOR', 'ADMIN', 'ROLE_ADMIN'].includes(sessao?.perfil); }
+  function ehProfessor() { return autenticado && ['PROFESSOR', 'PROF', 'ROLE_PROFESSOR'].includes(sessao?.perfil); }
   function podeGerenciarTopico(topico) { return !topicosBloqueados && (ehAdministrador() || ehAutor(topico)); }
   function podeArquivarTopico(topico) { return !topicosBloqueados && (ehAdministrador() || (ehProfessor() && ehAutor(topico))); }
   function podeApagarTopico() { return !topicosBloqueados && ehAdministrador(); }
@@ -162,7 +161,7 @@ export function useForum() {
 
   return {
     topicosBloqueados, comentariosBloqueados,
-    sessao, topicos, usuarios, pagina, totalPaginas, carregando, topicoSelecionado, comentarios, mensagemErro,
+    autenticado, sessao, topicos, usuarios, pagina, totalPaginas, carregando, topicoSelecionado, comentarios, mensagemErro,
     limparMensagem: () => setMensagemErro(''), carregarTopicos, selecionarTopico, salvarTopico, salvarComentario,
     editarTopico, editarComentario, excluirTopico, fecharTopicoSelecionado, arquivarTopicoSelecionado,
     excluirComentarioSelecionado, podeGerenciarTopico, podeArquivarTopico, podeEditarTopico, podeEditarComentario, podeApagarTopico, podeExcluirComentario

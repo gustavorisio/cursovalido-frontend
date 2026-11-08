@@ -1,17 +1,21 @@
+import { useAutenticacao } from './useAutenticacao';
 import { useCallback, useEffect, useState } from 'react';
 import { buscarMinhasRestricoes } from '../servicos/servicoAdministracao';
 
 export function useRestricoes() {
+  const { autenticado } = useAutenticacao();
   const [restricoes, setRestricoes] = useState([]);
   const carregar = useCallback(async () => {
+    if (!autenticado) return;
     try {
       setRestricoes(await buscarMinhasRestricoes());
     } catch {
       // O servidor continua validando cada operação, mesmo se esta consulta falhar.
     }
-  }, []);
+  }, [autenticado]);
 
   useEffect(() => {
+    if (!autenticado) return;
     queueMicrotask(carregar);
     function atualizarAoVoltar() {
       if (document.visibilityState === 'visible') carregar();
@@ -24,10 +28,10 @@ export function useRestricoes() {
       window.removeEventListener('curso-valido-restricoes-alteradas', carregar);
       document.removeEventListener('visibilitychange', atualizarAoVoltar);
     };
-  }, [carregar]);
+  }, [carregar, autenticado]);
 
   function bloqueado(escopo) {
-    return restricoes.some((item) => {
+    return autenticado && restricoes.some((item) => {
       if (item.expiraEm) {
         if (new Date(item.expiraEm).getTime() <= Date.now()) return false;
       }
@@ -40,5 +44,5 @@ export function useRestricoes() {
     });
   }
 
-  return { restricoes, bloqueado };
+  return { restricoes: autenticado ? restricoes : [], bloqueado };
 }
