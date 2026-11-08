@@ -29,7 +29,7 @@ export default function Login() {
     return () => window.clearInterval(temporizador);
   }, [segundosReenvio2fa]);
 
-  if (autenticado) return <Navigate to="/forum" replace />;
+  if (autenticado) return <Navigate to="/cursos" replace />;
 
   function alterar(campo, valor) {
     setDados((atuais) => ({ ...atuais, [campo]: valor }));
@@ -63,7 +63,7 @@ export default function Login() {
         }
       } else {
         await validarCodigo2fa(dados.email, codigo);
-        navegar(localizacao.state?.de || '/forum', { replace: true });
+        navegar('/cursos', { replace: true });
       }
     } catch (falha) {
       if (falha.codigo === 'EMAIL_NAO_CONFIRMADO') {

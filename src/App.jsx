@@ -1,5 +1,8 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import Cabecalho from './componentes/comuns/Cabecalho';
+import PaginaSuporte from './componentes/suporte/PaginaSuporte';
+import InicioCursos from './componentes/aulas/InicioCursos';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, matchPath } from 'react-router-dom';
 import PaginaForum from './componentes/forum/PaginaForum';
 import PaginaGestaoCursos from './componentes/aulas/PaginaGestaoCursos';
 import PaginaCatalogo from './componentes/aulas/PaginaCatalogo';
@@ -20,6 +23,59 @@ import CadastroConvite from './paginas/CadastroConvite';
 import RotaProtegida from './componentes/autenticacao/RotaProtegida';
 import { AutenticacaoProvedor } from './contextos/ContextoAutenticacao';
 
+const Dashboard = lazy(() => import('./paginas/Dashboard'));
+const Noticias = lazy(() => import('./paginas/Noticias'));
+const Noticia = lazy(() => import('./paginas/Noticia'));
+const EditorNoticia = lazy(() => import('./paginas/EditorNoticia'));
+
+const titulosPaginas = [
+  ['/', 'Início'],
+  ['/login', 'Login'],
+  ['/cadastro', 'Cadastro'],
+  ['/convites/cadastro', 'Cadastro por convite'],
+  ['/confirmacao-email', 'Confirmação de email'],
+  ['/solicitar-alteracao-senha', 'Recuperar senha'],
+  ['/redefinir-senha', 'Redefinir senha'],
+  ['/termos', 'Termos de uso'],
+  ['/termos-aceite', 'Aceite dos termos'],
+  ['/termos-aceite.html', 'Aceite dos termos'],
+  ['/privacidade', 'Política de privacidade'],
+  ['/politica-privacidade.html', 'Política de privacidade'],
+  ['/configuracoes', 'Configurações'],
+  ['/administracao', 'Administração'],
+  ['/administracao/dashboard', 'Dashboard'],
+  ['/administracao/termos', 'Administrar termos'],
+  ['/administracao/privacidade', 'Administrar privacidade'],
+  ['/administracao/usuarios', 'Usuários'],
+  ['/administracao/convites', 'Convites'],
+  ['/administracao/cursos/:idCurso/aulas/:idAula', 'Administrar aula'],
+  ['/administracao/cursos/*', 'Administrar cursos'],
+  ['/professor/cursos/:idCurso/modulos/:idModulo/aulas', 'Gerenciar aulas'],
+  ['/professor/cursos/:idCurso/modulos', 'Gerenciar módulos'],
+  ['/professor/cursos', 'Gerenciar cursos'],
+  ['/aluno/cursos/:idCurso/aulas/:idAula', 'Aula'],
+  ['/aluno/cursos/:idCurso', 'Curso'],
+  ['/aluno/cursos', 'Catálogo de cursos'],
+  ['/cursos', 'Cursos'],
+  ['/suporte', 'Suporte'],
+  ['/forum', 'Fórum'],
+  ['/noticias/nova', 'Publicar notícia'],
+  ['/noticias/:id/editar', 'Editar notícia'],
+  ['/noticias/:id', 'Notícia'],
+  ['/noticias', 'Notícias'],
+];
+
+function TituloPagina() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const pagina = titulosPaginas.find(([caminho]) => matchPath(caminho, pathname))?.[1] ?? 'Início';
+    document.title = `Curso Valido - ${pagina}`;
+  }, [pathname]);
+
+  return null;
+}
+
 function RedirecionarTermosPendentes() {
   const navegar = useNavigate();
 
@@ -37,8 +93,9 @@ function RedirecionarTermosPendentes() {
 export default function App() {
   return (
     <BrowserRouter>
+      <TituloPagina />
       <div className="min-h-screen bg-page">
-        <AutenticacaoProvedor><RedirecionarTermosPendentes /><Routes>
+        <AutenticacaoProvedor><Cabecalho /><RedirecionarTermosPendentes /><Suspense fallback={<p role="status" className="main-content">Carregando página...</p>}><Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
@@ -51,8 +108,11 @@ export default function App() {
           <Route path="/termos-aceite.html" element={<TermosDeUso />} />
           <Route path="/privacidade" element={<PoliticaDePrivacidade />} />
           <Route path="/politica-privacidade.html" element={<PoliticaDePrivacidade />} />
-          <Route element={<RotaProtegida />}><Route path="/forum" element={<PaginaForum />} /><Route path="/configuracoes" element={<Configuracoes />} /></Route>
+          <Route element={<RotaProtegida />}><Route path="/configuracoes" element={<Configuracoes />} /></Route>
           <Route element={<RotaProtegida perfis={['ADMINISTRADOR']} />}>
+            <Route path="/administracao/dashboard" element={<Dashboard />} />
+            <Route path="/noticias/nova" element={<EditorNoticia />} />
+            <Route path="/noticias/:id/editar" element={<EditorNoticia />} />
             <Route path="/administracao" element={<Administracao key="geral" />} />
             <Route path="/administracao/termos" element={<Administracao key="termos" tela="termos" />} />
             <Route path="/administracao/privacidade" element={<Administracao key="privacidade" tela="privacidade" />} />
@@ -73,7 +133,12 @@ export default function App() {
             <Route path="/aluno/cursos/:idCurso" element={<PaginaCursoAluno />} />
             <Route path="/aluno/cursos/:idCurso/aulas/:idAula" element={<PaginaAulaAluno />} />
           </Route>
-        </Routes></AutenticacaoProvedor>
+          <Route path="/cursos" element={<InicioCursos />} />
+          <Route path="/suporte" element={<PaginaSuporte />} />
+          <Route path="/forum" element={<PaginaForum />} />
+            <Route path="/noticias" element={<Noticias />} />
+            <Route path="/noticias/:id" element={<Noticia />} />
+        </Routes></Suspense></AutenticacaoProvedor>
       </div>
     </BrowserRouter>
   );
