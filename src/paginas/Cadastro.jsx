@@ -3,14 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormularioCadastro from '../componentes/autenticacao/FormularioCadastro';
 import Rodape from '../componentes/comuns/Rodape';
 import { buscarPoliticaAtiva, cadastrarUsuario } from '../servicos/servicoAutenticacao';
-import { validarIdade } from './validacoesCadastro';
+import { validarIdade, validarCpf } from './validacoesCadastro';
 
 const VALOR_PADRAO = {
-  nomeCompleto: '', email: '', senha: '', cpf: '', dataNascimento: '', telefone: '',
+  nomeCompleto: '', email: '', senha: '', cpf: '', dataNascimento: '',
   declarouMaiorIdade: false,
   aceitouTermosLgpd: false, versaoTermos: ''
 };
-const CAMPOS_OBRIGATORIOS = ['nomeCompleto', 'email', 'senha', 'cpf', 'dataNascimento', 'telefone'];
+const CAMPOS_OBRIGATORIOS = ['nomeCompleto', 'email', 'senha', 'cpf', 'dataNascimento'];
 
 export default function Cadastro() {
   const navegar = useNavigate();
@@ -24,7 +24,7 @@ export default function Cadastro() {
   const [cadastroConcluido, setCadastroConcluido] = useState(false);
   const idade = validarIdade(dados.dataNascimento);
   const formularioValido = useMemo(() => CAMPOS_OBRIGATORIOS.every((campo) => String(dados[campo]).trim())
-    && dados.senha.length >= 8 && idade >= 18 && dados.declarouMaiorIdade && dados.aceitouTermosLgpd && Boolean(dados.versaoTermos) && !carregandoPolitica, [dados, idade, carregandoPolitica]);
+    && validarCpf(dados.cpf) && dados.senha.length >= 8 && idade >= 18 && dados.declarouMaiorIdade && dados.aceitouTermosLgpd && Boolean(dados.versaoTermos) && !carregandoPolitica, [dados, idade, carregandoPolitica]);
 
   async function carregarPolitica() {
     setCarregandoPolitica(true);
@@ -61,7 +61,9 @@ export default function Cadastro() {
 
   async function enviar(evento) {
     evento.preventDefault();
-    if (idade < 18) { setErro('A plataforma Curso Válido é exclusiva para maiores de 18 anos.'); return; }
+    if (carregando) return;
+    if (!validarCpf(dados.cpf)) { setErro('Informe um CPF válido, com os dígitos verificadores corretos.'); return; }
+    if (idade < 18) { setErro('A plataforma Curso Válido é destinada a pessoas com 18 anos ou mais.'); return; }
     if (!politica?.versao) { setErro('A versão atual dos documentos ainda não foi carregada.'); return; }
     if (!formularioValido) { setErro('Preencha todos os campos obrigatórios e aceite os termos.'); return; }
     setCarregando(true); setErro('');

@@ -77,6 +77,8 @@ export async function requisitar(caminho, opcoes = {}) {
 
   if (!resposta.ok) {
     const mensagensServico = {
+      CPF_DADOS_INVALIDOS: 'Não foi possível confirmar o CPF e a data de nascimento. Confira os dados informados.',
+      CPF_CONSULTA_INDISPONIVEL: 'A consulta cadastral está indisponível. Tente novamente mais tarde. Seu cadastro não foi concluído.',
       LIMITE_SUPORTE_ATINGIDO: 'Já existe uma solicitação recente para este IP ou e-mail. Aguarde 24 horas após o último envio para enviar novamente.',
       SUPORTE_INDISPONIVEL: 'O suporte está temporariamente indisponível. Tente novamente mais tarde.',
       SERVICO_EMAIL_INDISPONIVEL: 'Não foi possível enviar o e-mail. Tente novamente em instantes.',
