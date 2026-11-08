@@ -43,7 +43,6 @@ export default function DadosUsuario({ desabilitado = false }) {
         <div><dt>Nome</dt><dd>{dados.nomeCompleto || 'Não informado'}</dd></div>
         <div><dt>E-mail</dt><dd>{ocultarEmail(dados.email)}</dd></div>
         <div><dt>Data de nascimento</dt><dd>{dados.dataNascimento ? dados.dataNascimento.split('-').reverse().join('/') : 'Não informada'}</dd></div>
-        <div><dt>Telefone</dt><dd>{dados.telefone || 'Não informado'}</dd></div>
       </dl>
     </>}
   </section>;
