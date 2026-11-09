@@ -120,7 +120,7 @@ function GestaoConteudo({ idCurso, idModulo }) {
   }
 
   return <div className="app-container">
-    
+
     <main className="main-content pagina-aulas">
       <nav className="acoes-topico" aria-label="Navegação dos cursos">
         <Link className="btn btn-link" to="/professor/cursos">Meus cursos</Link>
@@ -133,7 +133,7 @@ function GestaoConteudo({ idCurso, idModulo }) {
         <header className="aulas-apresentacao">
           <span className="aulas-etiqueta">Área do professor · Gestão de conteúdo</span>
           <div className="page-header"><h1 className="page-title">{titulo}</h1>
-          <button className="btn btn-primary" type="button" disabled={carregando ? true : falhaCarga ? true : processando} onClick={() => abrirFormulario()}>Cadastrar {nome}</button>
+            <button className="btn btn-primary" type="button" disabled={carregando ? true : falhaCarga ? true : processando} onClick={() => abrirFormulario()}>Cadastrar {nome}</button>
           </div>
           <p className="texto-suave">{tipo === 'curso' ? 'Organize seus cursos e crie uma jornada de aprendizagem.' : tipo === 'modulo' ? 'Organize os módulos na sequência em que devem ser estudados.' : 'Adicione vídeos e organize as aulas deste módulo.'}</p>
         </header>
@@ -142,22 +142,22 @@ function GestaoConteudo({ idCurso, idModulo }) {
           {itens.length === 0 ? <div className="card empty-list">Nenhum conteúdo cadastrado. Cadastre o primeiro {nome}.</div> : null}
           {itens.length > 0 && !itens.some((item) => correspondeAoNome(item.titulo, busca)) && <p className="card empty-list" role="status">Nenhum conteúdo encontrado para esta pesquisa.</p>}
           <div className="aulas-grade">
-          {itens.filter((item) => correspondeAoNome(item.titulo, busca)).map((item) => <article className="card aulas-cartao" key={item.id}>
-            <span className="aulas-etiqueta">{nome}{tipo === 'curso' ? '' : ` ${item.ordem}`}</span>
-            <div className="aulas-cartao-corpo">
-              <h2 className="topic-title">{item.titulo}</h2>
-              <p className="content-text">{item.descricao}</p>
-              {tipo === 'aula' ? <p className="texto-suave">Vídeo: <a href={`https://www.youtube.com/watch?v=${item.youtubeVideoId}`} target="_blank" rel="noreferrer">Abrir no YouTube ↗</a></p> : null}
-            </div>
-            <footer className="aulas-cartao-acoes">
-              <div className="acoes-topico">
-                {tipo === 'curso' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${item.id}/modulos`}>Ver módulos</Link> : null}
-                {tipo === 'modulo' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${idCurso}/modulos/${item.id}/aulas`}>Ver aulas</Link> : null}
-                <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => abrirFormulario(item)}>Editar</button>
-                <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => setExcluindo(item)}>Excluir</button>
+            {itens.filter((item) => correspondeAoNome(item.titulo, busca)).map((item) => <article className="card aulas-cartao" key={item.id}>
+              <span className="aulas-etiqueta">{nome}{tipo === 'curso' ? '' : ` ${item.ordem}`}</span>
+              <div className="aulas-cartao-corpo">
+                <h2 className="topic-title">{item.titulo}</h2>
+                <p className="content-text">{item.descricao}</p>
+                {tipo === 'aula' ? <p className="texto-suave">Vídeo: <a href={`https://www.youtube.com/watch?v=${item.youtubeVideoId}`} target="_blank" rel="noreferrer">Abrir no YouTube ↗</a></p> : null}
               </div>
-            </footer>
-          </article>)}
+              <footer className="aulas-cartao-acoes">
+                <div className="acoes-topico">
+                  {tipo === 'curso' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${item.id}/modulos`}>Ver módulos</Link> : null}
+                  {tipo === 'modulo' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${idCurso}/modulos/${item.id}/aulas`}>Ver aulas</Link> : null}
+                  <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => abrirFormulario(item)}>Editar</button>
+                  <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => setExcluindo(item)}>Excluir</button>
+                </div>
+              </footer>
+            </article>)}
           </div>
         </>}
       </>}

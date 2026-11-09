@@ -55,7 +55,7 @@ test('carregamento do YouTube compartilha script, permite retry e reutiliza API 
     await timeout;
 
     const terceira = carregarYoutube();
-    window.YT = { Player: function Player() {} };
+    window.YT = { Player: function Player() { } };
     window.onYouTubeIframeAPIReady();
     assert.equal(await terceira, window.YT);
     assert.equal(await carregarYoutube(), window.YT);

@@ -4,7 +4,7 @@ export function criarFilaProgresso() {
   let anterior = Promise.resolve();
   return function executar(operacao) {
     const resultado = anterior.then(operacao);
-    anterior = resultado.catch(() => {});
+    anterior = resultado.catch(() => { });
     return resultado;
   };
 }

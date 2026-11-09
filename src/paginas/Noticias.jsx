@@ -34,7 +34,7 @@ export default function Noticias() {
   const pagina = Number.isSafeInteger(numeroPagina) && numeroPagina >= 0 ? numeroPagina : 0;
   const [textoBusca, setTextoBusca] = useState(busca);
   return <LayoutNoticias>
-    
+
     <div className="noticias-barra"><h1>Noticias - Últimas publicações</h1>{sessao?.perfil === 'ADMINISTRADOR' && <Link className="btn btn-primary" to="/noticias/nova">Publicar notícia +</Link>}<form role="search" onSubmit={(evento) => { evento.preventDefault(); setParametros(textoBusca.trim() ? { busca: textoBusca.trim() } : {}); }}><label className="sr-only" htmlFor="buscar-noticias">Buscar notícias</label><input id="buscar-noticias" type="search" maxLength={255} placeholder="Busque uma notícia…" value={textoBusca} onChange={(evento) => setTextoBusca(evento.target.value)} /><button type="submit" className="btn btn-secondary">Buscar</button>{busca && <button type="button" className="btn btn-secondary" onClick={() => { setTextoBusca(''); setParametros({}); }}>Limpar</button>}</form></div>
     {busca && <p className="texto-suave">Resultados para “{busca}”</p>}
     <ListaNoticias key={`${pagina}:${busca}`} pagina={pagina} busca={busca} mudarPagina={(valor) => setParametros({ ...(busca ? { busca } : {}), pagina: String(valor) })} />
