@@ -52,7 +52,7 @@ test('modal mantém foco, cancela com Escape e bloqueia ações durante envio', 
 test('documentos usam mesma navegação e estrutura com conteúdo próprio', async () => {
   const estruturas = [];
   for (const tipo of ['termos', 'privacidade']) {
-    await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Documento, { tipo, versao: '1.0', dataPublicacao: '', onVoltar() {}, onRecarregar() {} }))));
+    await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Documento, { tipo, versao: '1.0', dataPublicacao: '', onVoltar() { }, onRecarregar() { } }))));
     const nav = document.querySelector('nav');
     assert.equal(nav.querySelector('button').textContent, '← Voltar');
     assert.equal(nav.querySelector('a').className, 'btn btn-secondary');

@@ -11,17 +11,21 @@ export default function GraficoDashboard({ tipo, rotulos, valores, titulo, horiz
       type: tipo,
       data: {
         labels: rotulos,
-        datasets: [{ label: titulo, data: valores, borderColor: '#58a6ff',
-          backgroundColor: tipo === 'doughnut' ? cores : '#58a6ff80', borderWidth: 2, tension: 0.25, fill: tipo === 'line' }],
+        datasets: [{
+          label: titulo, data: valores, borderColor: '#58a6ff',
+          backgroundColor: tipo === 'doughnut' ? cores : '#58a6ff80', borderWidth: 2, tension: 0.25, fill: tipo === 'line'
+        }],
       },
       options: {
         responsive: true, maintainAspectRatio: false, indexAxis: horizontal ? 'y' : 'x',
         animation: globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? false : undefined,
         plugins: { legend: { display: tipo === 'doughnut', labels: { color: '#e6edf3' } } },
-        ...(tipo === 'doughnut' ? {} : { scales: {
-          [horizontal ? 'x' : 'y']: { beginAtZero: true, ticks: { precision: 0, color: '#c9d1d9' }, grid: { color: '#30363d' } },
-          [horizontal ? 'y' : 'x']: { ticks: { color: '#c9d1d9' }, grid: { display: false } },
-        } }),
+        ...(tipo === 'doughnut' ? {} : {
+          scales: {
+            [horizontal ? 'x' : 'y']: { beginAtZero: true, ticks: { precision: 0, color: '#c9d1d9' }, grid: { color: '#30363d' } },
+            [horizontal ? 'y' : 'x']: { ticks: { color: '#c9d1d9' }, grid: { display: false } },
+          }
+        }),
       },
     });
     return () => grafico.destroy();

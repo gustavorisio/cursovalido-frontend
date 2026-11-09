@@ -136,14 +136,14 @@ export default function Administracao({ tela = 'geral' }) {
       {['termos', 'privacidade', 'convites'].includes(tela) && !principal ? <p className="mensagem-erro" role="alert">Esta tela está disponível apenas para o administrador principal.</p> : null}
       {principal ? <>
         {tela === 'convites' ? <>
-        <section className="card configuracoes-conta">
-          <h2 className="titulo-detalhe">Convidar professor ou administrador</h2>
-          <form className="formulario-publico" onSubmit={convidar}>
-            <label>E-mail<input required type="email" maxLength={254} value={email} onChange={(evento) => setEmail(evento.target.value)} /></label>
-            <label>Perfil<select value={perfil} onChange={(evento) => setPerfil(evento.target.value)}><option value="PROFESSOR">Professor</option><option value="ADMINISTRADOR">Administrador</option></select></label>
-            <button className="btn btn-primary" disabled={processando}>{processando ? 'Enviando...' : 'Enviar convite'}</button>
-          </form>
-        </section>
+          <section className="card configuracoes-conta">
+            <h2 className="titulo-detalhe">Convidar professor ou administrador</h2>
+            <form className="formulario-publico" onSubmit={convidar}>
+              <label>E-mail<input required type="email" maxLength={254} value={email} onChange={(evento) => setEmail(evento.target.value)} /></label>
+              <label>Perfil<select value={perfil} onChange={(evento) => setPerfil(evento.target.value)}><option value="PROFESSOR">Professor</option><option value="ADMINISTRADOR">Administrador</option></select></label>
+              <button className="btn btn-primary" disabled={processando}>{processando ? 'Enviando...' : 'Enviar convite'}</button>
+            </form>
+          </section>
         </> : null}
         {['termos', 'privacidade'].includes(tela) ? <section className="card configuracoes-conta">
           <h2 className="titulo-detalhe">{tela === 'privacidade' ? 'Editar política de privacidade' : 'Editar termos'}</h2>
@@ -157,29 +157,29 @@ export default function Administracao({ tela = 'geral' }) {
           </form>
         </section> : null}
         {tela === 'convites' ? <>
-        <section className="card configuracoes-conta">
-          <h2 className="titulo-detalhe">Convites enviados</h2>
-          {convites.length === 0 ? <p className="texto-suave">Nenhum convite pendente.</p> : null}
-          {convites.map((convite) => <div className="post-heading administracao-registro" key={convite.id}>
-            <p>{convite.email} · {convite.perfil} · {convite.status}</p>
-            <div className="acoes-topico">
-              <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => reenviarConvite(convite.id), 'Reenviar o convite? O link anterior deixará de funcionar.', 'Convite reenviado.')}>Reenviar</button>
-              <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => solicitar(() => cancelarConvite(convite.id), 'Cancelar este convite?', 'Convite cancelado.')}>Cancelar</button>
-            </div>
-          </div>)}
-        </section>
-        <section className="card configuracoes-conta">
-          <h2 className="titulo-detalhe">Cadastros aguardando aprovação</h2>
-          {pendentes.length === 0 ? <p className="texto-suave">Nenhum cadastro pendente.</p> : null}
-          {pendentes.map((item) => <div className="post-heading administracao-registro" key={item.id}>
-            <p>{item.nomeCompleto ?? item.email} · {item.email} · {item.perfil}</p>
-            <div className="acoes-topico">
-              <button className="btn btn-primary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => aprovarConvite(item.id), 'Aprovar este cadastro?', 'Cadastro aprovado.')}>Aprovar</button>
-              <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => rejeitarConvite(item.id), 'Rejeitar este cadastro?', 'Cadastro rejeitado.')}>Rejeitar</button>
-              <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => solicitar(() => removerPendenciaConvite(item.id), 'Remover esta pendência?', 'Pendência removida.')}>Remover</button>
-            </div>
-          </div>)}
-        </section>
+          <section className="card configuracoes-conta">
+            <h2 className="titulo-detalhe">Convites enviados</h2>
+            {convites.length === 0 ? <p className="texto-suave">Nenhum convite pendente.</p> : null}
+            {convites.map((convite) => <div className="post-heading administracao-registro" key={convite.id}>
+              <p>{convite.email} · {convite.perfil} · {convite.status}</p>
+              <div className="acoes-topico">
+                <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => reenviarConvite(convite.id), 'Reenviar o convite? O link anterior deixará de funcionar.', 'Convite reenviado.')}>Reenviar</button>
+                <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => solicitar(() => cancelarConvite(convite.id), 'Cancelar este convite?', 'Convite cancelado.')}>Cancelar</button>
+              </div>
+            </div>)}
+          </section>
+          <section className="card configuracoes-conta">
+            <h2 className="titulo-detalhe">Cadastros aguardando aprovação</h2>
+            {pendentes.length === 0 ? <p className="texto-suave">Nenhum cadastro pendente.</p> : null}
+            {pendentes.map((item) => <div className="post-heading administracao-registro" key={item.id}>
+              <p>{item.nomeCompleto ?? item.email} · {item.email} · {item.perfil}</p>
+              <div className="acoes-topico">
+                <button className="btn btn-primary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => aprovarConvite(item.id), 'Aprovar este cadastro?', 'Cadastro aprovado.')}>Aprovar</button>
+                <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => solicitar(() => rejeitarConvite(item.id), 'Rejeitar este cadastro?', 'Cadastro rejeitado.')}>Rejeitar</button>
+                <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => solicitar(() => removerPendenciaConvite(item.id), 'Remover esta pendência?', 'Pendência removida.')}>Remover</button>
+              </div>
+            </div>)}
+          </section>
         </> : null}
       </> : null}
       {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios} processando={processando} onExecutar={solicitar} /> : null}

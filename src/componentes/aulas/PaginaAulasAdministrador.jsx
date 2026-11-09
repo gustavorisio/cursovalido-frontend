@@ -88,14 +88,14 @@ function ConsultaAulas({ idCurso, idAula }) {
       {dados.cursos ? <>
         {cursos.length === 0 ? <div className="card empty-list">Nenhum curso encontrado.</div> : null}
         <div className="aulas-grade">
-        {cursos.map((curso) => <article className="card aulas-cartao" key={curso.id}>
-          <span className="aulas-etiqueta">Curso</span>
-          <div className="aulas-cartao-corpo">
-            <h2 className="topic-title">{curso.titulo}</h2>
-            <p className="content-text">{curso.descricao}</p>
-          </div>
-          <footer className="aulas-cartao-acoes"><Link className="btn btn-primary" to={`/administracao/cursos/${curso.id}`}>Ver módulos e aulas <span aria-hidden="true">→</span></Link></footer>
-        </article>)}
+          {cursos.map((curso) => <article className="card aulas-cartao" key={curso.id}>
+            <span className="aulas-etiqueta">Curso</span>
+            <div className="aulas-cartao-corpo">
+              <h2 className="topic-title">{curso.titulo}</h2>
+              <p className="content-text">{curso.descricao}</p>
+            </div>
+            <footer className="aulas-cartao-acoes"><Link className="btn btn-primary" to={`/administracao/cursos/${curso.id}`}>Ver módulos e aulas <span aria-hidden="true">→</span></Link></footer>
+          </article>)}
         </div>
       </> : null}
       {dados.aula ? editando ? formulario(dados.aula) : <section className="card aulas-detalhe">
@@ -111,9 +111,9 @@ function ConsultaAulas({ idCurso, idAula }) {
           {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível.</p> : null}
           {modulo.aulas.map((aula) => <div key={aula.id}>
             {editando?.id === aula.id ? formulario(aula) : <div className="aulas-linha">
-            <div><span className="aulas-etiqueta">Aula {aula.ordem}{aula.ativo === false ? ' · Arquivada' : ''}</span><h3>{aula.titulo}</h3></div>
-            <Link className="btn btn-secondary" to={`/administracao/cursos/${idCurso}/aulas/${aula.id}`}>Visualizar aula</Link>{acoes(aula)}
-          </div>}
+              <div><span className="aulas-etiqueta">Aula {aula.ordem}{aula.ativo === false ? ' · Arquivada' : ''}</span><h3>{aula.titulo}</h3></div>
+              <Link className="btn btn-secondary" to={`/administracao/cursos/${idCurso}/aulas/${aula.id}`}>Visualizar aula</Link>{acoes(aula)}
+            </div>}
           </div>)}
         </section>)}
       </> : null}
