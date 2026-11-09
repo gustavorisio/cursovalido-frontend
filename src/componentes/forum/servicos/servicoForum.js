@@ -27,6 +27,7 @@ export function buscarUsuarios() {
 }
 
 export function criarTopico(dados) {
+  if (!dados.titulo?.trim() || !dados.descricao?.trim()) throw new Error('Preencha o título e a descrição.');
   validarLimites(dados);
   return requisitar('/forum/topicos', {
     method: 'POST',
@@ -35,6 +36,7 @@ export function criarTopico(dados) {
 }
 
 export function atualizarTopico(idTopico, dados) {
+  if (!dados.titulo?.trim() || !dados.descricao?.trim()) throw new Error('Preencha o título e a descrição.');
   validarLimites(dados);
   return requisitar(`/forum/topicos/${idTopico}`, {
     method: 'PUT',
@@ -49,6 +51,7 @@ export function arquivarTopico(idTopico) {
 }
 
 export function criarComentario(idTopico, conteudo) {
+  if (!conteudo?.trim()) throw new Error('Preencha o comentário.');
   validarLimites({ conteudo });
   return requisitar(`/forum/topicos/${idTopico}/comentarios`, {
     method: 'POST',
@@ -69,6 +72,7 @@ export function fecharTopico(idTopico) {
 }
 
 export function atualizarComentario(idComentario, dados) {
+  if (!dados.conteudo?.trim()) throw new Error('Preencha o comentário.');
   validarLimites(dados);
   return requisitar(`/forum/comentarios/${idComentario}`, {
     method: 'PUT',
