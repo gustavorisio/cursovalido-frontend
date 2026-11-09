@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { validarUrlYoutube } from '../../../servicos/validacoesFormulario';
 
 export default function FormularioConteudo({ tipo, item, processando, onSalvar, onCancelar }) {
   const [titulo, setTitulo] = useState(item?.titulo ?? '');
@@ -19,6 +20,7 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
     }
     if (tipo === 'aula') {
       if (!youtubeUrl.trim()) { setErro('Informe o link do vídeo no YouTube.'); return; }
+      if (!validarUrlYoutube(youtubeUrl)) { setErro('Informe um link HTTPS válido do YouTube: youtube.com/watch?v= ou youtu.be/, com o código do vídeo.'); return; }
       dados.youtubeUrl = youtubeUrl.trim();
     }
     setErro('');

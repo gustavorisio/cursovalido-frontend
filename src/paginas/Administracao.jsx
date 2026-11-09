@@ -11,6 +11,7 @@ import {
 } from '../servicos/servicoAutenticacao';
 import { buscarPermissoesAdministrativas, buscarUsuariosAdministrativos } from '../servicos/servicoAdministracao';
 import { useAutenticacao } from '../contextos/useAutenticacao';
+import { validarDocumento } from '../servicos/validacoesFormulario';
 
 
 export default function Administracao({ tela = 'geral' }) {
@@ -95,9 +96,12 @@ export default function Administracao({ tela = 'geral' }) {
 
   function publicar(evento) {
     evento.preventDefault();
+    const erroValidacao = validarDocumento(nomePolitica, versaoPolitica, conteudoPolitica);
+    if (erroValidacao) { setErro(erroValidacao); return; }
+    setErro('');
     solicitar(async () => {
       const publicarDocumento = tela === 'privacidade' ? publicarPrivacidade : publicarPolitica;
-      await publicarDocumento(nomePolitica, versaoPolitica, conteudoPolitica);
+      await publicarDocumento(nomePolitica.trim(), versaoPolitica.trim(), conteudoPolitica.trim());
       setVersaoPolitica('');
       setConteudoPolitica('');
     }, 'Publicar esta versão arquivará a atual e exigirá novo aceite na próxima autenticação. As sessões abertas continuarão funcionando. Deseja continuar?', 'Nova versão publicada. O novo aceite será solicitado na próxima autenticação.');

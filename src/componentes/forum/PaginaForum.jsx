@@ -25,6 +25,8 @@ export default function PaginaForum() {
 
   async function publicar(evento) {
     evento.preventDefault();
+    if (processando) return;
+    forum.limparMensagem(); setErroTela('');
     if (!titulo.trim() || !descricao.trim()) { setErroTela('Preencha o título e a descrição.'); return; }
     setProcessando(true);
     const criado = await forum.salvarTopico(titulo, descricao);
@@ -34,6 +36,9 @@ export default function PaginaForum() {
 
   async function editarTopico(evento) {
     evento.preventDefault();
+    if (processando) return;
+    forum.limparMensagem(); setErroTela('');
+    if (!titulo.trim() || !descricao.trim()) { setErroTela('Preencha o título e a descrição.'); return; }
     setProcessando(true);
     const atualizado = await forum.editarTopico(forum.topicoSelecionado.id, titulo, descricao);
     setProcessando(false);
@@ -44,7 +49,9 @@ export default function PaginaForum() {
 
   async function enviarComentario(evento) {
     evento.preventDefault();
-    if (!texto.trim()) return;
+    if (processando) return;
+    forum.limparMensagem(); setErroTela('');
+    if (!texto.trim()) { setErroTela('Preencha o comentário.'); return; }
     setProcessando(true);
     const sucesso = comentarioEditando
       ? await forum.editarComentario(comentarioEditando, texto)
