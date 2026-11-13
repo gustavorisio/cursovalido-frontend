@@ -1,7 +1,7 @@
 import { requisitar } from './api';
 
 export function cadastrarUsuario(dados) {
-  const { nomeCompleto, email, senha, cpf, dataNascimento,
+  const { nomeCompleto, email, senha, dataNascimento,
     declarouMaiorIdade,
     aceitouTermosLgpd, versaoTermos } = dados;
   return requisitar('/autenticacao/cadastro', {
@@ -11,7 +11,6 @@ export function cadastrarUsuario(dados) {
       nomeCompleto,
       email,
       senha,
-      cpf,
       dataNascimento,
 
       declarouMaiorIdade,
@@ -165,7 +164,7 @@ export function confirmarEmailConvite(token) {
 }
 
 export function completarCadastroConvite(token, cadastro) {
-  const { nomeCompleto, email, senha, cpf, dataNascimento,
+  const { nomeCompleto, email, senha, dataNascimento,
     declarouMaiorIdade,
     aceitouTermosLgpd, versaoTermos } = cadastro;
   return requisitar('/convites/completar-cadastro', {
@@ -175,7 +174,6 @@ export function completarCadastroConvite(token, cadastro) {
         nomeCompleto,
         email,
         senha,
-        cpf,
         dataNascimento,
 
         declarouMaiorIdade,

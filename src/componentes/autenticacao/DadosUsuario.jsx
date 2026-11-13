@@ -1,20 +1,19 @@
 import { useEffect, useState } from 'react';
 import { buscarMeusDados, baixarDadosPessoais } from '../../servicos/servicoAutenticacao';
-
-function ocultarEmail(email) {
-  if (!email?.includes('@')) return 'Não informado';
-  const [nome, dominio] = email.split('@');
-  return nome.slice(0, 2) + '****@' + dominio;
-}
+import { useAutenticacao } from '../../contextos/useAutenticacao';
 
 
 export default function DadosUsuario({ desabilitado = false }) {
+  const { sessao } = useAutenticacao();
   const [baixando, setBaixando] = useState(false);
   const [dados, setDados] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [tentativa, setTentativa] = useState(0);
+  const perfil = dados?.perfil ?? sessao?.perfil;
+  const codigoPerfil = typeof perfil === 'object' && perfil !== null ? perfil.nome ?? perfil.codigo ?? perfil.descricao : perfil;
+  const nomePerfil = { ALUNO: 'Aluno', PROFESSOR: 'Professor', ADMINISTRADOR: 'Administrador', ADMIN: 'Administrador' }[String(codigoPerfil).toUpperCase()] ?? 'Não informado';
   useEffect(() => {
     let ativo = true;
     buscarMeusDados().then(resposta => { if (ativo) setDados(resposta); })
@@ -41,7 +40,8 @@ export default function DadosUsuario({ desabilitado = false }) {
     {dados && <>
       <dl className="dados-usuario-grade">
         <div><dt>Nome</dt><dd>{dados.nomeCompleto || 'Não informado'}</dd></div>
-        <div><dt>E-mail</dt><dd>{ocultarEmail(dados.email)}</dd></div>
+        <div><dt>E-mail</dt><dd>{dados.email || 'Não informado'}</dd></div>
+        <div><dt>Perfil do usuário</dt><dd>{nomePerfil}</dd></div>
         <div><dt>Data de nascimento</dt><dd>{dados.dataNascimento ? dados.dataNascimento.split('-').reverse().join('/') : 'Não informada'}</dd></div>
       </dl>
     </>}

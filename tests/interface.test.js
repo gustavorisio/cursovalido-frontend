@@ -52,12 +52,22 @@ test('modal mantém foco, cancela com Escape e bloqueia ações durante envio', 
 test('documentos usam mesma navegação e estrutura com conteúdo próprio', async () => {
   const estruturas = [];
   for (const tipo of ['termos', 'privacidade']) {
-    await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Documento, { tipo, versao: '1.0', dataPublicacao: '', onVoltar() { }, onRecarregar() { } }))));
+    const conteudo = `<h2>${tipo === 'termos' ? 'Condições de uso' : 'Seus dados pessoais'}</h2><p>Leia <strong>este documento</strong>.</p>`;
+    await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Documento, { tipo, versao: '1.0', dataPublicacao: '', conteudo, onVoltar() { }, onRecarregar() { } }))));
     const nav = document.querySelector('nav');
-    assert.equal(nav.querySelector('button').textContent, '← Voltar');
+    assert.equal(nav.querySelector('button').textContent, 'Voltar');
     assert.equal(nav.querySelector('a').className, 'btn btn-secondary');
-    assert.ok(document.querySelector('iframe').src.endsWith(tipo === 'termos' ? '/termos-aceite.html' : '/politica-privacidade.html'));
+    assert.equal(nav.querySelector('a').getAttribute('href'), tipo === 'termos' ? '/politica-privacidade.html' : '/termos-aceite.html');
+    assert.equal(document.querySelector('iframe'), null);
+    assert.equal(document.querySelector('.conteudo-legal h2').textContent, tipo === 'termos' ? 'Condições de uso' : 'Seus dados pessoais');
+    assert.equal(document.querySelector('.conteudo-legal strong').textContent, 'este documento');
     estruturas.push([...document.querySelector('main').children].map((el) => el.tagName));
   }
   assert.deepEqual(estruturas[0], estruturas[1]);
+});
+
+test('documentos não exibem conteúdo antigo durante o carregamento', async () => {
+  await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Documento, { tipo: 'termos', versao: '1.0', conteudo: '<p>Texto anterior</p>', carregando: true }))));
+  assert.match(document.querySelector('[role=status]').textContent, /Carregando/);
+  assert.equal(document.querySelector('.conteudo-legal'), null);
 });
