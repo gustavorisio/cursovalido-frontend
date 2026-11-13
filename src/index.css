@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 @theme {
+  --color-brand-100: #23432d;
+  --shadow-raised: 0 6px 20px rgb(0 0 0 / 0.1);
   --color-brand-50: #15251b;
   --color-brand-800: #7ee787;
   --shadow-panel: 0 2px 8px rgb(0 0 0 / 0.06);
