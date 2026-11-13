@@ -1,0 +1,61 @@
+@reference "../../../index.css";
+
+.avaliacao-formulario h2, .avaliacao-resultado h2 { font-size: 24px; font-weight: 600; margin: 12px 0; }
+.pagina-aulas .avaliacao-formulario, .pagina-aulas .avaliacao-resultado, .pagina-aulas .editor-questionario { border-radius: 0; }
+.avaliacao-formulario > .texto-suave, .editor-questionario > .texto-suave { margin-bottom: 24px; font-size: 14px; line-height: 1.8; }
+.avaliacao-formulario fieldset, .editor-questionario > fieldset { border: 0; min-width: 0; padding: 0; }
+.avaliacao-formulario > fieldset > legend { color: var(--color-muted); font-size: 13px; margin-bottom: 24px; }
+.avaliacao-formulario fieldset.avaliacao-pergunta { margin: 0 0 28px; padding: 24px 0 0;  }
+.avaliacao-pergunta legend { padding: 0 12px 0 0; font-size: 16px; font-weight: 550; }
+.avaliacao-opcao { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; margin-top: 10px; border: 1px solid var(--color-line); border-radius: 0; background: var(--color-page); font-size: 14px; cursor: pointer; }
+.avaliacao-opcao:has(input:checked) { border-color: var(--color-accent); background: var(--color-hover); }
+.avaliacao-opcao input { flex-shrink: 0; margin-top: 3px; accent-color: var(--color-accent); }
+.avaliacao-percentual { margin: 20px 0; font-size: 48px; font-weight: 600; color: var(--color-accent); letter-spacing: -.04em; }
+.avaliacao-resultado h3 { margin: 28px 0 18px; font-size: 20px; font-weight: 550; }
+.avaliacao-correcoes { padding-left: 24px; }
+.avaliacao-correcoes li { padding: 20px 0;  }
+.avaliacao-correcoes li > strong { display: block; font-size: 15px; }
+.avaliacao-correcoes p { margin-top: 10px; font-size: 14px; line-height: 1.7; }
+.avaliacao-acerto, .avaliacao-revisar { display: inline-block; margin-top: 12px; font-size: 12px; padding: 4px 9px; border: 1px solid var(--color-line); border-radius: 0; }
+.avaliacao-acerto { color: var(--color-success); }
+.avaliacao-revisar { color: var(--color-accent); }
+.avaliacao-resultado > .acoes-topico { margin-top: 28px; }
+.pagina-aulas .plano-estudos { border-radius: 0; margin: 0 40px; }
+.plano-avaliacoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.plano-avaliacoes article { padding: 20px; border: 1px solid var(--color-line); border-radius: 0; background: var(--color-page); min-width: 0; }
+.plano-avaliacoes h3 { margin: 12px 0; font-size: 16px; font-weight: 550; overflow-wrap: anywhere; }
+.plano-avaliacoes p { font-size: 12px; margin-bottom: 18px; }
+.plano-avaliacoes .btn { display: inline-block; text-decoration: none; font-size: 12px; }
+.plano-revisoes-titulo { margin: 28px 0 16px; font-size: 18px; font-weight: 550; }
+.plano-revisoes { display: grid; gap: 12px; list-style: none; padding: 0; margin: 16px 0; }
+.plano-revisoes li { display: flex; gap: 12px; align-items: center; font-size: 14px; }
+.plano-estudos > .texto-suave { font-size: 14px; line-height: 1.7; }
+.editor-questionario h2 { font-size: 24px; font-weight: 600; margin-bottom: 14px; }
+.editor-questionario label { display: block; margin: 14px 0 8px; font-size: 13px; font-weight: 500; }
+.editor-questionario textarea.input-field { min-height: 90px; }
+.editor-questionario .editor-pergunta { min-width: 0; margin: 28px 0; padding: 20px; border: 1px solid var(--color-line); border-radius: 0; }
+.editor-pergunta > legend { padding: 0 10px; color: var(--color-accent); font-size: 15px; font-weight: 600; }
+.editor-alternativa { display: grid; grid-template-columns: 90px 100px minmax(0, 1fr); align-items: center; gap: 10px; margin-bottom: 12px; }
+.editor-alternativa > label { margin: 0; }
+.editor-alternativa label:first-child { display: flex; align-items: center; gap: 8px; }
+.editor-alternativa > input { margin: 0; }
+.editor-questionario input[type="radio"], .editor-questionario input[type="checkbox"] { accent-color: var(--color-accent); }
+.editor-questionario .editor-publicacao { display: flex; align-items: center; gap: 10px; padding: 20px 0; margin-block: 20px;  }
+.editor-questionario > fieldset > .btn { margin-top: 8px; }
+@media (max-width: 900px) {
+  .pagina-aulas .plano-estudos { margin-inline: 0; }
+}
+@media (max-width: 640px) {
+  .plano-avaliacoes { grid-template-columns: 1fr; }
+  .editor-alternativa { grid-template-columns: 80px minmax(0, 1fr); }
+  .editor-alternativa > input { grid-column: 1 / -1; }
+  .editor-questionario .editor-pergunta { padding: 16px; }
+}
+
+.pagina-aulas .plano-estudos { @apply mx-0; }
+.plano-avaliacoes article { @apply border-brand-100 bg-brand-50; }
+.avaliacao-pergunta legend { @apply text-xl font-medium; }
+.avaliacao-opcao { @apply min-h-12 rounded-none border border-line bg-surface p-4; }
+.avaliacao-opcao:has(input:checked) { @apply border-accent bg-brand-50; }
+
+.pagina-aulas .page-header-content { @apply min-w-0 flex-[1_1_320px]; }
