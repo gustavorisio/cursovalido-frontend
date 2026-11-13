@@ -3,7 +3,7 @@ import Rodape from '../comuns/Rodape';
 import './noticias.css';
 
 export function LayoutNoticias({ children }) {
-  return <div className="app-container pagina-noticias"><main className="noticias-container">{children}</main><Rodape /></div>;
+  return <div className="app-container pagina-noticias"><main className="main-content noticias-container">{children}</main><Rodape /></div>;
 }
 
 export function DataNoticia({ valor }) {
@@ -16,4 +16,3 @@ export function EstadoNoticias({ consulta, children }) {
   if (consulta.erro) return <div className="mensagem-erro" role="alert">{consulta.erro}<div><button className="btn btn-secondary" type="button" onClick={consulta.repetir}>Tentar novamente</button></div></div>;
   return children(consulta.dados);
 }
-
