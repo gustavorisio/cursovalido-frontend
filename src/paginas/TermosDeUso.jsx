@@ -1,3 +1,4 @@
+import AceiteDocumentos from '../componentes/comuns/AceiteDocumentos';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DocumentoLegal from '../componentes/comuns/DocumentoLegal';
@@ -94,6 +95,6 @@ export default function TermosDeUso() {
 
   return <DocumentoLegal tipo="termos" versao={versao} dataPublicacao={dataPublicacao} conteudo={conteudo} carregando={carregandoMetadados} erro={erro} onVoltar={voltar} onRecarregar={carregarDocumento}>
     {mensagem && <div className="mensagem-sucesso" role="status">{mensagem}</div>}
-    {aceitePendente && versao && <section className="mensagem-cadastro-concluido"><h2>Aceite necessário</h2><p>É necessário aceitar os documentos atuais para acessar a conta.</p><label className="checkbox"><input type="checkbox" checked={aceito} onChange={(evento) => setAceito(evento.target.checked)} />Li e aceito os Termos de Aceite e a Política de Privacidade.</label><button className="botao-destaque" type="button" disabled={!aceito || carregando || carregandoMetadados} onClick={aceitar}>{carregando ? 'Enviando...' : 'Aceitar termos e voltar ao login'}</button></section>}
+    {aceitePendente && versao && <section className="mensagem-cadastro-concluido"><h2>Aceite necessário</h2><p>É necessário aceitar os documentos atuais para acessar a conta.</p><AceiteDocumentos key={versao} versaoTermos={versao} aceito={aceito} onAlterar={setAceito} desabilitado={carregando || carregandoMetadados} /><button className="botao-destaque" type="button" disabled={!aceito || carregando || carregandoMetadados} onClick={aceitar}>{carregando ? 'Enviando...' : 'Aceitar termos e voltar ao login'}</button></section>}
   </DocumentoLegal>;
 }
