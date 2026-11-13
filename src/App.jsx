@@ -18,6 +18,7 @@ import ConfirmacaoEmail from './paginas/ConfirmacaoEmail';
 import SolicitarAlteracaoSenha from './paginas/SolicitarAlteracaoSenha';
 import AlterarSenha from './paginas/AlterarSenha';
 import Configuracoes from './paginas/Configuracoes';
+import AlterarSenhaConta from './paginas/AlterarSenhaConta';
 import Administracao from './paginas/Administracao';
 import CadastroConvite from './paginas/CadastroConvite';
 import RotaProtegida from './componentes/autenticacao/RotaProtegida';
@@ -42,6 +43,7 @@ const titulosPaginas = [
   ['/privacidade', 'Política de privacidade'],
   ['/politica-privacidade.html', 'Política de privacidade'],
   ['/configuracoes', 'Configurações'],
+  ['/configuracoes/alterar-senha', 'Alterar senha'],
   ['/administracao', 'Administração'],
   ['/administracao/dashboard', 'Dashboard'],
   ['/administracao/termos', 'Administrar termos'],
@@ -108,7 +110,10 @@ export default function App() {
           <Route path="/termos-aceite.html" element={<TermosDeUso />} />
           <Route path="/privacidade" element={<PoliticaDePrivacidade />} />
           <Route path="/politica-privacidade.html" element={<PoliticaDePrivacidade />} />
-          <Route element={<RotaProtegida />}><Route path="/configuracoes" element={<Configuracoes />} /></Route>
+          <Route element={<RotaProtegida />}>
+            <Route path="/configuracoes" element={<Configuracoes />} />
+            <Route path="/configuracoes/alterar-senha" element={<AlterarSenhaConta />} />
+          </Route>
           <Route element={<RotaProtegida perfis={['ADMINISTRADOR']} />}>
             <Route path="/administracao/dashboard" element={<Dashboard />} />
             <Route path="/noticias/nova" element={<EditorNoticia />} />
