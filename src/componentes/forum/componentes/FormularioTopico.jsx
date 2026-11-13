@@ -1,7 +1,7 @@
 export default function FormularioTopico({ titulo, descricao, onMudarTitulo, onMudarDescricao, onPublicar, onCancelar, modoEdicao = false }) {
   return (
     <div className="formulario-container">
-      <button className="btn btn-link" onClick={onCancelar}>← Cancelar</button>
+      <button className="btn btn-link" onClick={onCancelar}>Cancelar</button>
 
       <div className="card">
         <input

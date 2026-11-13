@@ -53,7 +53,7 @@ export default function DetalheTopico({
 
   return (
     <div className="detalhe-topico">
-      <button className="btn btn-link" onClick={onVoltar}>← Voltar para a lista</button>
+      <button className="btn btn-link" onClick={onVoltar}>Voltar para a lista</button>
 
       <div className="card">
         <div className="post-heading">
