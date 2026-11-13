@@ -507,3 +507,8 @@
 .alternar-senha { position: absolute; top: 0; right: 0; height: 100%; width: 82px; display: grid; place-items: center; border: 0; border-radius: 0; background: transparent; color: var(--color-brand-700); cursor: pointer; font-size: 14px; }
 .alternar-senha:hover { color: var(--color-brand-700); background: var(--color-hover); }
 .alternar-senha:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -3px; }
+
+.alteracao-senha {  margin-top: 24px; padding-top: 24px; }
+.alteracao-senha form { max-width: 480px; }
+.pagina-alterar-senha .alteracao-senha { border-top: 0; margin-top: 0; padding-top: 0; }
+.pagina-alterar-senha .alteracao-senha > h2 { display: none; }
