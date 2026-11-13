@@ -7,7 +7,7 @@ import { EstadoNoticias, LayoutNoticias } from '../componentes/noticias/componen
 
 export default function EditorNoticia() {
   const { id } = useParams();
-  return <LayoutNoticias><Link className="noticias-voltar" to={id ? `/noticias/${id}` : '/noticias'}>← Voltar às notícias</Link>{id ? <CarregarEdicao key={id} id={id} /> : <FormularioNoticia />}</LayoutNoticias>;
+  return <LayoutNoticias><Link className="noticias-voltar" to={id ? `/noticias/${id}` : '/noticias'}>Voltar às notícias</Link>{id ? <CarregarEdicao key={id} id={id} /> : <FormularioNoticia />}</LayoutNoticias>;
 }
 
 function CarregarEdicao({ id }) {
@@ -39,4 +39,3 @@ function FormularioNoticia({ noticia }) {
     <form onSubmit={salvar} className="formulario-publico" aria-busy={processando}><label>Título<input required maxLength={255} value={titulo} onChange={(evento) => setTitulo(evento.target.value)} disabled={processando} /></label><label>Conteúdo<textarea required maxLength={30000} rows={18} value={conteudo} onChange={(evento) => setConteudo(evento.target.value)} disabled={processando} /></label><p className="texto-suave">{conteudo.length.toLocaleString('pt-BR')} / 30.000 caracteres · Texto simples, com quebras de linha preservadas.</p><div className="noticias-acoes"><button type="submit" className="btn btn-primary" disabled={processando}>{processando ? 'Salvando...' : noticia ? 'Salvar alterações' : 'Publicar notícia'}</button><Link className="btn btn-secondary" to={noticia ? `/noticias/${noticia.id}` : '/noticias'}>Cancelar</Link></div></form>
   </section>;
 }
-
