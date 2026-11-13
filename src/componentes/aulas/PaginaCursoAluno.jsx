@@ -1,3 +1,4 @@
+import ModuloExpansivel from './componentes/ModuloExpansivel';
 import PesquisaConteudo from './componentes/PesquisaConteudo';
 import { correspondeAoNome } from './servicos/pesquisaConteudo';
 import { useCallback, useState } from 'react';
@@ -6,10 +7,14 @@ import LayoutAulas from './componentes/LayoutAulas';
 import EstadoCarregamento from './componentes/EstadoCarregamento';
 import useCarregamento from './hooks/useCarregamento';
 import * as servico from './servicos/servicoAluno';
+import CabecalhoAulas from './componentes/CabecalhoAulas';
+import { useAutenticacao } from '../../contextos/useAutenticacao';
+
 
 export default function PaginaCursoAluno() {
   const { idCurso } = useParams();
-  return <CursoAluno key={idCurso} idCurso={idCurso} />;
+  const { sessao } = useAutenticacao();
+  return <CursoAluno key={`${sessao?.idUsuario}-${idCurso}`} idCurso={idCurso} />;
 }
 
 function CursoAluno({ idCurso }) {
@@ -28,33 +33,36 @@ function CursoAluno({ idCurso }) {
   const carga = useCarregamento(carregar);
   const [busca, setBusca] = useState('');
   const modulos = carga.dados?.modulos.map((modulo) => ({ ...modulo, aulas: modulo.aulas.filter((aula) => correspondeAoNome(aula.titulo, busca)) })).filter((modulo) => !busca.trim() || modulo.aulas.length > 0) ?? [];
+  const aulas = carga.dados?.modulos.flatMap((modulo) => modulo.aulas) ?? [];
+  const concluidas = aulas.filter((aula) => aula.progresso.concluida).length;
+  const percentual = aulas.length ? Math.round(concluidas / aulas.length * 100) : 0;
 
   return <LayoutAulas>
-    <Link className="btn btn-link" to="/aluno/cursos">← Voltar aos cursos</Link>
+    <Link className="btn btn-link" to="/aluno/cursos">Voltar aos cursos</Link>
     <EstadoCarregamento carga={carga} />
     {carga.carregando ? null : carga.erro ? null : carga.dados ? <>
-      <header className="aulas-apresentacao">
-        <span className="aulas-etiqueta">Seu curso</span>
-        <h1 className="page-title">{carga.dados.curso.titulo}</h1>
-        <p className="texto-suave">{carga.dados.curso.descricao}</p>
+      <CabecalhoAulas etiqueta="Área do aluno · Seu curso" titulo={carga.dados.curso.titulo} descricao={carga.dados.curso.descricao}>
         <div className="aulas-indicadores"><span>{carga.dados.modulos.length} módulos</span><span>{carga.dados.modulos.reduce((total, modulo) => total + modulo.aulas.length, 0)} aulas</span></div>
-      </header>
-      <h2 className="titulo-respostas">Módulos e aulas</h2>
+        <div className="aulas-progresso"><div><span>Seu progresso</span><strong>{concluidas} de {aulas.length} aulas concluídas</strong></div><progress max="100" value={percentual} aria-label="Progresso do curso" /><span>{percentual}% concluído</span></div>
+      </CabecalhoAulas>
+      <section className="catalogo-resultados" aria-labelledby="aulas-modulos-titulo">
+      <div className="catalogo-secao-cabecalho"><div><span className="aulas-etiqueta">Sua jornada de aprendizagem</span><h2 id="aulas-modulos-titulo">Módulos e aulas</h2></div></div>
       <PesquisaConteudo valor={busca} onAlterar={setBusca} label="Pesquisar aula por nome" />
       {busca.trim() && modulos.length === 0 && <p className="card empty-list" role="status">Nenhuma aula encontrada para esta pesquisa.</p>}
       {carga.dados.modulos.length === 0 ? <div className="card empty-list">Este curso ainda não possui módulos disponíveis.</div> : null}
-      {modulos.map((modulo) => <section className="card aulas-modulo" key={modulo.id}>
-        <header className="aulas-modulo-cabecalho"><span className="aulas-numero">{String(modulo.ordem).padStart(2, '0')}</span><div><span className="aulas-etiqueta">Módulo · {modulo.aulas.length} aulas</span><h2 className="topic-title">{modulo.titulo}</h2></div></header>
+      {modulos.map((modulo) => <ModuloExpansivel key={modulo.id} modulo={modulo} expandido={Boolean(busca.trim())}>
         <p className="content-text">{modulo.descricao}</p>
         {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível neste módulo.</p> : null}
         {modulo.aulas.map((aula) => <div className="aulas-linha" key={aula.id}>
+
           <div>
             <span className="aulas-etiqueta">Aula {aula.ordem}</span><h3>{aula.titulo}</h3>
             <p className="texto-suave">{aula.progresso.concluida ? 'Concluída' : aula.progresso.posicaoSegundos > 0 ? `Em andamento · posição salva: ${aula.progresso.posicaoSegundos}s` : 'Não iniciada'}</p>
           </div>
           <Link className="btn btn-secondary" to={`/aluno/cursos/${idCurso}/aulas/${aula.id}`}>{aula.progresso.posicaoSegundos > 0 ? 'Continuar aula' : 'Abrir aula'}</Link>
         </div>)}
-      </section>)}
+      </ModuloExpansivel>)}
+      </section>
     </> : null}
   </LayoutAulas>;
 }
