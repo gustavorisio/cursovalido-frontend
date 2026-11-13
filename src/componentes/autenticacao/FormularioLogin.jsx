@@ -1,3 +1,4 @@
+import CampoSenha from './CampoSenha';
 import { Link } from 'react-router-dom';
 
 export default function FormularioLogin({ dados, codigo, segundoFator, erro, carregando, mensagem, onAlterar, onCodigo, onEnviar }) {
@@ -7,7 +8,7 @@ export default function FormularioLogin({ dados, codigo, segundoFator, erro, car
       {erro && <div className="mensagem-erro" role="alert">{erro}</div>}
       {!segundoFator ? <form onSubmit={onEnviar} className="formulario-publico">
         <label>E-mail<input required type="email" value={dados.email} onChange={(evento) => onAlterar('email', evento.target.value)} /></label>
-        <label>Senha<input required minLength={8} type="password" value={dados.senha} onChange={(evento) => onAlterar('senha', evento.target.value)} /></label>
+        <CampoSenha required autoComplete="current-password" validarPolitica={false} value={dados.senha} onChange={(evento) => onAlterar('senha', evento.target.value)} />
         <button className="botao-destaque" disabled={carregando}>{carregando ? 'Entrando...' : 'Entrar'}</button>
       </form> : <form onSubmit={onEnviar} className="formulario-publico">
         <p className="texto-suave">Enviamos um código de 6 dígitos para o seu e-mail.</p>

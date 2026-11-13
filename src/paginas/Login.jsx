@@ -90,7 +90,7 @@ export default function Login() {
         setExibirReenvio2fa(true);
         setErro('O código 2FA expirou.');
       } else {
-        setErro(falha.message || 'O servidor está indisponível no momento. Tente novamente mais tarde.');
+        setErro(falha.message || 'O serviço está indisponível. Tente novamente mais tarde.');
       }
     } finally {
       setCarregando(false);
