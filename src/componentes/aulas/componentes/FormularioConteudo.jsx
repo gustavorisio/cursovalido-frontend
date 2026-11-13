@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { validarUrlYoutube } from '../../../servicos/validacoesFormulario';
+import FiltroTema from './FiltroTema';
 
 export default function FormularioConteudo({ tipo, item, processando, onSalvar, onCancelar }) {
   const [titulo, setTitulo] = useState(item?.titulo ?? '');
@@ -7,12 +8,17 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
   const [ordem, setOrdem] = useState(item?.ordem ?? 1);
   const [youtubeUrl, setYoutubeUrl] = useState(item?.youtubeVideoId ? `https://www.youtube.com/watch?v=${item.youtubeVideoId}` : '');
   const [erro, setErro] = useState('');
+  const [idTema, setIdTema] = useState(String(item?.idTema ?? ''));
 
   function salvar(evento) {
     evento.preventDefault();
     if (!titulo.trim()) { setErro('Preencha o título.'); return; }
     if (!descricao.trim()) { setErro('Preencha a descrição.'); return; }
     const dados = { titulo: titulo.trim(), descricao: descricao.trim() };
+    if (tipo === 'curso') {
+      dados.idTema = idTema ? Number(idTema) : null;
+      dados.idArea = item?.idArea ?? null;
+    }
     if (tipo !== 'curso') {
       if (!Number.isInteger(Number(ordem))) { setErro('A ordem deve ser um inteiro positivo.'); return; }
       if (Number(ordem) < 1) { setErro('A ordem deve ser um inteiro positivo.'); return; }
@@ -20,17 +26,18 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
     }
     if (tipo === 'aula') {
       if (!youtubeUrl.trim()) { setErro('Informe o link do vídeo no YouTube.'); return; }
-      if (!validarUrlYoutube(youtubeUrl)) { setErro('Informe um link HTTPS válido do YouTube: youtube.com/watch?v= ou youtu.be/, com o código do vídeo.'); return; }
+      if (!validarUrlYoutube(youtubeUrl)) { setErro('Informe um link válido do vídeo no YouTube.'); return; }
       dados.youtubeUrl = youtubeUrl.trim();
     }
     setErro('');
     onSalvar(dados);
   }
 
-  return <div className="formulario-container">
-    <button className="btn btn-link" type="button" disabled={processando} onClick={onCancelar}>← Cancelar</button>
+  return <div className="formulario-container aulas-editor">
+    <button className="btn btn-link" type="button" disabled={processando} onClick={onCancelar}>Cancelar</button>
     <form className="card" onSubmit={salvar}>
-      <h2 className="titulo-detalhe">{item ? 'Editar' : 'Cadastrar'} {tipo}</h2>
+      <header className="aulas-editor-cabecalho"><div><span className="aulas-etiqueta">Gestão de conteúdo</span><h2 className="titulo-detalhe">{item ? 'Editar' : 'Cadastrar'} {tipo}</h2></div></header>
+      <p className="texto-suave">Preencha as informações para organizar o conteúdo de aprendizagem.</p>
       {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
       <fieldset disabled={processando}>
         <label htmlFor="conteudo-titulo">Título</label>
@@ -38,6 +45,7 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
         <label htmlFor="conteudo-descricao">Descrição</label>
         <textarea id="conteudo-descricao" className="input-field" value={descricao} onChange={(evento) => setDescricao(evento.target.value)} maxLength={5000} required />
         <div className={`contador ${descricao.length >= 5000 ? 'limite' : ''}`}>{descricao.length}/5000</div>
+        {tipo === 'curso' && <><FiltroTema valor={idTema} onAlterar={setIdTema} cadastro gerenciar /></>}
         {tipo !== 'curso' ? <>
           <label htmlFor="conteudo-ordem">Ordem</label>
           <input id="conteudo-ordem" className="input-field" type="number" min="1" max="2147483647" step="1" value={ordem} onChange={(evento) => setOrdem(evento.target.value)} required />
