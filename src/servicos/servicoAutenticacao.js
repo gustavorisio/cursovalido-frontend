@@ -204,3 +204,9 @@ export async function baixarDadosPessoais() {
   document.body.appendChild(link);
   try { link.click(); } finally { link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000); }
 }
+
+export function alterarSenhaAutenticado({ senhaAtual, novaSenha, confirmacaoSenha }) {
+  return requisitar('/autenticacao/alterar-senha-autenticado', {
+    method: 'POST', body: JSON.stringify({ senhaAtual, novaSenha, confirmacaoSenha })
+  });
+}
