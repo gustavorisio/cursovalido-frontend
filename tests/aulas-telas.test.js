@@ -19,11 +19,14 @@ const aulas = [
   { id: 5, idModulo: 3, titulo: 'Componentes', descricao: 'Seu primeiro componente.', ordem: 2, youtubeVideoId: 'abcdefghijk', ativo: true },
 ];
 
+const avaliacaoAluno = { id: 1, titulo: 'Diagnóstico do curso', versao: 1, perguntas: [{ enunciado: 'Qual alternativa?', alternativas: ['Correta', 'Incorreta'] }], resultado: null };
+const avaliacaoGestor = { ...avaliacaoAluno, publicado: true, perguntas: [{ ...avaliacaoAluno.perguntas[0], alternativaCorreta: 0, explicacao: 'Entenda o conceito.', idAulaRevisao: 4 }] };
+
 before(async () => {
   servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
   contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
   telas = {};
-  for (const nome of ['PaginaCatalogo', 'PaginaGestaoCursos', 'PaginaAulasAdministrador', 'PaginaCursoAluno', 'PaginaAulaAluno']) {
+  for (const nome of ['PaginaCatalogo', 'PaginaGestaoCursos', 'PaginaAulasAdministrador', 'PaginaCursoAluno', 'PaginaAulaAluno', 'PaginaQuestionarioAluno', 'PaginaEditorQuestionario']) {
     telas[nome] = (await servidor.ssrLoadModule(`/src/componentes/aulas/${nome}.jsx`)).default;
   }
 });
@@ -40,6 +43,8 @@ beforeEach(() => {
     const path = new URL(url).pathname.replace(/^\/api/, '');
     let dados;
     if (path === '/catalogo/temas') dados = [{ id: 8, nome: 'Desenvolvimento' }, { id: 9, nome: 'Meu tema novo' }];
+    else if (path.endsWith('/plano')) dados = { avaliacoes: [], revisoes: [] };
+    else if (path.endsWith('/diagnostico') || path.endsWith('/questionario')) dados = path.startsWith('/aluno') ? avaliacaoAluno : avaliacaoGestor;
     else if (/\/progresso$/.test(path)) dados = { posicaoSegundos: 0, concluida: path.includes('/4/') };
     else if (/\/matriculas$/.test(path)) dados = [{ idCurso: 1 }];
     else if (/\/cursos$/.test(path)) dados = cursos;
@@ -217,3 +222,54 @@ test('o catálogo mantém somente a busca e os temas cadastrados como filtros', 
   assert.equal(document.querySelectorAll('select').length, 1);
   assert.match(document.querySelector('select').textContent, /Todos os temas/);
 });
+
+test('questionário exibe correção e links de revisão recebidos do backend e permite refazer', async () => {
+  const fetchSucesso = globalThis.fetch;
+  let enviados;
+  globalThis.fetch = async (url, opcoes) => {
+    if (url.endsWith('/diagnostico/respostas')) {
+      enviados = JSON.parse(opcoes.body);
+      return new Response(JSON.stringify({ acertos: 0, total: 1, percentual: 0, correcoes: [{ pergunta: 0, acertou: false, alternativaCorreta: 0, explicacao: 'Entenda o conceito.' }], revisoes: [{ idAula: 4, titulo: 'Introdução', idModulo: 3 }] }), { status: 200 });
+    }
+    return fetchSucesso(url, opcoes);
+  };
+  await renderizar('PaginaQuestionarioAluno', 'ALUNO', '/aluno/cursos/1/diagnostico', '/aluno/cursos/:idCurso/diagnostico');
+  assert.equal(document.querySelector('.avaliacao-correcoes'), null);
+  await act(async () => document.querySelector('input[value="1"]').click());
+  await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
+  assert.deepEqual(enviados, { versao: 1, respostas: [1] });
+  assert.match(document.querySelector('.avaliacao-resultado').textContent, /Vale revisar/);
+  assert.ok(document.querySelector('a[href="/aluno/cursos/1/aulas/4"]'));
+  await act(async () => [...document.querySelectorAll('button')].find((el) => el.textContent === 'Refazer avaliação').click());
+  assert.equal(document.querySelector('input:checked'), null);
+});
+
+test('plano do curso apresenta diagnóstico, questionários e revisões com links corretos', async () => {
+  const fetchSucesso = globalThis.fetch;
+  globalThis.fetch = async (url, opcoes) => url.endsWith('/plano') ? new Response(JSON.stringify({ avaliacoes: [{ idModulo: null, titulo: 'Diagnóstico inicial', percentual: 50 }, { idModulo: 3, titulo: 'Módulo 1', percentual: null }], revisoes: [{ idAula: 4, titulo: 'Introdução' }] }), { status: 200 }) : fetchSucesso(url, opcoes);
+  await renderizar('PaginaCursoAluno', 'ALUNO', '/aluno/cursos/1', '/aluno/cursos/:idCurso');
+  assert.ok(document.querySelector('a[href="/aluno/cursos/1/diagnostico"]'));
+  assert.ok(document.querySelector('a[href="/aluno/cursos/1/modulos/3/questionario"]'));
+  assert.match(document.querySelector('.plano-estudos').textContent, /50% de acertos/);
+});
+
+for (const [perfil, raizRota] of [['PROFESSOR', 'professor'], ['ADMINISTRADOR', 'administracao']]) {
+  test(`${perfil} edita e publica avaliação vinculada a uma aula do curso`, async () => {
+    const fetchSucesso = globalThis.fetch;
+    let enviados;
+    globalThis.fetch = async (url, opcoes) => {
+      if (url.endsWith(`/${raizRota}/cursos/1/diagnostico`) && opcoes.method === 'PUT') {
+        enviados = JSON.parse(opcoes.body);
+        return new Response(JSON.stringify({ ...enviados, versao: 2 }), { status: 200 });
+      }
+      return fetchSucesso(url, opcoes);
+    };
+    await renderizar('PaginaEditorQuestionario', perfil, `/${raizRota}/cursos/1/diagnostico`, `/${raizRota}/cursos/:idCurso/diagnostico`);
+    assert.equal(document.querySelector('#revisao-0').value, '4');
+    await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
+    assert.equal(enviados.publicado, true);
+    assert.equal(enviados.perguntas[0].idAulaRevisao, 4);
+    assert.equal(enviados.perguntas[0].alternativaCorreta, 0);
+    assert.match(document.querySelector('[role="status"]').textContent, /Versão 2/);
+  });
+}
