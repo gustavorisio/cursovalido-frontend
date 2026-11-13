@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 import { createElement as h, act } from 'react';
 let createRoot;
 
-let servidor, CampoSenha, AlterarSenha, raiz, dom;
+let servidor, CampoSenha, AlterarSenha, contexto, useForum, raiz, dom, forum;
 const fetchOriginal = globalThis.fetch;
 before(async () => {
   const inicial = new JSDOM('<div></div>');
@@ -15,6 +15,8 @@ before(async () => {
   servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
   CampoSenha = (await servidor.ssrLoadModule('/src/componentes/autenticacao/CampoSenha.jsx')).default;
   AlterarSenha = (await servidor.ssrLoadModule('/src/componentes/autenticacao/FormularioAlterarSenha.jsx')).default;
+  contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+  useForum = (await servidor.ssrLoadModule('/src/componentes/forum/hooks/useForum.js')).useForum;
   inicial.window.close();
 });
 after(async () => servidor.close());
@@ -59,4 +61,27 @@ test('alteração autenticada envia senha atual e só conclui após sucesso', as
   assert.deepEqual(enviados[0].corpo, { senhaAtual: valores[0], novaSenha: valores[1], confirmacaoSenha: valores[2] });
   assert.equal(conclusoes, 1);
   assert.equal(document.querySelector('input').value, '');
+});
+
+test('meus tópicos consulta endpoint próprio e mantém busca na paginação', async () => {
+  const chamadas = [];
+  globalThis.fetch = async (url) => {
+    const u = new URL(url); chamadas.push(u);
+    if (u.pathname.endsWith('/users')) return Response.json({ usuarios: [] });
+    if (u.pathname.endsWith('/restricoes')) return Response.json([]);
+    return Response.json({ content: [{ id: 1, titulo: 'Java' }], totalPages: 3 });
+  };
+  function Harness() { forum = useForum(); return null; }
+  await act(async () => raiz.render(h(contexto.Provider, { value: { autenticado: true, sessao: { idUsuario: 7, perfil: 'ALUNO' } } }, h(Harness))));
+  await act(() => forum.carregarTopicos(0, 'Java'));
+  await act(async () => forum.setMeusTopicos(true));
+  await act(() => forum.carregarTopicos(1));
+  const ultima = chamadas.at(-1);
+  assert.equal(ultima.pathname, '/api/forum/topicos/meus');
+  assert.equal(ultima.searchParams.get('page'), '1');
+  assert.equal(ultima.searchParams.get('busca'), 'Java');
+  assert.equal(ultima.searchParams.has('idAutor'), false);
+  assert.equal(forum.totalPaginas, 3);
+  await act(() => forum.setMeusTopicos(false));
+  assert.equal(chamadas.filter(u => u.pathname.endsWith('/topicos')).at(-1).searchParams.get('page'), '0');
 });
