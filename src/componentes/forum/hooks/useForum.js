@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   apagarComentario, apagarTopico, atualizarComentario, atualizarTopico, buscarComentarios,
-  buscarTopicos, buscarUsuarios, criarComentario, criarTopico, fecharTopico, arquivarTopico
+  buscarTopicos, buscarMeusTopicos, buscarUsuarios, criarComentario, criarTopico, fecharTopico, arquivarTopico
 } from '../servicos/servicoForum';
 import { useAutenticacao } from '../../../contextos/useAutenticacao';
 import { useRestricoes } from '../../../contextos/useRestricoes';
@@ -20,7 +20,7 @@ function mensagemDoErro(erro) {
   if (erro?.status === 403) return erro?.message || 'Você não tem permissão para esta operação.';
   if (erro?.status === 404) return 'O recurso solicitado não foi encontrado.';
   if (erro?.status === 409) return 'Esta operação entrou em conflito com dados existentes.';
-  if (erro?.status >= 500) return 'O servidor está indisponível no momento. Tente novamente mais tarde.';
+  if (erro?.status >= 500) return 'O serviço está indisponível. Tente novamente mais tarde.';
   return erro?.message || 'Não foi possível concluir a operação.';
 }
 
@@ -39,6 +39,9 @@ export function useForum() {
   const { bloqueado } = useRestricoes();
   const topicosBloqueados = bloqueado('TOPICOS');
   const comentariosBloqueados = bloqueado('COMENTARIOS');
+  const [meusTopicos, setMeusTopicos] = useState(false);
+  const buscaAtual = useRef('');
+  const consultaAtual = useRef(0);
   const [topicos, setTopicos] = useState([]);
   const [pagina, setPagina] = useState(0);
   const [totalPaginas, setTotalPaginas] = useState(1);
@@ -54,16 +57,23 @@ export function useForum() {
     return mensagem;
   }, []);
 
-  const carregarTopicos = useCallback(async (numeroPagina = 0, busca = '') => {
-    if (topicosBloqueados) { setTopicos([]); setComentarios([]); setTopicoSelecionado(null); return; }
+  const carregarTopicos = useCallback(async (numeroPagina = 0, busca = buscaAtual.current) => {
+    const consulta = ++consultaAtual.current;
+    if (topicosBloqueados) { setTopicos([]); setComentarios([]); setTopicoSelecionado(null); setCarregando(false); return; }
+    buscaAtual.current = busca;
     setCarregando(true);
+    setMensagemErro('');
     try {
-      const resultado = listaDaResposta(await buscarTopicos(numeroPagina, TAMANHO_PAGINA, busca));
+      const buscar = meusTopicos && autenticado ? buscarMeusTopicos : buscarTopicos;
+      const resultado = listaDaResposta(await buscar(numeroPagina, TAMANHO_PAGINA, busca));
+      if (consulta !== consultaAtual.current) return;
       setTopicos(resultado.itens);
       setPagina(numeroPagina);
       setTotalPaginas(resultado.totalPaginas);
-    } catch (erro) { tratarErro(erro); } finally { setCarregando(false); }
-  }, [tratarErro, topicosBloqueados]);
+    } catch (erro) {
+      if (consulta === consultaAtual.current) { setTopicos([]); tratarErro(erro); }
+    } finally { if (consulta === consultaAtual.current) setCarregando(false); }
+  }, [tratarErro, topicosBloqueados, meusTopicos, autenticado]);
 
   useEffect(() => {
     queueMicrotask(() => carregarTopicos(0));
@@ -160,7 +170,7 @@ export function useForum() {
   }
 
   return {
-    topicosBloqueados, comentariosBloqueados,
+    meusTopicos, setMeusTopicos, topicosBloqueados, comentariosBloqueados,
     autenticado, sessao, topicos, usuarios, pagina, totalPaginas, carregando, topicoSelecionado, comentarios, mensagemErro,
     limparMensagem: () => setMensagemErro(''), carregarTopicos, selecionarTopico, salvarTopico, salvarComentario,
     editarTopico, editarComentario, excluirTopico, fecharTopicoSelecionado, arquivarTopicoSelecionado,
