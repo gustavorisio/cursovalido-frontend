@@ -104,6 +104,7 @@ function ConteudoAula({ dados }) {
       <p className="texto-suave">{aulas.length} aulas · Aula {indice + 1} de {aulas.length}</p>
       <nav aria-label="Aulas deste módulo">{aulas.map((item) => <Link key={item.id} to={`/aluno/cursos/${curso.id}/aulas/${item.id}`} aria-current={item.id === aula.id ? 'page' : undefined}><span><small>Aula {item.ordem}</small>{item.titulo}</span></Link>)}</nav>
       <Link className="btn btn-secondary" to={`/aluno/cursos/${curso.id}`}>Ver todos os módulos</Link>
+      <Link className="btn btn-secondary" to={`/aluno/cursos/${curso.id}/modulos/${modulo.id}/questionario`}>Questionário do módulo</Link>
     </aside>
     </div>
     <nav className="page-actions" aria-label="Navegar entre aulas do módulo">

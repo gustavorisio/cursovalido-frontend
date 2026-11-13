@@ -157,7 +157,9 @@ function GestaoConteudo({ idCurso, idModulo }) {
               <footer className="aulas-cartao-acoes">
                 <div className="acoes-topico">
                   {tipo === 'curso' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${item.id}/modulos`}>Ver módulos</Link> : null}
+                  {tipo === 'curso' && <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${item.id}/diagnostico`}>Diagnóstico inicial</Link>}
                   {tipo === 'modulo' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${idCurso}/modulos/${item.id}/aulas`}>Ver aulas</Link> : null}
+                  {tipo === 'modulo' && <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${idCurso}/modulos/${item.id}/questionario`}>Questionário do módulo</Link>}
                   <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => abrirFormulario(item)}>Editar</button>
                   <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => setExcluindo(item)}>Excluir</button>
                 </div>
