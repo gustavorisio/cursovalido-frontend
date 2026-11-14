@@ -17,6 +17,7 @@ export default function Cabecalho() {
         {!autenticado && <NavLink to="/" end>Início</NavLink>}
         <NavLink to={!autenticado ? '/cursos' : ehAdministrador ? '/administracao/cursos' : sessao?.perfil === 'PROFESSOR' ? '/professor/cursos' : '/aluno/cursos'}>Aulas online</NavLink>
         <NavLink to="/forum">Fórum</NavLink><NavLink to="/noticias">Notícias</NavLink>
+        <NavLink to="/roadmap">Caminhos na tecnologia</NavLink>
         {ehAdministrador && <NavLink to="/administracao" end>Administração</NavLink>}
       </nav>
       <div className="cv-conta">

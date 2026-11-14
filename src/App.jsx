@@ -9,6 +9,8 @@ import PaginaCatalogo from './componentes/aulas/PaginaCatalogo';
 import PaginaCursoAluno from './componentes/aulas/PaginaCursoAluno';
 import PaginaAulaAluno from './componentes/aulas/PaginaAulaAluno';
 import PaginaAulasAdministrador from './componentes/aulas/PaginaAulasAdministrador';
+import PaginaRoadmap from './componentes/aulas/PaginaRoadmap';
+import PaginaAdministracaoCaminhos from './componentes/aulas/PaginaAdministracaoCaminhos';
 import PaginaQuestionarioAluno from './componentes/aulas/PaginaQuestionarioAluno';
 import PaginaEditorQuestionario from './componentes/aulas/PaginaEditorQuestionario';
 import Inicio from './paginas/Inicio';
@@ -52,6 +54,7 @@ const titulosPaginas = [
   ['/administracao/privacidade', 'Administrar privacidade'],
   ['/administracao/usuarios', 'Usuários'],
   ['/administracao/convites', 'Convites'],
+  ['/administracao/caminhos', 'Administrar caminhos na tecnologia'],
   ['/administracao/cursos/:idCurso/aulas/:idAula', 'Administrar aula'],
   ['/administracao/cursos/:idCurso/diagnostico', 'Editar diagnóstico'],
   ['/administracao/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
@@ -67,6 +70,7 @@ const titulosPaginas = [
   ['/aluno/cursos/:idCurso', 'Curso'],
   ['/aluno/cursos', 'Catálogo de cursos'],
   ['/cursos', 'Cursos'],
+  ['/roadmap', 'Caminhos na tecnologia'],
   ['/suporte', 'Suporte'],
   ['/forum', 'Fórum'],
   ['/noticias/nova', 'Publicar notícia'],
@@ -132,6 +136,7 @@ export default function App() {
             <Route path="/administracao/usuarios" element={<Administracao key="usuarios" tela="usuarios" />} />
             <Route path="/administracao/convites" element={<Administracao key="convites" tela="convites" />} />
             <Route path="/administracao/cursos" element={<PaginaAulasAdministrador />} />
+            <Route path="/administracao/caminhos" element={<PaginaAdministracaoCaminhos />} />
             <Route path="/administracao/cursos/:idCurso" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso/aulas/:idAula" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso/diagnostico" element={<PaginaEditorQuestionario />} />
@@ -153,6 +158,7 @@ export default function App() {
             <Route path="/aluno/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaQuestionarioAluno />} />
           </Route>
           <Route path="/cursos" element={<InicioCursos />} />
+          <Route path="/roadmap" element={<PaginaRoadmap />} />
           <Route path="/suporte" element={<PaginaSuporte />} />
           <Route path="/forum" element={<PaginaForum />} />
             <Route path="/noticias" element={<Noticias />} />
