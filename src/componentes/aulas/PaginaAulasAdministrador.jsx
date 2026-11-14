@@ -78,6 +78,7 @@ function ConsultaAulas({ idCurso, idAula }) {
 
   function acoesCurso(curso) {
     return <div className="acoes-topico">
+      <Link className="btn btn-secondary" to={`/administracao/cursos/${curso.id}/diagnostico`}>Diagnóstico inicial</Link>
       <button className="btn btn-secondary" type="button" disabled={processando} onClick={() => setCursoEditando(curso)}>Editar curso</button>
       <button className="btn btn-danger" type="button" disabled={processando} onClick={() => setCursoExcluindo(curso)}>Excluir curso</button>
     </div>;
@@ -125,6 +126,7 @@ function ConsultaAulas({ idCurso, idAula }) {
         {modulos.map((modulo) => <ModuloExpansivel key={modulo.id} modulo={modulo} expandido={Boolean(busca.trim())}>
 
           <p className="content-text">{modulo.descricao}</p>
+          <Link className="btn btn-secondary" to={`/administracao/cursos/${idCurso}/modulos/${modulo.id}/questionario`}>Editar questionário do módulo</Link>
           {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível.</p> : null}
           {modulo.aulas.map((aula) => <div key={aula.id}>
             {editando?.id === aula.id ? formulario(aula) : <div className="aulas-linha">

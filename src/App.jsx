@@ -9,6 +9,8 @@ import PaginaCatalogo from './componentes/aulas/PaginaCatalogo';
 import PaginaCursoAluno from './componentes/aulas/PaginaCursoAluno';
 import PaginaAulaAluno from './componentes/aulas/PaginaAulaAluno';
 import PaginaAulasAdministrador from './componentes/aulas/PaginaAulasAdministrador';
+import PaginaQuestionarioAluno from './componentes/aulas/PaginaQuestionarioAluno';
+import PaginaEditorQuestionario from './componentes/aulas/PaginaEditorQuestionario';
 import Inicio from './paginas/Inicio';
 import Login from './paginas/Login';
 import Cadastro from './paginas/Cadastro';
@@ -51,11 +53,17 @@ const titulosPaginas = [
   ['/administracao/usuarios', 'Usuários'],
   ['/administracao/convites', 'Convites'],
   ['/administracao/cursos/:idCurso/aulas/:idAula', 'Administrar aula'],
+  ['/administracao/cursos/:idCurso/diagnostico', 'Editar diagnóstico'],
+  ['/administracao/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
   ['/administracao/cursos/*', 'Administrar cursos'],
   ['/professor/cursos/:idCurso/modulos/:idModulo/aulas', 'Gerenciar aulas'],
+  ['/professor/cursos/:idCurso/diagnostico', 'Editar diagnóstico'],
+  ['/professor/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
   ['/professor/cursos/:idCurso/modulos', 'Gerenciar módulos'],
   ['/professor/cursos', 'Gerenciar cursos'],
   ['/aluno/cursos/:idCurso/aulas/:idAula', 'Aula'],
+  ['/aluno/cursos/:idCurso/diagnostico', 'Diagnóstico inicial'],
+  ['/aluno/cursos/:idCurso/modulos/:idModulo/questionario', 'Questionário do módulo'],
   ['/aluno/cursos/:idCurso', 'Curso'],
   ['/aluno/cursos', 'Catálogo de cursos'],
   ['/cursos', 'Cursos'],
@@ -126,17 +134,23 @@ export default function App() {
             <Route path="/administracao/cursos" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso/aulas/:idAula" element={<PaginaAulasAdministrador />} />
+            <Route path="/administracao/cursos/:idCurso/diagnostico" element={<PaginaEditorQuestionario />} />
+            <Route path="/administracao/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaEditorQuestionario />} />
           </Route>
           <Route element={<RotaProtegida perfis={['PROFESSOR']} />}>
             <Route path="/professor/cursos" element={<PaginaGestaoCursos />} />
             <Route path="/professor/cursos/:idCurso/modulos" element={<PaginaGestaoCursos />} />
             <Route path="/professor/cursos/:idCurso/modulos/:idModulo/aulas" element={<PaginaGestaoCursos />} />
+            <Route path="/professor/cursos/:idCurso/diagnostico" element={<PaginaEditorQuestionario />} />
+            <Route path="/professor/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaEditorQuestionario />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
           <Route element={<RotaProtegida perfis={['ALUNO']} />}>
             <Route path="/aluno/cursos" element={<PaginaCatalogo />} />
             <Route path="/aluno/cursos/:idCurso" element={<PaginaCursoAluno />} />
             <Route path="/aluno/cursos/:idCurso/aulas/:idAula" element={<PaginaAulaAluno />} />
+            <Route path="/aluno/cursos/:idCurso/diagnostico" element={<PaginaQuestionarioAluno />} />
+            <Route path="/aluno/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaQuestionarioAluno />} />
           </Route>
           <Route path="/cursos" element={<InicioCursos />} />
           <Route path="/suporte" element={<PaginaSuporte />} />
