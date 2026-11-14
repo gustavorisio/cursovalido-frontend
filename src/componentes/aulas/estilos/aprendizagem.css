@@ -42,24 +42,6 @@
 .editor-questionario input[type="radio"], .editor-questionario input[type="checkbox"] { accent-color: var(--color-accent); }
 .editor-questionario .editor-publicacao { display: flex; align-items: center; gap: 10px; padding: 20px 0; margin-block: 20px;  }
 .editor-questionario > fieldset > .btn { margin-top: 8px; }
-@media (max-width: 900px) {
-  .pagina-aulas .plano-estudos { margin-inline: 0; }
-}
-@media (max-width: 640px) {
-  .plano-avaliacoes { grid-template-columns: 1fr; }
-  .editor-alternativa { grid-template-columns: 80px minmax(0, 1fr); }
-  .editor-alternativa > input { grid-column: 1 / -1; }
-  .editor-questionario .editor-pergunta { padding: 16px; }
-}
-
-.pagina-aulas .plano-estudos { @apply mx-0; }
-.plano-avaliacoes article { @apply border-brand-100 bg-brand-50; }
-.avaliacao-pergunta legend { @apply text-xl font-medium; }
-.avaliacao-opcao { @apply min-h-12 rounded-none border border-line bg-surface p-4; }
-.avaliacao-opcao:has(input:checked) { @apply border-accent bg-brand-50; }
-
-
-
 .caminhos-resultado h2, .caminhos-imagem h2 { margin-bottom: 16px; font-size: 25px; font-weight: 600; }
 .caminhos-resultado > p { margin: 16px 0; line-height: 1.8; }
 .caminhos-temas { margin: 24px 0; padding-left: 18px;  }
@@ -136,7 +118,21 @@
   .caminhos-admin-item, .caminhos-revisao li { flex-direction: column; align-items: stretch; }
   .editor-caminhos .editor-pergunta { padding: 16px; }
 }
-.caminhos-etapa legend { @apply text-xl font-medium; }
+@media (max-width: 900px) {
+  .pagina-aulas .plano-estudos { margin-inline: 0; }
+}
+@media (max-width: 640px) {
+  .plano-avaliacoes { grid-template-columns: 1fr; }
+  .editor-alternativa { grid-template-columns: 80px minmax(0, 1fr); }
+  .editor-alternativa > input { grid-column: 1 / -1; }
+  .editor-questionario .editor-pergunta { padding: 16px; }
+}
+
+.pagina-aulas .plano-estudos { @apply mx-0; }
+.plano-avaliacoes article { @apply border-brand-100 bg-brand-50; }
+.avaliacao-pergunta legend, .caminhos-etapa legend { @apply text-xl font-medium; }
+.avaliacao-opcao { @apply min-h-12 rounded-none border border-line bg-surface p-4; }
+.avaliacao-opcao:has(input:checked) { @apply border-accent bg-brand-50; }
 .caminhos-secao { @apply rounded-none bg-surface; }
 .caminhos-secao summary { @apply px-4; }
 .caminhos-etapas, .caminhos-resultado { @apply bg-surface; }
