@@ -3,7 +3,7 @@ import { requisitar } from '../../../servicos/api';
 const TAMANHO_PAGINA_PADRAO = 5;
 
 function validarLimites(dados) {
-  if ((dados.titulo?.length ?? 0) > 255 || (dados.descricao?.length ?? 0) > 5000 || (dados.conteudo?.length ?? 0) > 5000) {
+  if ((dados.titulo?.length ?? 0) > 40 || (dados.descricao?.length ?? 0) > 5000 || (dados.conteudo?.length ?? 0) > 5000) {
     throw new Error('Limite máximo alcançado');
   }
 }

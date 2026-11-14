@@ -83,6 +83,8 @@
 .lista-topicos .card { @apply mb-0; }
 .pagina-forum .page-header { @apply  border-line pb-6; }
 .pagina-forum .topic-title { @apply mb-2 text-lg font-semibold; }
+.pagina-forum .lista-topicos .topic-summary { width: 100%; }
+.pagina-forum .titulo-detalhe { overflow-wrap: anywhere; }
 .pagina-forum .lista-topicos .topic-title {
   margin: 0;
   padding: 0;

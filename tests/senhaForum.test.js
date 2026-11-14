@@ -7,6 +7,7 @@ import { createElement as h, act } from 'react';
 let createRoot;
 
 let servidor, CampoSenha, AlterarSenha, contexto, useForum, raiz, dom, forum;
+let ListaComentarios, DadosUsuario;
 const fetchOriginal = globalThis.fetch;
 before(async () => {
   const inicial = new JSDOM('<div></div>');
@@ -17,6 +18,8 @@ before(async () => {
   AlterarSenha = (await servidor.ssrLoadModule('/src/componentes/autenticacao/FormularioAlterarSenha.jsx')).default;
   contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
   useForum = (await servidor.ssrLoadModule('/src/componentes/forum/hooks/useForum.js')).useForum;
+  ListaComentarios = (await servidor.ssrLoadModule('/src/componentes/forum/componentes/ListaComentarios.jsx')).default;
+  DadosUsuario = (await servidor.ssrLoadModule('/src/componentes/autenticacao/DadosUsuario.jsx')).default;
   inicial.window.close();
 });
 after(async () => servidor.close());
@@ -84,4 +87,33 @@ test('meus tópicos consulta endpoint próprio e mantém busca na paginação', 
   assert.equal(forum.totalPaginas, 3);
   await act(() => forum.setMeusTopicos(false));
   assert.equal(chamadas.filter(u => u.pathname.endsWith('/topicos')).at(-1).searchParams.get('page'), '0');
+});
+
+test('comentário excluído mantém o cartão, oculta conteúdo e ações', async () => {
+  await act(() => raiz.render(h(ListaComentarios, {
+    comentarios: [{ id: 1, ativo: false, conteudo: 'Texto original privado', nomeAutor: 'Aluno' }],
+    podeEditar: () => true, podeExcluir: () => true,
+  })));
+  assert.equal(document.querySelectorAll('.comment-card').length, 1);
+  assert.match(document.body.textContent, /Esta mensagem foi excluída\./);
+  assert.doesNotMatch(document.body.textContent, /Texto original privado/);
+  assert.equal(document.querySelectorAll('button').length, 0);
+});
+
+test('dados da conta exibem data e hora do último aceite e a versão aceita', async () => {
+  const dados = { id: 7, nomeCompleto: 'Aluno', email: 'aluno@example.com', dataHoraAceite: '2026-11-14T15:42:30', versaoTermos: '2.1' };
+  globalThis.fetch = async () => Response.json(dados);
+  await act(async () => raiz.render(h(contexto.Provider, { value: { sessao: { idUsuario: 7 } } }, h(DadosUsuario))));
+  const campos = Object.fromEntries([...document.querySelectorAll('dl > div')].map(div => [div.querySelector('dt').textContent, div.querySelector('dd').textContent]));
+  assert.match(campos['Último aceite dos termos'], /14\/11\/2026/);
+  assert.match(campos['Último aceite dos termos'], /15:42:30/);
+  assert.equal(campos['Versão dos termos aceitos'], '2.1');
+});
+
+test('dados da conta não inventam data ou versão quando o aceite não está informado', async () => {
+  globalThis.fetch = async () => Response.json({ id: 7, nomeCompleto: 'Aluno', email: 'aluno@example.com' });
+  await act(async () => raiz.render(h(contexto.Provider, { value: { sessao: { idUsuario: 7 } } }, h(DadosUsuario))));
+  const campos = Object.fromEntries([...document.querySelectorAll('dl > div')].map(div => [div.querySelector('dt').textContent, div.querySelector('dd').textContent]));
+  assert.equal(campos['Último aceite dos termos'], 'Não informado');
+  assert.equal(campos['Versão dos termos aceitos'], 'Não informada');
 });

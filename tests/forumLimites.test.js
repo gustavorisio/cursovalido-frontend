@@ -9,7 +9,7 @@ test('fórum impede envio acima do limite ao criar e editar tópicos e comentár
   globalThis.fetch = async () => { chamadas++; return new Response('{}'); };
   try {
     const servico = await servidor.ssrLoadModule('/src/componentes/forum/servicos/servicoForum.js');
-    const titulo = 't'.repeat(256);
+    const titulo = 't'.repeat(41);
     const longo = 'a'.repeat(5001);
     for (const executar of [
       () => servico.criarTopico({ titulo, descricao: 'Descrição' }),
@@ -20,7 +20,7 @@ test('fórum impede envio acima do limite ao criar e editar tópicos e comentár
       () => servico.atualizarComentario(1, { conteudo: longo }),
     ]) assert.throws(executar, /Limite máximo alcançado/);
     assert.equal(chamadas, 0);
-    await servico.criarTopico({ titulo: 't'.repeat(255), descricao: 'a'.repeat(5000) });
+    await servico.criarTopico({ titulo: 't'.repeat(40), descricao: 'a'.repeat(5000) });
     await servico.criarComentario(1, 'a'.repeat(5000));
     assert.equal(chamadas, 2);
   } finally {
