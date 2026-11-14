@@ -72,6 +72,7 @@ export default function PaginaCatalogo() {
     {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
     {mensagem ? <p className="mensagem-sucesso" role="status">{mensagem}</p> : null}
     <FiltroTema valor={temaSelecionado} onAlterar={setTemaSelecionado} />
+    <Link className="btn btn-link" to="/roadmap">Ainda está escolhendo uma área? Explore o mapa de tecnologia</Link>
     {!carga.carregando && !carga.erro && <p className="catalogo-contagem" role="status">{cursos.length} {cursos.length === 1 ? 'curso encontrado' : 'cursos encontrados'}{temaSelecionado && <> neste tema · <button type="button" onClick={() => setTemaSelecionado('')}>Limpar tema</button></>}</p>}
     <EstadoCarregamento carga={carga} />
     {carga.carregando ? null : carga.erro ? null : <>
