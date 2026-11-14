@@ -1,3 +1,4 @@
+import CabecalhoPagina from '../comuns/CabecalhoPagina';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Rodape from '../comuns/Rodape';
@@ -59,9 +60,7 @@ export default function PaginaSuporte() {
   }
   return <div className="app-container pagina-forum pagina-suporte">
     <main className="main-content">
-      <div className="page-header"><div><h1 className="page-title">Suporte</h1>
-        <p>Recupere seu acesso ou fale com a nossa equipe. Você pode enviar uma solicitação sem entrar na conta.</p>
-      </div></div>
+      <CabecalhoPagina titulo="Suporte" descricao="Recupere seu acesso ou fale com a nossa equipe. Você pode enviar uma solicitação sem entrar na conta." />
       <div className="forum-colunas">
         <section className="forum-topicos" aria-label="Solicitação de suporte">
           {resultado ? <div className="card" role="status" aria-live="polite">
