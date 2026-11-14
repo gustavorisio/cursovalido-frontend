@@ -1,0 +1,19 @@
+.layout-dashboard { color: var(--color-brand-950); background: var(--color-page); }
+.layout-dashboard .app-wrapper { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr auto; grid-template-areas: 'painel-main' 'painel-footer'; min-height: 100dvh; }
+.layout-dashboard .app-main { grid-area: painel-main; min-width: 0; }
+.layout-dashboard .container-fluid { width: 100%; min-width: 0; }
+.layout-dashboard .dashboard-retorno { padding: 0; margin-bottom: 16px; }
+.layout-dashboard .administracao-retorno { margin-bottom: 0; }
+.layout-dashboard .app-content-header { padding: 24px 24px 0; }
+.layout-dashboard .app-content-header h1 { margin-block: 16px 8px; font-size: 28px; font-weight: 700; }
+.layout-dashboard .app-content-header p { color: var(--color-muted); }
+.layout-dashboard .app-content { padding: 0; }
+.layout-dashboard .app-footer { border-top: 1px solid var(--color-line); background: var(--color-surface); grid-area: painel-footer; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 20px 24px;  font-size: 14px; }
+.layout-dashboard .breadcrumb { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.layout-dashboard .breadcrumb-item + .breadcrumb-item::before { content: '/'; margin-right: 8px; color: var(--color-muted); }
+.layout-dashboard .breadcrumb a { color: var(--color-brand-700); }
+.layout-dashboard .dashboard-pular { position: absolute; top: -100px; z-index: 1100; background: var(--color-surface); padding: 16px; }
+.layout-dashboard .dashboard-pular:focus { top: 0; }
+
+
+.layout-dashboard .dashboard-localizacao { margin-bottom: 16px; font-size: 14px; }
