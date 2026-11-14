@@ -1,3 +1,4 @@
+import CabecalhoPagina from '../componentes/comuns/CabecalhoPagina';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import ConfirmacaoModal from '../componentes/forum/componentes/ConfirmacaoModal';
@@ -109,11 +110,7 @@ export default function Administracao({ tela = 'geral' }) {
 
   return <div className="app-container"><main className="main-content administracao">
     {tela !== 'geral' && <VoltarAdministracao />}
-    <section className="card configuracoes-conta administracao-cabecalho">
-      <span className="administracao-etiqueta">Gestão da plataforma</span>
-      <h1 className="page-title">{({ termos: 'Termos de Aceite', privacidade: 'Política de Privacidade', usuarios: 'Moderação de usuários', convites: 'Convites' })[tela] ?? 'Administração'}</h1>
-      <p className="texto-suave">Administrador: {sessao?.nome}</p>
-    </section>
+    <CabecalhoPagina etiqueta="Gestão da plataforma" titulo={({ termos: 'Termos de Aceite', privacidade: 'Política de Privacidade', usuarios: 'Moderação de usuários', convites: 'Convites' })[tela] ?? 'Administração'} descricao={`Administrador: ${sessao?.nome}`} />
     <nav className="administracao-navegacao" aria-label="Ferramentas administrativas">
       <NavLink to="/administracao/usuarios">Usuários</NavLink>
       {principal && <><NavLink to="/administracao/termos">Termos de Aceite</NavLink><NavLink to="/administracao/privacidade">Privacidade</NavLink><NavLink to="/administracao/convites">Convites</NavLink></>}

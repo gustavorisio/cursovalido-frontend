@@ -2,28 +2,39 @@ import { useEffect, useRef } from 'react';
 import { Chart, LineController, BarController, DoughnutController, LineElement, PointElement, BarElement, ArcElement, CategoryScale, LinearScale, Tooltip, Legend, Filler } from 'chart.js';
 
 Chart.register(LineController, BarController, DoughnutController, LineElement, PointElement, BarElement, ArcElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
+Chart.defaults.font.family = 'Arial, sans-serif';
 
 export default function GraficoDashboard({ tipo, rotulos, valores, titulo, horizontal = false }) {
   const canvas = useRef(null);
   useEffect(() => {
-    const cores = ['#58a6ff', '#3fb950', '#d29922', '#bc8cff'];
+    const estilo = window.getComputedStyle(canvas.current);
+    const cor = (token, padrao) => estilo.getPropertyValue(token).trim() || padrao;
+    const matiz = Math.floor(Math.random() * 360);
+    const corPrincipal = `hsl(${matiz}, 68%, 65%)`;
+    const texto = cor('--color-brand-950', '#f0f6fc');
+    const suave = cor('--color-muted', '#8b949e');
+    const linha = cor('--color-line', '#30363d');
+    const cores = rotulos.map((_, indice) => `hsl(${(matiz + indice * 137.508) % 360}, 68%, 65%)`);
     const grafico = new Chart(canvas.current, {
       type: tipo,
       data: {
         labels: rotulos,
         datasets: [{
-          label: titulo, data: valores, borderColor: '#58a6ff',
-          backgroundColor: tipo === 'doughnut' ? cores : '#58a6ff80', borderWidth: 2, tension: 0.25, fill: tipo === 'line'
+          label: titulo, data: valores,
+          borderColor: tipo === 'line' ? corPrincipal : cores,
+          backgroundColor: tipo === 'line' ? `hsla(${matiz}, 68%, 65%, 0.2)` : cores,
+          pointBackgroundColor: corPrincipal,
+          borderWidth: 2, tension: 0.25, fill: tipo === 'line'
         }],
       },
       options: {
         responsive: true, maintainAspectRatio: false, indexAxis: horizontal ? 'y' : 'x',
         animation: globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? false : undefined,
-        plugins: { legend: { display: tipo === 'doughnut', labels: { color: '#e6edf3' } } },
+        plugins: { legend: { display: tipo === 'doughnut', labels: { color: texto } } },
         ...(tipo === 'doughnut' ? {} : {
           scales: {
-            [horizontal ? 'x' : 'y']: { beginAtZero: true, ticks: { precision: 0, color: '#c9d1d9' }, grid: { color: '#30363d' } },
-            [horizontal ? 'y' : 'x']: { ticks: { color: '#c9d1d9' }, grid: { display: false } },
+            [horizontal ? 'x' : 'y']: { beginAtZero: true, ticks: { precision: 0, color: suave }, grid: { color: linha } },
+            [horizontal ? 'y' : 'x']: { ticks: { color: suave }, grid: { display: false } },
           }
         }),
       },

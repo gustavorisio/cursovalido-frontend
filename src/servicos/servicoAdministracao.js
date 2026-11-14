@@ -5,7 +5,7 @@ export async function buscarPermissoesAdministrativas() {
     return await requisitar('/administracao/permissoes');
   } catch (erro) {
     if (erro.status === 404) {
-      throw new Error('O backend em execução não possui as rotas administrativas atualizadas. Reinicie o backend com o código atualizado e confira VITE_API_URL.', { cause: erro });
+      throw new Error('A administração está indisponível. Tente novamente mais tarde.', { cause: erro });
     }
     throw erro;
   }
