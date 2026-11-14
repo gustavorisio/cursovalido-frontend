@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import CabecalhoPagina from '../componentes/comuns/CabecalhoPagina';
 import FormularioAlterarSenha from '../componentes/autenticacao/FormularioAlterarSenha';
 import Rodape from '../componentes/comuns/Rodape';
 import { useAutenticacao } from '../contextos/useAutenticacao';
@@ -17,7 +18,7 @@ export default function AlterarSenhaConta() {
 
   return <div className="app-container pagina-configuracoes pagina-alterar-senha">
     <main className="main-content">
-      <h1 className="page-title">Alterar senha</h1>
+      <CabecalhoPagina titulo="Alterar senha" />
       <section className="card configuracoes-conta">
         <Link className="btn btn-link" to="/configuracoes">Voltar para configurações</Link>
         <FormularioAlterarSenha aoConcluir={concluir} />
