@@ -60,7 +60,7 @@ jobs:
           [[ "$port" =~ ^[0-9]+$ ]]
           keydir=$(mktemp -d)
           trap 'rm -rf -- "$keydir"' EXIT
-          printf '%s\n' "$SSH_KEY" > "$keydir/key"
+          echo "$SSH_KEY" | tr -d '\r' > "$keydir/key"
           printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
           chmod 600 "$keydir/key" "$keydir/known_hosts"
           unset SSH_KEY KNOWN_HOSTS
