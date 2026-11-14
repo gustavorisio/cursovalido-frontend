@@ -131,7 +131,7 @@ export default function Login() {
   return (
     <div className="pagina-publica">
       <main className="painel-autenticacao">
-        <div className="marca-publica">CURSO VÁLIDO <span>•</span></div>
+        <div className="marca-publica">CURSO VÁLIDO </div>
         <h1>Entrar na plataforma</h1>
         <p className="texto-suave">Acesse o fórum e continue sua jornada de aprendizagem.</p>
         <FormularioLogin dados={dados} codigo={codigo} segundoFator={segundoFator} erro={erro} carregando={carregando} mensagem={mensagemReenvio || localizacao.state?.mensagem} onAlterar={alterar} onCodigo={setCodigo} onEnviar={enviar} />

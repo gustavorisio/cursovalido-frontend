@@ -58,7 +58,7 @@
 .avaliacao-opcao { @apply min-h-12 rounded-none border border-line bg-surface p-4; }
 .avaliacao-opcao:has(input:checked) { @apply border-accent bg-brand-50; }
 
-.pagina-aulas .page-header-content { @apply min-w-0 flex-[1_1_320px]; }
+
 
 .caminhos-resultado h2, .caminhos-imagem h2 { margin-bottom: 16px; font-size: 25px; font-weight: 600; }
 .caminhos-resultado > p { margin: 16px 0; line-height: 1.8; }

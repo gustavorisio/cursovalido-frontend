@@ -104,21 +104,3 @@
 .pagina-forum .content-text { @apply leading-8; }
 .pagina-forum .detalhe-topico > .card { @apply p-6 sm:p-8; }
 @media (min-width: 901px) { .forum-regras { position: sticky; top: 24px; } }
-
-/* Estrutura do cabeçalho, pesquisa e filtros do fórum. */
-.pagina-forum .page-header-content { @apply min-w-0 flex-[1_1_320px]; }
-.pagina-forum .page-actions {
-    @apply ml-0 flex min-w-0 w-full flex-col flex-wrap items-stretch gap-3 lg:ml-auto lg:w-auto lg:flex-row lg:items-center;
-  }
-.pagina-forum .barra-pesquisa {
-    @apply m-0 flex min-w-0 w-full max-w-[480px] flex-wrap items-center gap-3;
-  }
-.pagina-forum .barra-pesquisa .campo-pesquisa { @apply w-0 min-w-[160px] flex-1; }
-.pagina-forum .barra-pesquisa .btn { @apply min-h-12 shrink-0; }
-.pagina-forum .page-actions .barra-pesquisa { @apply max-w-none lg:w-[400px]; }
-.pagina-forum .page-actions > .btn { @apply min-h-12; }
-.pagina-forum .campo-pesquisa {
-    @apply min-h-12 w-full rounded-none border border-line bg-surface px-4 py-3 text-base text-brand-950 outline-none transition-colors placeholder:text-muted focus:border-accent focus:ring-3 focus:ring-accent/15;
-  }
-.pagina-forum .forum-filtros { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-.pagina-forum .forum-filtros [aria-pressed="true"] { border-color: var(--color-brand-700); color: var(--color-brand-700); background: var(--color-hover); }
