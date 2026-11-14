@@ -8,11 +8,15 @@ export default function FormularioTopico({ titulo, descricao, onMudarTitulo, onM
           type="text"
           className="input-field"
           placeholder="Título da postagem"
-          maxLength={255}
+          aria-label="Título da postagem"
+          aria-describedby="limite-titulo-topico"
+          maxLength={40}
           value={titulo}
           onChange={(evento) => onMudarTitulo(evento.target.value)}
         />
-        {titulo.length >= 255 && <p className="contador limite" role="status">Limite máximo alcançado</p>}
+        <p id="limite-titulo-topico" className={`contador ${titulo.length >= 40 ? 'limite' : ''}`}>
+          {titulo.length}/40 caracteres{titulo.length >= 40 && <span role="status"> · Limite máximo alcançado</span>}
+        </p>
         <textarea
           className="input-field"
           placeholder="Escreva a descrição detalhada do seu tópico..."
