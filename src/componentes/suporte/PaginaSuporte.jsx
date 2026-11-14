@@ -52,7 +52,7 @@ export default function PaginaSuporte() {
     setEnviando(true); setErro('');
     try {
       const resposta = await enviarSolicitacao(pedido);
-      if (!resposta?.protocolo) throw new Error('O servidor não confirmou o envio. Tente novamente.');
+      if (!resposta?.protocolo) throw new Error('Não foi possível confirmar o envio. Tente novamente.');
       setResultado(resposta);
     }
     catch (falha) { mostrarErro(falha.message || 'Não foi possível enviar. Tente novamente.'); }
@@ -85,7 +85,7 @@ export default function PaginaSuporte() {
               <input className="input-field" id="assunto" name="assunto" maxLength={150} required value={dados.assunto} onChange={alterar} />
               <label htmlFor="descricao">Descreva o que aconteceu</label>
               <textarea className="input-field" id="descricao" name="descricao" rows={8} minLength={20} maxLength={5000} required aria-describedby="descricao-ajuda" value={dados.descricao} onChange={alterar} />
-              <p id="descricao-ajuda">Use entre 20 e 5.000 caracteres. Informe quando o problema começou e qual mensagem apareceu. Não envie senhas, códigos de acesso, CPF ou documentos.</p>
+              <p id="descricao-ajuda">Use entre 20 e 5.000 caracteres. Informe quando o problema começou e qual mensagem apareceu. Não envie senhas, códigos de acesso ou documentos pessoais.</p>
               <div className="contador">{dados.descricao.length}/5000</div>
             </fieldset>
             <div className="suporte-envio">
