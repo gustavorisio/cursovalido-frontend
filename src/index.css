@@ -589,7 +589,7 @@
   }
 }
 @layer components {
-  .configuracoes-conta h2 { @apply text-xl font-semibold; }
+  .configuracoes-conta h2, .suporte-formulario h2 { @apply text-xl font-semibold; }
   .empty-list { @apply rounded-none border-solid px-6 py-12; }
   .administracao-navegacao a[aria-current="page"] { @apply bg-brand-50 text-brand-800; }
   .moderacao-formulario { @apply bg-brand-50; }
