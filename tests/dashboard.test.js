@@ -67,7 +67,7 @@ test('falha em uma seção preserva as demais e permite tentar novamente', async
   const fetchSucesso = globalThis.fetch;
   globalThis.fetch = (url) => url.endsWith('/resumo') ? Promise.resolve(new Response('{}', { status: 500 })) : fetchSucesso(url);
   await act(async () => { raiz.render(createElement(Dashboard)); });
-  assert.match(document.querySelector('[role="alert"]').textContent, /servidor está indisponível/);
+  assert.match(document.querySelector('[role="alert"]').textContent, /serviço está indisponível/);
   assert.equal(document.querySelectorAll('.dashboard-grafico').length, 3);
   globalThis.fetch = fetchSucesso;
   await act(async () => { document.querySelector('[role="alert"] button').click(); });
