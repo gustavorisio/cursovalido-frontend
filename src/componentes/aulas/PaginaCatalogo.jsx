@@ -7,6 +7,9 @@ import LayoutAulas from './componentes/LayoutAulas';
 import EstadoCarregamento from './componentes/EstadoCarregamento';
 import useCarregamento from './hooks/useCarregamento';
 import * as servico from './servicos/servicoAluno';
+import CabecalhoAulas from './componentes/CabecalhoAulas';
+import FiltroTema from './componentes/FiltroTema';
+import { correspondeAoTema } from './servicos/filtroTema';
 
 
 export default function PaginaCatalogo() {
@@ -22,14 +25,23 @@ export default function PaginaCatalogo() {
   const [somenteMatriculados, setSomenteMatriculados] = useState(false);
   const [processando, setProcessando] = useState(null);
   const [busca, setBusca] = useState('');
+  const [temaSelecionado, setTemaSelecionado] = useState('');
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
   const matriculas = [...(carga.dados?.matriculas ?? []), ...novasMatriculas];
-  const cursos = (carga.dados?.cursos ?? []).filter((curso) => {
+  const catalogo = carga.dados?.cursos ?? [];
+  const cursos = catalogo.filter((curso) => {
     if (!correspondeAoNome(curso.titulo, busca)) return false;
+    if (!correspondeAoTema(curso, temaSelecionado)) return false;
     if (!somenteMatriculados) return true;
     return matriculas.some((item) => item.idCurso === curso.id);
   });
+
+  function mostrarTodos() {
+    setTemaSelecionado('');
+    setBusca('');
+    setSomenteMatriculados(false);
+  }
 
   async function matricular(curso) {
     if (!aluno || processando !== null) return;
@@ -48,31 +60,31 @@ export default function PaginaCatalogo() {
   }
 
   return <LayoutAulas>
-    <header className="aulas-apresentacao">
-      <span className="aulas-etiqueta">Sua jornada de aprendizagem</span>
-      <div className="page-header">
-        <h1 className="page-title">Cursos</h1>
-        {aluno && <div className="page-actions">
-          <button className={somenteMatriculados ? 'btn btn-secondary' : 'btn btn-primary'} type="button" aria-pressed={!somenteMatriculados} onClick={() => setSomenteMatriculados(false)}>Catálogo</button>
-          <button className={somenteMatriculados ? 'btn btn-primary' : 'btn btn-secondary'} type="button" aria-pressed={somenteMatriculados} onClick={() => setSomenteMatriculados(true)}>Minhas matrículas</button>
+    <CabecalhoAulas etiqueta="Aprenda no seu ritmo" titulo="Aulas online" descricao="Explore nossos cursos de tecnologia e programação e descubra novas possibilidades." tipo="aula" acao={<PesquisaConteudo valor={busca} onAlterar={setBusca} />} />
+    <section className="catalogo-resultados" id="catalogo-cursos" aria-labelledby="catalogo-cursos-titulo">
+      <div className="catalogo-secao-cabecalho">
+        <div><span className="aulas-etiqueta">Continue aprendendo</span><h2 id="catalogo-cursos-titulo">Explore nossos cursos</h2></div>
+        {aluno && <div className="catalogo-abas">
+          <button type="button" aria-pressed={!somenteMatriculados} onClick={() => setSomenteMatriculados(false)}>Catálogo</button>
+          <button type="button" aria-pressed={somenteMatriculados} onClick={() => setSomenteMatriculados(true)}>Minhas matrículas</button>
         </div>}
       </div>
-      <p className="texto-suave">{autenticado ? 'Explore os cursos gratuitos ou retome seus estudos nas suas matrículas.' : 'Conheça os cursos disponíveis. Entre na sua conta para acessar módulos e aulas.'}</p>
-    </header>
     {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
     {mensagem ? <p className="mensagem-sucesso" role="status">{mensagem}</p> : null}
-    <PesquisaConteudo valor={busca} onAlterar={setBusca} />
+    <FiltroTema valor={temaSelecionado} onAlterar={setTemaSelecionado} />
+    <Link className="btn btn-link" to="/roadmap">Ainda está escolhendo uma área? Explore o mapa de tecnologia</Link>
+    {!carga.carregando && !carga.erro && <p className="catalogo-contagem" role="status">{cursos.length} {cursos.length === 1 ? 'curso encontrado' : 'cursos encontrados'}{temaSelecionado && <> neste tema · <button type="button" onClick={() => setTemaSelecionado('')}>Limpar tema</button></>}</p>}
     <EstadoCarregamento carga={carga} />
     {carga.carregando ? null : carga.erro ? null : <>
-      {cursos.length === 0 ? <div className="card empty-list">{busca.trim() ? 'Nenhum curso encontrado para esta pesquisa.' : somenteMatriculados ? 'Você ainda não possui matrículas em cursos disponíveis.' : 'Nenhum curso disponível no momento.'}</div> : null}
-      <div className="aulas-grade">
+      {cursos.length === 0 ? <div className="card empty-list">{busca.trim() ? 'Nenhum curso encontrado para esta pesquisa.' : somenteMatriculados ? 'Você ainda não possui matrículas com estes filtros.' : temaSelecionado ? 'Ainda não há cursos disponíveis com estes filtros.' : 'Nenhum curso disponível no momento.'}{(temaSelecionado || busca || somenteMatriculados) && <button className="btn btn-link catalogo-limpar" type="button" onClick={mostrarTodos}>Ver todos os cursos</button>}</div> : null}
+      <div className="aulas-grade catalogo-cursos-grade">
         {cursos.map((curso) => {
           const matriculado = matriculas.some((item) => item.idCurso === curso.id);
           return <article className="card aulas-cartao" key={curso.id}>
-            <span className="aulas-etiqueta">{matriculado ? 'Matriculado' : 'Curso gratuito'}</span>
+
             <div className="aulas-cartao-corpo">
               <h2 className="topic-title">{curso.titulo}</h2>
-              <p className="content-text">{curso.descricao}</p>
+
             </div>
             <footer className="aulas-cartao-acoes">
               <div className="acoes-topico">
@@ -83,5 +95,6 @@ export default function PaginaCatalogo() {
         })}
       </div>
     </>}
+    </section>
   </LayoutAulas>;
 }

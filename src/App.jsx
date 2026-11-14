@@ -9,6 +9,10 @@ import PaginaCatalogo from './componentes/aulas/PaginaCatalogo';
 import PaginaCursoAluno from './componentes/aulas/PaginaCursoAluno';
 import PaginaAulaAluno from './componentes/aulas/PaginaAulaAluno';
 import PaginaAulasAdministrador from './componentes/aulas/PaginaAulasAdministrador';
+import PaginaRoadmap from './componentes/aulas/PaginaRoadmap';
+import PaginaAdministracaoCaminhos from './componentes/aulas/PaginaAdministracaoCaminhos';
+import PaginaQuestionarioAluno from './componentes/aulas/PaginaQuestionarioAluno';
+import PaginaEditorQuestionario from './componentes/aulas/PaginaEditorQuestionario';
 import Inicio from './paginas/Inicio';
 import Login from './paginas/Login';
 import Cadastro from './paginas/Cadastro';
@@ -18,6 +22,7 @@ import ConfirmacaoEmail from './paginas/ConfirmacaoEmail';
 import SolicitarAlteracaoSenha from './paginas/SolicitarAlteracaoSenha';
 import AlterarSenha from './paginas/AlterarSenha';
 import Configuracoes from './paginas/Configuracoes';
+import AlterarSenhaConta from './paginas/AlterarSenhaConta';
 import Administracao from './paginas/Administracao';
 import CadastroConvite from './paginas/CadastroConvite';
 import RotaProtegida from './componentes/autenticacao/RotaProtegida';
@@ -42,21 +47,30 @@ const titulosPaginas = [
   ['/privacidade', 'Política de privacidade'],
   ['/politica-privacidade.html', 'Política de privacidade'],
   ['/configuracoes', 'Configurações'],
+  ['/configuracoes/alterar-senha', 'Alterar senha'],
   ['/administracao', 'Administração'],
   ['/administracao/dashboard', 'Dashboard'],
   ['/administracao/termos', 'Administrar termos'],
   ['/administracao/privacidade', 'Administrar privacidade'],
   ['/administracao/usuarios', 'Usuários'],
   ['/administracao/convites', 'Convites'],
+  ['/administracao/caminhos', 'Administrar caminhos na tecnologia'],
   ['/administracao/cursos/:idCurso/aulas/:idAula', 'Administrar aula'],
+  ['/administracao/cursos/:idCurso/diagnostico', 'Editar diagnóstico'],
+  ['/administracao/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
   ['/administracao/cursos/*', 'Administrar cursos'],
   ['/professor/cursos/:idCurso/modulos/:idModulo/aulas', 'Gerenciar aulas'],
+  ['/professor/cursos/:idCurso/diagnostico', 'Editar diagnóstico'],
+  ['/professor/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
   ['/professor/cursos/:idCurso/modulos', 'Gerenciar módulos'],
   ['/professor/cursos', 'Gerenciar cursos'],
   ['/aluno/cursos/:idCurso/aulas/:idAula', 'Aula'],
+  ['/aluno/cursos/:idCurso/diagnostico', 'Diagnóstico inicial'],
+  ['/aluno/cursos/:idCurso/modulos/:idModulo/questionario', 'Questionário do módulo'],
   ['/aluno/cursos/:idCurso', 'Curso'],
   ['/aluno/cursos', 'Catálogo de cursos'],
   ['/cursos', 'Cursos'],
+  ['/roadmap', 'Caminhos na tecnologia'],
   ['/suporte', 'Suporte'],
   ['/forum', 'Fórum'],
   ['/noticias/nova', 'Publicar notícia'],
@@ -108,7 +122,10 @@ export default function App() {
           <Route path="/termos-aceite.html" element={<TermosDeUso />} />
           <Route path="/privacidade" element={<PoliticaDePrivacidade />} />
           <Route path="/politica-privacidade.html" element={<PoliticaDePrivacidade />} />
-          <Route element={<RotaProtegida />}><Route path="/configuracoes" element={<Configuracoes />} /></Route>
+          <Route element={<RotaProtegida />}>
+            <Route path="/configuracoes" element={<Configuracoes />} />
+            <Route path="/configuracoes/alterar-senha" element={<AlterarSenhaConta />} />
+          </Route>
           <Route element={<RotaProtegida perfis={['ADMINISTRADOR']} />}>
             <Route path="/administracao/dashboard" element={<Dashboard />} />
             <Route path="/noticias/nova" element={<EditorNoticia />} />
@@ -119,21 +136,29 @@ export default function App() {
             <Route path="/administracao/usuarios" element={<Administracao key="usuarios" tela="usuarios" />} />
             <Route path="/administracao/convites" element={<Administracao key="convites" tela="convites" />} />
             <Route path="/administracao/cursos" element={<PaginaAulasAdministrador />} />
+            <Route path="/administracao/caminhos" element={<PaginaAdministracaoCaminhos />} />
             <Route path="/administracao/cursos/:idCurso" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso/aulas/:idAula" element={<PaginaAulasAdministrador />} />
+            <Route path="/administracao/cursos/:idCurso/diagnostico" element={<PaginaEditorQuestionario />} />
+            <Route path="/administracao/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaEditorQuestionario />} />
           </Route>
           <Route element={<RotaProtegida perfis={['PROFESSOR']} />}>
             <Route path="/professor/cursos" element={<PaginaGestaoCursos />} />
             <Route path="/professor/cursos/:idCurso/modulos" element={<PaginaGestaoCursos />} />
             <Route path="/professor/cursos/:idCurso/modulos/:idModulo/aulas" element={<PaginaGestaoCursos />} />
+            <Route path="/professor/cursos/:idCurso/diagnostico" element={<PaginaEditorQuestionario />} />
+            <Route path="/professor/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaEditorQuestionario />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
           <Route element={<RotaProtegida perfis={['ALUNO']} />}>
             <Route path="/aluno/cursos" element={<PaginaCatalogo />} />
             <Route path="/aluno/cursos/:idCurso" element={<PaginaCursoAluno />} />
             <Route path="/aluno/cursos/:idCurso/aulas/:idAula" element={<PaginaAulaAluno />} />
+            <Route path="/aluno/cursos/:idCurso/diagnostico" element={<PaginaQuestionarioAluno />} />
+            <Route path="/aluno/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaQuestionarioAluno />} />
           </Route>
           <Route path="/cursos" element={<InicioCursos />} />
+          <Route path="/roadmap" element={<PaginaRoadmap />} />
           <Route path="/suporte" element={<PaginaSuporte />} />
           <Route path="/forum" element={<PaginaForum />} />
             <Route path="/noticias" element={<Noticias />} />

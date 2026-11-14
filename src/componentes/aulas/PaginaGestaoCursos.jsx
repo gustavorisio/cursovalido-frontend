@@ -1,9 +1,13 @@
+import ModuloExpansivel from './componentes/ModuloExpansivel';
 import PesquisaConteudo from './componentes/PesquisaConteudo';
 import { correspondeAoNome } from './servicos/pesquisaConteudo';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import ConfirmacaoModal from '../forum/componentes/ConfirmacaoModal';
-import Rodape from '../comuns/Rodape';
+import LayoutAulas from './componentes/LayoutAulas';
+import CabecalhoAulas from './componentes/CabecalhoAulas';
+import FiltroTema from './componentes/FiltroTema';
+import { correspondeAoTema } from './servicos/filtroTema';
 import FormularioConteudo from './componentes/FormularioConteudo';
 import * as servico from './servicos/servicoAulas';
 import './estilos/aulas.css';
@@ -26,6 +30,7 @@ function GestaoConteudo({ idCurso, idModulo }) {
   const nome = tipo === 'modulo' ? 'módulo' : tipo;
   const titulo = tipo === 'curso' ? 'Meus cursos' : tipo === 'modulo' ? 'Módulos do curso' : 'Aulas do módulo';
   const [busca, setBusca] = useState('');
+  const [tema, setTema] = useState('');
   const [itens, setItens] = useState([]);
   const [curso, setCurso] = useState(null);
   const [modulo, setModulo] = useState(null);
@@ -119,50 +124,55 @@ function GestaoConteudo({ idCurso, idModulo }) {
     }
   }
 
-  return <div className="app-container">
+  const itensFiltrados = itens.filter((item) => correspondeAoNome(item.titulo, busca) && (tipo !== 'curso' || correspondeAoTema(item, tema)));
 
-    <main className="main-content pagina-aulas">
+  return <LayoutAulas>
       <nav className="acoes-topico" aria-label="Navegação dos cursos">
         <Link className="btn btn-link" to="/professor/cursos">Meus cursos</Link>
-        {curso ? <Link className="btn btn-link" to={`/professor/cursos/${curso.id}/modulos`}>→ {curso.titulo}</Link> : null}
-        {modulo ? <span>→ {modulo.titulo}</span> : null}
+        {curso ? <Link className="btn btn-link" to={`/professor/cursos/${curso.id}/modulos`}>{curso.titulo}</Link> : null}
+        {modulo ? <span>{modulo.titulo}</span> : null}
       </nav>
       {erro ? <div className="card aviso-erro" role="alert">{erro}</div> : null}
       {sucesso ? <div className="mensagem-sucesso" role="status">{sucesso}</div> : null}
       {formulario ? <FormularioConteudo tipo={nome} item={editando} processando={processando} onSalvar={salvar} onCancelar={() => { setFormulario(false); setErro(''); }} /> : <>
-        <header className="aulas-apresentacao">
-          <span className="aulas-etiqueta">Área do professor · Gestão de conteúdo</span>
-          <div className="page-header"><h1 className="page-title">{titulo}</h1>
-            <button className="btn btn-primary" type="button" disabled={carregando ? true : falhaCarga ? true : processando} onClick={() => abrirFormulario()}>Cadastrar {nome}</button>
-          </div>
-          <p className="texto-suave">{tipo === 'curso' ? 'Organize seus cursos e crie uma jornada de aprendizagem.' : tipo === 'modulo' ? 'Organize os módulos na sequência em que devem ser estudados.' : 'Adicione vídeos e organize as aulas deste módulo.'}</p>
-        </header>
+        <CabecalhoAulas etiqueta="Área do professor · Gestão de conteúdo" titulo={modulo?.titulo ?? curso?.titulo ?? titulo} tipo={tipo} descricao={tipo === 'curso' ? 'Organize seus cursos e crie uma jornada de aprendizagem.' : tipo === 'modulo' ? 'Organize os módulos na sequência em que devem ser estudados.' : 'Adicione vídeos e organize as aulas deste módulo.'} acao={<button className="btn btn-primary catalogo-cta" type="button" disabled={carregando || falhaCarga || processando} onClick={() => abrirFormulario()}>Cadastrar {nome} </button>}>
+          {!carregando && !falhaCarga && <div className="aulas-indicadores"><span>{itens.length} {tipo === 'curso' ? 'cursos' : tipo === 'modulo' ? 'módulos' : 'aulas'}</span></div>}
+        </CabecalhoAulas>
+        <section className="catalogo-resultados aulas-gestao-resultados" id="catalogo-cursos" aria-label={titulo}>
+        <div className="catalogo-secao-cabecalho"><div><span className="aulas-etiqueta">Conteúdo educacional</span><h2>{titulo}</h2></div></div>
         <PesquisaConteudo valor={busca} onAlterar={setBusca} label={tipo === 'curso' ? 'Pesquisar curso por nome' : tipo === 'aula' ? 'Pesquisar aula por nome' : 'Pesquisar módulo por nome'} />
+        {tipo === 'curso' && <FiltroTema valor={tema} onAlterar={setTema} gerenciar onAtualizar={() => { setCarregando(true); setTentativa((valor) => valor + 1); }} />}
         {carregando ? <div className="card empty-list" role="status">Carregando...</div> : falhaCarga ? <div className="card empty-list"><button className="btn btn-secondary" type="button" onClick={() => { setCarregando(true); setErro(''); setTentativa(tentativa + 1); }}>Tentar novamente</button></div> : <>
           {itens.length === 0 ? <div className="card empty-list">Nenhum conteúdo cadastrado. Cadastre o primeiro {nome}.</div> : null}
-          {itens.length > 0 && !itens.some((item) => correspondeAoNome(item.titulo, busca)) && <p className="card empty-list" role="status">Nenhum conteúdo encontrado para esta pesquisa.</p>}
-          <div className="aulas-grade">
-            {itens.filter((item) => correspondeAoNome(item.titulo, busca)).map((item) => <article className="card aulas-cartao" key={item.id}>
-              <span className="aulas-etiqueta">{nome}{tipo === 'curso' ? '' : ` ${item.ordem}`}</span>
+          {itens.length > 0 && itensFiltrados.length === 0 && <p className="card empty-list" role="status">Nenhum conteúdo encontrado com estes filtros.</p>}
+          <div className={`aulas-grade aulas-conteudo-grade${tipo === 'modulo' ? ' aulas-modulos-lista' : ''}`}>
+            {itensFiltrados.map((item) => <CartaoConteudo key={item.id} tipo={tipo} item={item} expandido={Boolean(busca.trim())}>
+
+              {tipo === 'aula' && <span className="aulas-etiqueta">{nome} {item.ordem}</span>}
               <div className="aulas-cartao-corpo">
-                <h2 className="topic-title">{item.titulo}</h2>
-                <p className="content-text">{item.descricao}</p>
-                {tipo === 'aula' ? <p className="texto-suave">Vídeo: <a href={`https://www.youtube.com/watch?v=${item.youtubeVideoId}`} target="_blank" rel="noreferrer">Abrir no YouTube ↗</a></p> : null}
+                {tipo !== 'modulo' && <h2 className="topic-title">{item.titulo}</h2>}
+                {tipo !== 'curso' && <p className="content-text">{item.descricao}</p>}
+                {tipo === 'aula' ? <p className="texto-suave">Vídeo: <a href={`https://www.youtube.com/watch?v=${item.youtubeVideoId}`} target="_blank" rel="noreferrer">Abrir no YouTube</a></p> : null}
               </div>
               <footer className="aulas-cartao-acoes">
                 <div className="acoes-topico">
                   {tipo === 'curso' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${item.id}/modulos`}>Ver módulos</Link> : null}
+                  {tipo === 'curso' && <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${item.id}/diagnostico`}>Diagnóstico inicial</Link>}
                   {tipo === 'modulo' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${idCurso}/modulos/${item.id}/aulas`}>Ver aulas</Link> : null}
+                  {tipo === 'modulo' && <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${idCurso}/modulos/${item.id}/questionario`}>Questionário do módulo</Link>}
                   <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => abrirFormulario(item)}>Editar</button>
                   <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => setExcluindo(item)}>Excluir</button>
                 </div>
               </footer>
-            </article>)}
+            </CartaoConteudo>)}
           </div>
         </>}
+        </section>
       </>}
       {excluindo ? <ConfirmacaoModal titulo={`Excluir ${nome}`} processando={processando} mensagem={`Deseja excluir “${excluindo.titulo}”? O conteúdo será inativado.${tipo === 'aula' ? '' : ' O acesso ao conteúdo vinculado também será bloqueado.'}`} onConfirmar={excluir} onCancelar={() => { if (!processando) setExcluindo(null); }} /> : null}
-    </main>
-    <Rodape />
-  </div>;
+  </LayoutAulas>;
+}
+
+function CartaoConteudo({ tipo, item, expandido, children }) {
+  return tipo === 'modulo' ? <ModuloExpansivel modulo={item} expandido={expandido}>{children}</ModuloExpansivel> : <article className="card aulas-cartao">{children}</article>;
 }

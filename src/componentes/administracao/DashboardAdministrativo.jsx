@@ -31,7 +31,7 @@ function useConsulta(consulta, dependencia, atualizacao) {
 
 function Estado({ estado, repetir, children }) {
   if (estado.carregando) return <p role="status">Carregando indicadores...</p>;
-  if (estado.erro) return <div className="alert alert-danger" role="alert">{estado.erro} <button type="button" className="btn btn-outline-light btn-sm" onClick={repetir}>Tentar novamente</button></div>;
+  if (estado.erro) return <div className="alert alert-danger" role="alert">{estado.erro} <button type="button" className="btn btn-secondary btn-small" onClick={repetir}>Tentar novamente</button></div>;
   return children(estado.dados);
 }
 
@@ -54,7 +54,7 @@ export default function DashboardAdministrativo() {
   const matriculas = useConsulta(buscarMatriculasPorMes, meses, atualizacao);
   const cursos = useConsulta(buscarCursosMaisProcurados, undefined, atualizacao);
   const usuarios = useConsulta(buscarUsuariosPorPerfil, undefined, atualizacao);
-  return <section className="dashboard-adminlte" data-bs-theme="dark" aria-labelledby="dashboard-titulo">
+  return <section className="dashboard-administrativo" aria-labelledby="dashboard-titulo">
     <div className="dashboard-toolbar"><div><h2 id="dashboard-titulo">Indicadores da plataforma</h2><p>Panorama atual de ensino e comunidade</p></div>
       <button type="button" className="btn btn-primary" onClick={repetir} disabled={[resumo, matriculas, cursos, usuarios].some((item) => item.carregando)}>Atualizar indicadores</button>
     </div>

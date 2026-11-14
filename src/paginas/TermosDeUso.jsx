@@ -1,3 +1,4 @@
+import AceiteDocumentos from '../componentes/comuns/AceiteDocumentos';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DocumentoLegal from '../componentes/comuns/DocumentoLegal';
@@ -6,6 +7,7 @@ import { useAutenticacao } from '../contextos/useAutenticacao';
 
 export default function TermosDeUso() {
   const [versao, setVersao] = useState('');
+  const [conteudo, setConteudo] = useState('');
   const [dataPublicacao, setDataPublicacao] = useState('');
   const [aceitePendente, setAceitePendente] = useState(() => sessionStorage.getItem('curso-valido-token-termos') || '');
   const [aceito, setAceito] = useState(false);
@@ -23,10 +25,12 @@ export default function TermosDeUso() {
 
   async function carregarDocumento() {
     setCarregandoMetadados(true);
+    setAceito(false);
     setErro('');
     try {
       const politica = await buscarPoliticaAtiva();
       setVersao(politica.versao);
+      setConteudo(politica.conteudo);
       setDataPublicacao(politica.dataPublicacao || '');
     } catch (falha) {
       if (falha.status === 401) {
@@ -34,6 +38,7 @@ export default function TermosDeUso() {
         return;
       }
       setVersao('');
+      setConteudo('');
       setDataPublicacao('');
       setErro('Não foi possível carregar os documentos atuais. Tente novamente.');
     } finally { setCarregandoMetadados(false); }
@@ -44,6 +49,7 @@ export default function TermosDeUso() {
     buscarPoliticaAtiva().then((politica) => {
       if (!ativo) return;
       setVersao(politica.versao);
+      setConteudo(politica.conteudo);
       setDataPublicacao(politica.dataPublicacao || '');
     }).catch((falha) => {
       if (!ativo) return;
@@ -52,6 +58,7 @@ export default function TermosDeUso() {
         return;
       }
       setVersao('');
+      setConteudo('');
       setDataPublicacao('');
       setErro('Não foi possível carregar os documentos atuais. Tente novamente.');
     }).finally(() => ativo && setCarregandoMetadados(false));
@@ -79,15 +86,15 @@ export default function TermosDeUso() {
         sair();
         navegar('/login', { replace: true, state: { mensagem: 'Não foi possível validar o aceite. Faça login novamente.' } });
       } else if (falha.status >= 500) {
-        setErro('O servidor está indisponível. Tente novamente mais tarde.');
+        setErro('O serviço está indisponível. Tente novamente mais tarde.');
       } else {
         setErro(falha.message);
       }
     } finally { setCarregando(false); }
   }
 
-  return <DocumentoLegal tipo="termos" versao={versao} dataPublicacao={dataPublicacao} carregando={carregandoMetadados} erro={erro} onVoltar={voltar} onRecarregar={carregarDocumento}>
+  return <DocumentoLegal tipo="termos" versao={versao} dataPublicacao={dataPublicacao} conteudo={conteudo} carregando={carregandoMetadados} erro={erro} onVoltar={voltar} onRecarregar={carregarDocumento}>
     {mensagem && <div className="mensagem-sucesso" role="status">{mensagem}</div>}
-    {aceitePendente && versao && <section className="mensagem-cadastro-concluido"><h2>Aceite necessário</h2><p>É necessário aceitar os documentos atuais para acessar a conta.</p><label className="checkbox"><input type="checkbox" checked={aceito} onChange={(evento) => setAceito(evento.target.checked)} />Li e aceito os Termos de Aceite e a Política de Privacidade.</label><button className="botao-destaque" type="button" disabled={!aceito || carregando || carregandoMetadados} onClick={aceitar}>{carregando ? 'Enviando...' : 'Aceitar termos e voltar ao login'}</button></section>}
+    {aceitePendente && versao && <section className="mensagem-cadastro-concluido"><h2>Aceite necessário</h2><p>É necessário aceitar os documentos atuais para acessar a conta.</p><AceiteDocumentos key={versao} versaoTermos={versao} aceito={aceito} onAlterar={setAceito} desabilitado={carregando || carregandoMetadados} /><button className="botao-destaque" type="button" disabled={!aceito || carregando || carregandoMetadados} onClick={aceitar}>{carregando ? 'Enviando...' : 'Aceitar termos e voltar ao login'}</button></section>}
   </DocumentoLegal>;
 }

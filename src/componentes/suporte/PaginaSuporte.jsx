@@ -1,3 +1,4 @@
+import CabecalhoPagina from '../comuns/CabecalhoPagina';
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Rodape from '../comuns/Rodape';
@@ -51,7 +52,7 @@ export default function PaginaSuporte() {
     setEnviando(true); setErro('');
     try {
       const resposta = await enviarSolicitacao(pedido);
-      if (!resposta?.protocolo) throw new Error('O servidor não confirmou o envio. Tente novamente.');
+      if (!resposta?.protocolo) throw new Error('Não foi possível confirmar o envio. Tente novamente.');
       setResultado(resposta);
     }
     catch (falha) { mostrarErro(falha.message || 'Não foi possível enviar. Tente novamente.'); }
@@ -59,9 +60,7 @@ export default function PaginaSuporte() {
   }
   return <div className="app-container pagina-forum pagina-suporte">
     <main className="main-content">
-      <div className="page-header"><div><h1 className="page-title">Suporte</h1>
-        <p>Recupere seu acesso ou fale com a nossa equipe. Você pode enviar uma solicitação sem entrar na conta.</p>
-      </div></div>
+      <CabecalhoPagina titulo="Suporte" descricao="Recupere seu acesso ou fale com a nossa equipe. Você pode enviar uma solicitação sem entrar na conta." />
       <div className="forum-colunas">
         <section className="forum-topicos" aria-label="Solicitação de suporte">
           {resultado ? <div className="card" role="status" aria-live="polite">
@@ -86,7 +85,7 @@ export default function PaginaSuporte() {
               <input className="input-field" id="assunto" name="assunto" maxLength={150} required value={dados.assunto} onChange={alterar} />
               <label htmlFor="descricao">Descreva o que aconteceu</label>
               <textarea className="input-field" id="descricao" name="descricao" rows={8} minLength={20} maxLength={5000} required aria-describedby="descricao-ajuda" value={dados.descricao} onChange={alterar} />
-              <p id="descricao-ajuda">Use entre 20 e 5.000 caracteres. Informe quando o problema começou e qual mensagem apareceu. Não envie senhas, códigos de acesso, CPF ou documentos.</p>
+              <p id="descricao-ajuda">Use entre 20 e 5.000 caracteres. Informe quando o problema começou e qual mensagem apareceu. Não envie senhas, códigos de acesso ou documentos pessoais.</p>
               <div className="contador">{dados.descricao.length}/5000</div>
             </fieldset>
             <div className="suporte-envio">

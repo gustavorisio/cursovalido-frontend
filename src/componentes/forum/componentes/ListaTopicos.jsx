@@ -3,14 +3,9 @@ import { perfilDoUsuario } from '../hooks/useForum';
 
 function formatarData(valor) {
   if (!valor) return '--/--/----';
-
   const data = new Date(valor);
   if (Number.isNaN(data.getTime())) return '--/--/----';
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'short'
-  }).format(data);
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(data);
 }
 
 export default function ListaTopicos({ topicos, usuarios, onSelecionar }) {
@@ -24,13 +19,14 @@ export default function ListaTopicos({ topicos, usuarios, onSelecionar }) {
         <div
           key={topico.id}
           className="card topic-list-item"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(evento) => { if (evento.key === 'Enter' || evento.key === ' ') { evento.preventDefault(); onSelecionar(topico); } }}
           onClick={() => onSelecionar(topico)}
         >
           <div className="topic-summary">
-            <h3 className="topic-title">{topico.titulo}</h3>
-            <p className="topic-preview">{topico.descricao}</p>
+            <h3 className="topic-title" title={topico.titulo}>{topico.titulo}</h3>
           </div>
-
           <div className="topic-meta">
             <div className="meta-group">
               <span className="meta-label">Respostas</span>
@@ -38,9 +34,7 @@ export default function ListaTopicos({ topicos, usuarios, onSelecionar }) {
             </div>
             <div className="meta-group">
               <span className="meta-label">Autor</span>
-              <span className="meta-value">
-                {usuarios.find((usuario) => Number(usuario.id) === Number(topico.idAutor))?.nome ?? topico.nomeAutor}
-              </span>
+              <span className="meta-value">{usuarios.find((usuario) => Number(usuario.id) === Number(topico.idAutor))?.nome ?? topico.nomeAutor}</span>
             </div>
             <PerfilAutor perfil={topico.perfilAutor ?? topico.perfil ?? topico.nomePerfil ?? topico.autor?.perfil ?? topico.autor?.tipoPerfil ?? perfilDoUsuario(usuarios.find((usuario) => Number(usuario.id ?? usuario.idUsuario) === Number(topico.idAutor ?? topico.idUsuario ?? topico.autor?.id ?? topico.autor?.idUsuario)))} />
             <div className="meta-group">

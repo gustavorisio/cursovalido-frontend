@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PesquisaPagina from '../comuns/PesquisaPagina';
 import { aplicarSuspensao, revogarSuspensao } from '../../servicos/servicoAdministracao';
 
 const ESCOPOS = { CONTA: 'Acesso à conta', FORUM: 'Acesso ao fórum', TOPICOS: 'Acesso a tópicos e comentários', COMENTARIOS: 'Acesso a tópicos e comentários' };
@@ -43,8 +44,7 @@ export default function ModeracaoUsuarios({ usuarios, processando, onExecutar })
     <h2 className="titulo-detalhe">Moderação de usuários</h2>
     <p className="texto-suave">Restrinja a conta inteira ou apenas ações do fórum. Restrições temporárias expiram automaticamente; permanentes podem ser revogadas.</p>
     <div className="administracao-resumo"><span><strong>{usuarios.length}</strong> contas</span><span><strong>{equipe.length}</strong> membros da equipe</span><span><strong>{usuarios.filter((usuario) => usuario.suspensoes.length > 0).length}</strong> com restrições</span></div>
-    <div className="pesquisa-conteudo"><label htmlFor="buscar-usuario">Buscar usuário</label>
-      <input id="buscar-usuario" className="campo-pesquisa" type="search" value={busca} onChange={(evento) => setBusca(evento.target.value)} placeholder="Nome, e-mail ou perfil" /></div>
+    <PesquisaPagina valor={busca} onAlterar={setBusca} rotulo="Buscar usuário" placeholder="Nome, e-mail ou perfil" />
     {!termo ? <p className="texto-suave">Digite um nome, e-mail ou perfil para encontrar um usuário.</p> : null}
     {selecionado ? <form className="formulario-publico moderacao-formulario" onSubmit={solicitar}>
       <h3>Restringir {selecionado.nome}</h3>

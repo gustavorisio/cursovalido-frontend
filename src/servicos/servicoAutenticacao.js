@@ -1,7 +1,7 @@
 import { requisitar } from './api';
 
 export function cadastrarUsuario(dados) {
-  const { nomeCompleto, email, senha, cpf, dataNascimento,
+  const { nomeCompleto, email, senha, dataNascimento,
     declarouMaiorIdade,
     aceitouTermosLgpd, versaoTermos } = dados;
   return requisitar('/autenticacao/cadastro', {
@@ -11,7 +11,6 @@ export function cadastrarUsuario(dados) {
       nomeCompleto,
       email,
       senha,
-      cpf,
       dataNascimento,
 
       declarouMaiorIdade,
@@ -165,7 +164,7 @@ export function confirmarEmailConvite(token) {
 }
 
 export function completarCadastroConvite(token, cadastro) {
-  const { nomeCompleto, email, senha, cpf, dataNascimento,
+  const { nomeCompleto, email, senha, dataNascimento,
     declarouMaiorIdade,
     aceitouTermosLgpd, versaoTermos } = cadastro;
   return requisitar('/convites/completar-cadastro', {
@@ -175,7 +174,6 @@ export function completarCadastroConvite(token, cadastro) {
         nomeCompleto,
         email,
         senha,
-        cpf,
         dataNascimento,
 
         declarouMaiorIdade,
@@ -203,4 +201,10 @@ export async function baixarDadosPessoais() {
   link.href = url; link.download = 'meus-dados-pessoais.json';
   document.body.appendChild(link);
   try { link.click(); } finally { link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000); }
+}
+
+export function alterarSenhaAutenticado({ senhaAtual, novaSenha, confirmacaoSenha }) {
+  return requisitar('/autenticacao/alterar-senha-autenticado', {
+    method: 'POST', body: JSON.stringify({ senhaAtual, novaSenha, confirmacaoSenha })
+  });
 }

@@ -5,14 +5,16 @@ import react from '@vitejs/plugin-react';
 import { JSDOM } from 'jsdom';
 import { createElement, act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 
-let servidor, Dashboard, servico, dom, raiz, chamadas;
+let servidor, Dashboard, LayoutDashboard, servico, dom, raiz, chamadas;
 const fetchOriginal = globalThis.fetch;
 const resumo = { alunosAtivos: 12, professoresAtivos: 2, cursosAtivos: 3, aulasAtivas: 8, matriculas: 15, topicosAtivos: 0, noticiasAtivas: 0 };
 
 before(async () => {
   servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
   Dashboard = (await servidor.ssrLoadModule('/src/componentes/administracao/DashboardAdministrativo.jsx')).default;
+  LayoutDashboard = (await servidor.ssrLoadModule('/src/paginas/Dashboard.jsx')).default;
   servico = await servidor.ssrLoadModule('/src/servicos/servicoDashboard.js');
 });
 after(async () => { await servidor?.close(); });
@@ -37,6 +39,14 @@ afterEach(async () => {
   delete globalThis.IS_REACT_ACT_ENVIRONMENT;
 });
 
+test('dashboard exibe conteúdo sem menu lateral nem botão de menu', async () => {
+  await act(async () => raiz.render(createElement(MemoryRouter, null, createElement(LayoutDashboard))));
+  assert.equal(document.querySelector('.app-sidebar'), null);
+  assert.equal(document.querySelector('button[aria-controls="menu-dashboard"]'), null);
+  assert.ok(document.querySelector('main#conteudo-dashboard'));
+  assert.equal(document.querySelectorAll('.small-box').length, 7);
+});
+
 test('painel consulta quatro endpoints e restringe a troca de período à série mensal', async () => {
   await act(async () => { raiz.render(createElement(Dashboard)); });
   assert.equal(chamadas.length, 4);
@@ -57,7 +67,7 @@ test('falha em uma seção preserva as demais e permite tentar novamente', async
   const fetchSucesso = globalThis.fetch;
   globalThis.fetch = (url) => url.endsWith('/resumo') ? Promise.resolve(new Response('{}', { status: 500 })) : fetchSucesso(url);
   await act(async () => { raiz.render(createElement(Dashboard)); });
-  assert.match(document.querySelector('[role="alert"]').textContent, /servidor está indisponível/);
+  assert.match(document.querySelector('[role="alert"]').textContent, /serviço está indisponível/);
   assert.equal(document.querySelectorAll('.dashboard-grafico').length, 3);
   globalThis.fetch = fetchSucesso;
   await act(async () => { document.querySelector('[role="alert"] button').click(); });

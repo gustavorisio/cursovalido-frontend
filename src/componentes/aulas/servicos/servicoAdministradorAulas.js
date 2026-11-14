@@ -5,7 +5,7 @@ export async function listarCursos() {
     return await requisitar('/administracao/cursos');
   } catch (erro) {
     if (erro.status === 404) {
-      throw new Error('O backend em execução não possui a consulta administrativa de cursos. Reinicie o backend atualizado e confira VITE_API_URL.', { cause: erro });
+      throw new Error('Não foi possível consultar os cursos. Tente novamente mais tarde.', { cause: erro });
     }
     throw erro;
   }
@@ -13,6 +13,14 @@ export async function listarCursos() {
 
 export function buscarCurso(id) {
   return requisitar(`/administracao/cursos/${id}`);
+}
+
+export function editarCurso(id, dados) {
+  return requisitar(`/administracao/cursos/${id}`, { method: 'PUT', body: JSON.stringify(dados) });
+}
+
+export function excluirCurso(id) {
+  return requisitar(`/administracao/cursos/${id}`, { method: 'DELETE' });
 }
 
 export function listarModulos(idCurso) {

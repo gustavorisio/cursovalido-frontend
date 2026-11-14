@@ -1,3 +1,5 @@
+import CabecalhoPagina from '../comuns/CabecalhoPagina';
+import PesquisaPagina from '../comuns/PesquisaPagina';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import './forum.css';
@@ -18,8 +20,7 @@ export default function PaginaForum() {
   const [erroTela, setErroTela] = useState('');
   const [processando, setProcessando] = useState(false);
 
-  async function pesquisar(evento) {
-    evento.preventDefault();
+  async function pesquisar() {
     await forum.carregarTopicos(0, termo);
   }
 
@@ -69,7 +70,14 @@ export default function PaginaForum() {
   return <div className="app-container pagina-forum"><main className="main-content">
     {(forum.mensagemErro || erroTela) && <div className="card aviso-erro" role="alert">{forum.mensagemErro || erroTela}<button className="btn btn-link" type="button" onClick={() => { forum.limparMensagem(); setErroTela(''); }}>Fechar</button></div>}
     {tela === 'lista' && <>
-      <div className="page-header"><h1 className="page-title">Fórum de dúvidas</h1><div className="page-actions"><form className="barra-pesquisa" onSubmit={pesquisar}><input className="campo-pesquisa" type="search" aria-label="Pesquisar por título" placeholder="Buscar por título" value={termo} onChange={(evento) => setTermo(evento.target.value)} /></form><>{forum.autenticado ? <button className="btn btn-primary" type="button" disabled={forum.topicosBloqueados} onClick={() => setTela('criacao')}>Novo tópico</button> : <Link className="btn btn-primary" to="/login">Entrar para participar</Link>}</></div></div>
+      <CabecalhoPagina titulo="Fórum de dúvidas" acoes={<>
+        {forum.autenticado ? <button className="btn btn-primary" type="button" disabled={forum.topicosBloqueados} onClick={() => setTela('criacao')}>Novo tópico</button> : <Link className="btn btn-primary" to="/login">Entrar para participar</Link>}
+        <PesquisaPagina valor={termo} onAlterar={setTermo} onPesquisar={pesquisar} rotulo="Pesquisar por título" placeholder="Buscar por título" />
+      </>} />
+      {forum.autenticado && <div className="forum-filtros" role="group" aria-label="Filtrar tópicos">
+        <button type="button" className="btn btn-secondary" aria-pressed={!forum.meusTopicos} disabled={forum.carregando} onClick={() => forum.setMeusTopicos(false)}>Todos os tópicos</button>
+        <button type="button" className="btn btn-secondary" aria-pressed={forum.meusTopicos} disabled={forum.carregando} onClick={() => forum.setMeusTopicos(true)}>Meus tópicos</button>
+      </div>}
       <div className="forum-colunas"><section className="forum-topicos" aria-label="Tópicos do fórum">
         {forum.carregando ? <div className="card empty-list">Carregando tópicos...</div> : <ListaTopicos topicos={forum.topicos} usuarios={forum.usuarios} onSelecionar={selecionar} />}
         {forum.totalPaginas > 1 && <div className="paginacao"><button className="btn btn-secondary" disabled={forum.pagina === 0 || forum.carregando} onClick={() => forum.carregarTopicos(forum.pagina - 1, termo)}>Anterior</button><span>Página {forum.pagina + 1} de {forum.totalPaginas}</span><button className="btn btn-secondary" disabled={forum.pagina + 1 >= forum.totalPaginas || forum.carregando} onClick={() => forum.carregarTopicos(forum.pagina + 1, termo)}>Próxima</button></div>}

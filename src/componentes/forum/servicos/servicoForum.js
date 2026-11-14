@@ -85,3 +85,8 @@ export function apagarComentario(idComentario) {
     method: 'DELETE',
   });
 }
+
+export function buscarMeusTopicos(page = 0, size = TAMANHO_PAGINA_PADRAO, busca = '') {
+  const parametros = new URLSearchParams({ page: String(page), size: String(size), busca: busca.trim() });
+  return requisitar(`/forum/topicos/meus?${parametros}`);
+}

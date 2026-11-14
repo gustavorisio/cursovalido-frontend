@@ -1,5 +1,4 @@
 import '../../paginas/inicio.css';
-import lobo from '../../assets/hero.png';
 import { Link, NavLink } from 'react-router-dom';
 import { useAutenticacao } from '../../contextos/useAutenticacao';
 import { useRestricoes } from '../../contextos/useRestricoes';
@@ -12,11 +11,12 @@ export default function Cabecalho() {
 
   return (
     <header className="cv-header cv-home">
-      <Link className="cv-logo" to="/" aria-label="CursoVálido — início"><img src={lobo} alt="" width="42" height="42" /><span>Curso<span>Válido</span></span></Link>
+      <Link className="cv-logo" to="/" aria-label="CursoVálido — início"><span>Curso<span>Válido</span></span></Link>
       <nav className="cv-nav" aria-label="Navegação principal">
         {!autenticado && <NavLink to="/" end>Início</NavLink>}
         <NavLink to={!autenticado ? '/cursos' : ehAdministrador ? '/administracao/cursos' : sessao?.perfil === 'PROFESSOR' ? '/professor/cursos' : '/aluno/cursos'}>Aulas online</NavLink>
         <NavLink to="/forum">Fórum</NavLink><NavLink to="/noticias">Notícias</NavLink>
+        <NavLink to="/roadmap">Caminhos na tecnologia</NavLink>
         {ehAdministrador && <NavLink to="/administracao" end>Administração</NavLink>}
       </nav>
       <div className="cv-conta">

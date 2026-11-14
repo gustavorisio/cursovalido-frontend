@@ -6,6 +6,7 @@ import { useAutenticacao } from '../contextos/useAutenticacao';
 
 export default function PoliticaDePrivacidade() {
   const [versao, setVersao] = useState('');
+  const [conteudo, setConteudo] = useState('');
   const [dataPublicacao, setDataPublicacao] = useState('');
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
@@ -22,6 +23,7 @@ export default function PoliticaDePrivacidade() {
     try {
       const politica = await buscarPrivacidadeAtiva();
       setVersao(politica?.versao ?? '');
+      setConteudo(politica?.conteudo ?? '');
       setDataPublicacao(politica?.dataPublicacao || '');
     } catch (falha) {
       if (falha.status === 401) {
@@ -29,6 +31,7 @@ export default function PoliticaDePrivacidade() {
         return;
       }
       setVersao(''); setErro('Não foi possível carregar os documentos atuais. Tente novamente.');
+      setConteudo('');
       setDataPublicacao('');
     } finally { setCarregando(false); }
   }
@@ -38,6 +41,7 @@ export default function PoliticaDePrivacidade() {
     buscarPrivacidadeAtiva().then((politica) => {
       if (!ativo) return;
       setVersao(politica?.versao ?? '');
+      setConteudo(politica?.conteudo ?? '');
       setDataPublicacao(politica?.dataPublicacao || '');
     }).catch((falha) => {
       if (!ativo) return;
@@ -46,11 +50,12 @@ export default function PoliticaDePrivacidade() {
         return;
       }
       setVersao('');
+      setConteudo('');
       setDataPublicacao('');
       setErro('Não foi possível carregar os documentos atuais. Tente novamente.');
     }).finally(() => ativo && setCarregando(false));
     return () => { ativo = false; };
   }, [navegar]);
 
-  return <DocumentoLegal tipo="privacidade" versao={versao} dataPublicacao={dataPublicacao} carregando={carregando} erro={erro} onVoltar={voltar} onRecarregar={carregarDocumento} />;
+  return <DocumentoLegal tipo="privacidade" versao={versao} dataPublicacao={dataPublicacao} conteudo={conteudo} carregando={carregando} erro={erro} onVoltar={voltar} onRecarregar={carregarDocumento} />;
 }
