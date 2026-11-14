@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 import { buscarMeusDados, baixarDadosPessoais } from '../../servicos/servicoAutenticacao';
 import { useAutenticacao } from '../../contextos/useAutenticacao';
 
+function formatarDataHoraAceite(valor) {
+  if (!valor) return 'Não informado';
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return 'Não informado';
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'medium' }).format(data);
+}
 
 export default function DadosUsuario({ desabilitado = false }) {
   const { sessao } = useAutenticacao();
@@ -43,6 +49,8 @@ export default function DadosUsuario({ desabilitado = false }) {
         <div><dt>E-mail</dt><dd>{dados.email || 'Não informado'}</dd></div>
         <div><dt>Perfil do usuário</dt><dd>{nomePerfil}</dd></div>
         <div><dt>Data de nascimento</dt><dd>{dados.dataNascimento ? dados.dataNascimento.split('-').reverse().join('/') : 'Não informada'}</dd></div>
+        <div><dt>Último aceite dos termos</dt><dd>{formatarDataHoraAceite(dados.dataHoraAceite)}</dd></div>
+        <div><dt>Versão dos termos aceitos</dt><dd>{dados.versaoTermos || 'Não informada'}</dd></div>
       </dl>
     </>}
   </section>;
