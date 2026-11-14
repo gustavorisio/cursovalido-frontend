@@ -55,7 +55,7 @@ function ConfirmarCadastro({ token }) {
   }
 
   return <div className="pagina-publica"><main className="painel-autenticacao">
-    <div className="marca-publica">CURSO VÁLIDO <span>•</span></div><h1>Confirmação de e-mail</h1>
+    <div className="marca-publica">CURSO VÁLIDO </div><h1>Confirmação de e-mail</h1>
     {token && !confirmado && <><p className="texto-suave">Para ativar sua conta e confirmar que este e-mail é seu, clique no botão abaixo.</p><button className="botao-destaque" type="button" disabled={carregando || carregandoReenvio} onClick={confirmar}>{carregando ? 'Confirmando...' : 'Confirmar meu e-mail'}</button></>}
     {mensagem && <div className="mensagem-sucesso" role="status">{mensagem}</div>}
     {erro && <div className="mensagem-erro" role="alert">{erro}</div>}

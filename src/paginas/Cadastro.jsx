@@ -76,7 +76,7 @@ export default function Cadastro() {
   return (
     <div className="pagina-publica">
       <main className="painel-cadastro">
-        <div className="marca-publica">CURSO VÁLIDO <span>•</span></div>
+        <div className="marca-publica">CURSO VÁLIDO </div>
         <h1>Cadastro de aluno</h1>
         <p className="texto-suave">Crie seu acesso gratuito para participar da comunidade acadêmica.</p>
         {localizacao.state?.mensagem && <div className="mensagem-sucesso" role="status">{localizacao.state.mensagem}</div>}
