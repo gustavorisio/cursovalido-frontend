@@ -37,12 +37,6 @@ export async function requisitar(caminho, opcoes = {}) {
   if (!semAutenticacao && tokenValido(token)) cabecalhos.Authorization = `Bearer ${token}`;
 
   let resposta;
-  const detalhesRequisicao = {
-    method: opcoesFetch.method || 'GET',
-    url: `${URL_API}${caminho}`,
-    temAuthorization: Boolean(cabecalhos.Authorization)
-  };
-  if (import.meta.env.DEV) console.debug('[API] request', detalhesRequisicao);
   try {
     resposta = await fetch(`${URL_API}${caminho}`, { ...opcoesFetch, headers: cabecalhos });
   } catch {
@@ -64,10 +58,6 @@ export async function requisitar(caminho, opcoes = {}) {
     } catch {
       dados = null;
     }
-  }
-
-  if (import.meta.env.DEV) {
-    console.debug('[API] response', { ...detalhesRequisicao, status: resposta.status });
   }
 
   if (!resposta.ok) {
