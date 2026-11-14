@@ -519,18 +519,3 @@
 .pagina-aulas > .page-header { margin-bottom: 8px; }
 .pagina-aulas .page-actions > .btn { min-height: 48px; padding: 12px 20px; }
 .pagina-aulas .barra-pesquisa .btn { min-height: 48px; padding: 12px 20px; }
-
-.pagina-aulas .page-header-content { @apply min-w-0 flex-[1_1_320px]; }
-.pagina-aulas .page-actions {
-    @apply ml-0 flex min-w-0 w-full flex-col flex-wrap items-stretch gap-3 lg:ml-auto lg:w-auto lg:flex-row lg:items-center;
-  }
-.pagina-aulas .barra-pesquisa {
-    @apply m-0 flex min-w-0 w-full max-w-[480px] flex-wrap items-center gap-3;
-  }
-.pagina-aulas .barra-pesquisa .campo-pesquisa { @apply w-0 min-w-[160px] flex-1; }
-.pagina-aulas .barra-pesquisa .btn { @apply min-h-12 shrink-0; }
-.pagina-aulas .page-actions .barra-pesquisa { @apply max-w-none lg:w-[400px]; }
-.pagina-aulas .page-actions > .btn { @apply min-h-12; }
-.pagina-aulas .campo-pesquisa {
-    @apply min-h-12 w-full rounded-none border border-line bg-surface px-4 py-3 text-base text-brand-950 outline-none transition-colors placeholder:text-muted focus:border-accent focus:ring-3 focus:ring-accent/15;
-  }

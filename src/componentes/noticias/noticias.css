@@ -427,18 +427,3 @@
 .noticia-resumo { @apply text-base leading-relaxed; }
 .noticia-leitura .noticia-corpo { @apply text-base leading-8; }
 .noticia-editor { @apply bg-surface shadow-panel; }
-
-.pagina-noticias .page-header-content { @apply min-w-0 flex-[1_1_320px]; }
-.pagina-noticias .page-actions {
-    @apply ml-0 flex min-w-0 w-full flex-col flex-wrap items-stretch gap-3 lg:ml-auto lg:w-auto lg:flex-row lg:items-center;
-  }
-.pagina-noticias .barra-pesquisa {
-    @apply m-0 flex min-w-0 w-full max-w-[480px] flex-wrap items-center gap-3;
-  }
-.pagina-noticias .barra-pesquisa .campo-pesquisa { @apply w-0 min-w-[160px] flex-1; }
-.pagina-noticias .barra-pesquisa .btn { @apply min-h-12 shrink-0; }
-.pagina-noticias .page-actions .barra-pesquisa { @apply max-w-none lg:w-[400px]; }
-.pagina-noticias .page-actions > .btn { @apply min-h-12; }
-.pagina-noticias .campo-pesquisa {
-    @apply min-h-12 w-full rounded-none border border-line bg-surface px-4 py-3 text-base text-brand-950 outline-none transition-colors placeholder:text-muted focus:border-accent focus:ring-3 focus:ring-accent/15;
-  }
