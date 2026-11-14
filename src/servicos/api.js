@@ -34,8 +34,7 @@ export async function requisitar(caminho, opcoes = {}) {
   const cabecalhos = { Accept: 'application/json', ...opcoesFetch.headers };
 
   if (opcoesFetch.body || !semAutenticacao) cabecalhos['Content-Type'] = 'application/json';
-  const tokenParaEnviar = token;
-  if (!semAutenticacao && tokenValido(tokenParaEnviar)) cabecalhos.Authorization = `Bearer ${tokenParaEnviar}`;
+  if (!semAutenticacao && tokenValido(token)) cabecalhos.Authorization = `Bearer ${token}`;
 
   let resposta;
   const detalhesRequisicao = {
@@ -53,12 +52,8 @@ export async function requisitar(caminho, opcoes = {}) {
     throw new ErroApi(0, 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.', { codigo: 'FALHA_CONEXAO' });
   }
 
-  if (!semAutenticacao) {
-    if (tokenAutenticacao === undefined) {
-      if (obterTokenSessao() !== token) {
-        throw new ErroApi(409, 'A sessão desta requisição foi encerrada.', { codigo: 'SESSAO_ALTERADA' });
-      }
-    }
+  if (!semAutenticacao && tokenAutenticacao === undefined && obterTokenSessao() !== token) {
+    throw new ErroApi(409, 'Sua sessão foi encerrada. Entre novamente.', { codigo: 'SESSAO_ALTERADA' });
   }
 
   const texto = await resposta.text();
@@ -101,11 +96,11 @@ export async function requisitar(caminho, opcoes = {}) {
     }
     if (resposta.status === 403 && !semAutenticacao && dados?.codigo === 'TERMOS_NAO_ACEITOS') {
       globalThis.dispatchEvent?.(new CustomEvent('curso-valido-termos-pendentes', {
-        detail: { token: dados?.token ?? dados?.jwt ?? dados?.accessToken, tokenOrigem: tokenParaEnviar }
+        detail: { token: dados?.token ?? dados?.jwt ?? dados?.accessToken, tokenOrigem: token }
       }));
     }
     if (resposta.status === 401 && !semAutenticacao) {
-      globalThis.dispatchEvent?.(new CustomEvent('curso-valido-sessao-expirada', { detail: { token: tokenParaEnviar } }));
+      globalThis.dispatchEvent?.(new CustomEvent('curso-valido-sessao-expirada', { detail: { token: token } }));
     }
     const mensagem = (resposta.status === 403 && !['EMAIL_NAO_CONFIRMADO', 'TERMOS_NAO_ACEITOS'].includes(dados?.codigo)
       ? 'Você não tem permissão para esta operação.'
