@@ -1,11 +1,11 @@
 import { requisitar } from '../../../servicos/api';
 
-const TAMANHO_PAGINA_PADRAO = 5;
+const TAMANHO_PAGINA_PADRAO = 10;
 
 function validarLimites(dados) {
-  if ((dados.titulo?.length ?? 0) > 40 || (dados.descricao?.length ?? 0) > 5000 || (dados.conteudo?.length ?? 0) > 5000) {
-    throw new Error('Limite máximo alcançado');
-  }
+  if ((dados.titulo?.length ?? 0) > 80) throw new Error('O título pode ter até 80 caracteres. Reduza o texto para publicar.');
+  if ((dados.descricao?.length ?? 0) > 5000) throw new Error('A descrição pode ter até 5.000 caracteres. Reduza o texto para publicar.');
+  if ((dados.conteudo?.length ?? 0) > 5000) throw new Error('O comentário pode ter até 5.000 caracteres. Reduza o texto para enviar.');
 }
 
 export function buscarTopicos(page = 0, size = TAMANHO_PAGINA_PADRAO, busca = '') {
