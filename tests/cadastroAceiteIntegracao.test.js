@@ -66,17 +66,12 @@ for (const perfil of [null, 'ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
   });
 }
 
-async function rolar(elemento, posicao) {
-  elemento.scrollTop = posicao;
-  await act(() => elemento.dispatchEvent(new window.Event('scroll', { bubbles: true })));
-}
-
 for (const { fluxo, perfil } of [
   { fluxo: 'cadastro comum', perfil: 'ALUNO' },
   ...['PROFESSOR', 'ADMINISTRADOR'].map(perfil => ({ fluxo: 'cadastro por convite', perfil })),
   ...['ALUNO', 'PROFESSOR', 'ADMINISTRADOR'].map(perfil => ({ fluxo: 'reativação', perfil }))
 ]) {
-  test(`${fluxo} ${perfil}: mesmos documentos das páginas públicas e envio bloqueado até ler e aceitar ambos`, async () => {
+  test(`${fluxo} ${perfil}: mesmos documentos das páginas públicas e envio bloqueado até aceitar os documentos, sem rolagem`, async () => {
     const referencias = {};
     for (const tipo of ['termos', 'privacidade']) {
       await act(() => raiz.render(h(MemoryRouter, null, h(Documento, { tipo, ...documentos[tipo] }))));
@@ -149,18 +144,8 @@ for (const { fluxo, perfil } of [
       else assert.equal(leitor().querySelector('.conteudo-legal').outerHTML, referencias[tipo]);
       assert.equal(document.querySelectorAll('.conteudo-legal').length, 1, 'somente o documento em leitura deve ser renderizado');
       assert.equal(document.querySelector('iframe'), null);
-      assert.equal(confirmarLeitura().disabled, true);
-      Object.defineProperties(leitor(), { clientHeight: { value: 200 }, scrollHeight: { value: 1200 } });
-      await act(() => window.dispatchEvent(new window.Event('scroll')));
-      assert.equal(confirmarLeitura().disabled, true);
-      await rolar(leitor(), 500);
-      assert.equal(confirmarLeitura().disabled, true);
-      await verificarEnvioBloqueado();
-      await act(() => confirmarLeitura().click());
-      assert.equal(confirmarLeitura().disabled, true);
-      await rolar(leitor(), 1000);
+      assert.equal(leitor().scrollTop, 0);
       assert.equal(confirmarLeitura().disabled, false);
-      // Chegar ao fim libera a confirmação do documento, mas não aceita por conta própria.
       await verificarEnvioBloqueado();
       await act(async () => confirmarLeitura().click());
     }
@@ -180,16 +165,14 @@ for (const { fluxo, perfil } of [
       assert.equal(botao(textoFinal).disabled, false);
     }
 
-    // Revogar o aceite exige repetir a leitura dos dois documentos.
+    // Desmarcar o aceite exige confirmar novamente os documentos.
     await act(() => aceite().click());
     await verificarEnvioBloqueado();
     await act(async () => aceite().click());
     for (const tipo of tipos) {
       if (tipo === 'responsabilidade') assert.equal(leitor().textContent, responsabilidade.conteudo);
       else assert.equal(leitor().querySelector('.conteudo-legal').outerHTML, referencias[tipo]);
-      assert.equal(confirmarLeitura().disabled, true);
-      Object.defineProperties(leitor(), { clientHeight: { value: 200 }, scrollHeight: { value: 1200 } });
-      await rolar(leitor(), 1000);
+      assert.equal(confirmarLeitura().disabled, false);
       await act(async () => confirmarLeitura().click());
     }
     assert.equal(botao(textoFinal).disabled, false);
@@ -245,8 +228,6 @@ test('recarregar documentos após rejeição invalida todos os aceites mesmo com
     h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Reativacao)))));
   await act(async () => aceite().click());
   for (let indice = 0; indice < 3; indice++) {
-    Object.defineProperties(leitor(), { clientHeight: { value: 200 }, scrollHeight: { value: 1200 } });
-    await rolar(leitor(), 1000);
     await act(async () => confirmarLeitura().click());
   }
   await act(async () => botao('Aceitar termos e voltar ao login').click());
@@ -257,9 +238,7 @@ test('recarregar documentos após rejeição invalida todos os aceites mesmo com
   assert.equal(botao('Política de Privacidade — Aceito'), undefined);
   assert.equal(botao('Termo de Responsabilidade — Aceito'), undefined);
   await act(async () => aceite().click());
-  assert.equal(confirmarLeitura().disabled, true);
-  Object.defineProperties(leitor(), { clientHeight: { value: 200 }, scrollHeight: { value: 1200 } });
-  await rolar(leitor(), 1000);
+  assert.equal(confirmarLeitura().disabled, false);
   await act(async () => confirmarLeitura().click());
   assert.equal(botao('Aceitar termos e voltar ao login').disabled, true);
   assert.equal(document.querySelector('.leitura-documento h3').textContent, 'Política de Privacidade');

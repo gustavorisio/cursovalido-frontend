@@ -15,6 +15,10 @@ export function buscarUsuariosAdministrativos() {
   return requisitar('/administracao/usuarios');
 }
 
+export function excluirUsuarioAdministrativo(idUsuario) {
+  return requisitar(`/administracao/usuarios/${idUsuario}`, { method: 'DELETE' });
+}
+
 export function aplicarSuspensao(idUsuario, dados) {
   return requisitar(`/administracao/usuarios/${idUsuario}/suspensoes`, {
     method: 'POST', body: JSON.stringify(dados),

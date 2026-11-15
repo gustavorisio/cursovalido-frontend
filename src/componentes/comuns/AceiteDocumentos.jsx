@@ -8,7 +8,7 @@ function LeituraDocumento({ tipo, perfil, versaoTermos, desabilitado, onAceitar,
   const [documento, setDocumento] = useState(null);
   const [erro, setErro] = useState('');
   const [tentativa, setTentativa] = useState(0);
-  const [leuTudo, setLeuTudo] = useState(false);
+
   const texto = useRef(null);
   const id = useId();
 
@@ -29,21 +29,7 @@ function LeituraDocumento({ tipo, perfil, versaoTermos, desabilitado, onAceitar,
   }, [tipo, perfil, versaoTermos, tentativa, carregarDocumento]);
 
   useEffect(() => {
-    if (!documento) return;
-    const elemento = texto.current;
-    function verificarFim() {
-      if (elemento.clientHeight > 0 && elemento.scrollHeight - elemento.scrollTop <= elemento.clientHeight + 2) setLeuTudo(true);
-    }
-    elemento.focus();
-    const temporizador = window.setTimeout(verificarFim, 0);
-    const observador = window.ResizeObserver ? new window.ResizeObserver(verificarFim) : null;
-    observador?.observe(elemento);
-    window.addEventListener('resize', verificarFim);
-    return () => {
-      window.clearTimeout(temporizador);
-      observador?.disconnect();
-      window.removeEventListener('resize', verificarFim);
-    };
+    if (documento) texto.current?.focus();
   }, [documento]);
 
   return <section className="leitura-documento" aria-labelledby={id} aria-busy={!documento && !erro}>
@@ -52,16 +38,11 @@ function LeituraDocumento({ tipo, perfil, versaoTermos, desabilitado, onAceitar,
     {erro && <div className="mensagem-erro" role="alert">{erro}<div><button type="button" className="btn btn-secondary" onClick={() => { setErro(''); setTentativa((atual) => atual + 1); }}>Tentar novamente</button></div></div>}
     {documento && <>
       <p className="texto-suave">Versão vigente: {documento.versao}</p>
-      <p id={id + '-instrucao'} className="texto-suave">Role o texto até o final para liberar o aceite.</p>
-      <div ref={texto} className="leitura-documento-texto" role="region" aria-label={TITULOS[tipo]} aria-describedby={id + '-instrucao'} tabIndex={0} onScroll={(evento) => {
-        const elemento = evento.currentTarget;
-        if (elemento.clientHeight > 0 && elemento.scrollHeight - elemento.scrollTop <= elemento.clientHeight + 2) setLeuTudo(true);
-      }}><ConteudoLegal conteudo={documento.conteudo} /></div>
-      <p className="texto-suave" role="status">{leuTudo ? 'Leitura concluída. Você já pode aceitar este documento.' : 'Aceite bloqueado até chegar ao final do texto.'}</p>
+      <div ref={texto} className="leitura-documento-texto" role="region" aria-label={TITULOS[tipo]} tabIndex={0}><ConteudoLegal conteudo={documento.conteudo} /></div>
     </>}
     <div className="leitura-documento-acoes">
       <button className="btn btn-secondary" type="button" disabled={desabilitado} onClick={onFechar}>Fechar</button>
-      <button className="btn btn-primary" type="button" disabled={!documento || !leuTudo || desabilitado} onClick={() => { if (documento && leuTudo) onAceitar(documento); }}>Li e aceito {tipo === 'responsabilidade' ? 'o termo de responsabilidade' : tipo === 'termos' ? 'os termos' : 'a política de privacidade'}</button>
+      <button className="btn btn-primary" type="button" disabled={!documento || desabilitado} onClick={() => { if (documento) onAceitar(documento); }}>Li e aceito {tipo === 'responsabilidade' ? 'o termo de responsabilidade' : tipo === 'termos' ? 'os termos' : 'a política de privacidade'}</button>
     </div>
   </section>;
 }

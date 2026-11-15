@@ -36,10 +36,10 @@ export async function buscarPoliticaAtiva() {
   return politica;
 }
 
-export function publicarPolitica(nome, versao, conteudo) {
+export function publicarPolitica(nome, conteudo) {
   return requisitar('/politicas', {
     method: 'POST',
-    body: JSON.stringify({ nome, versao, conteudo })
+    body: JSON.stringify({ nome, conteudo })
   });
 }
 
@@ -47,10 +47,10 @@ export function buscarPrivacidadeAtiva() {
   return requisitar('/politicas/privacidade/ativa', { semAutenticacao: true });
 }
 
-export function publicarPrivacidade(nome, versao, conteudo) {
+export function publicarPrivacidade(nome, conteudo) {
   return requisitar('/politicas/privacidade', {
     method: 'POST',
-    body: JSON.stringify({ nome, versao, conteudo }),
+    body: JSON.stringify({ nome, conteudo }),
   });
 }
 

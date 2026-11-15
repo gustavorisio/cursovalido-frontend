@@ -1,0 +1,58 @@
+import test, { before, after, beforeEach, afterEach } from 'node:test';
+import assert from 'node:assert/strict';
+import { JSDOM } from 'jsdom';
+import { createServer } from 'vite';
+import react from '@vitejs/plugin-react';
+import { createElement, act } from 'react';
+import { createRoot } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
+
+let servidor, Administracao, Contexto, dom, raiz;
+const fetchOriginal = globalThis.fetch;
+before(async () => {
+  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
+  Administracao = (await servidor.ssrLoadModule('/src/paginas/Administracao.jsx')).default;
+  Contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+});
+after(async () => { await servidor?.close(); });
+beforeEach(() => {
+  dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000' });
+  globalThis.window = dom.window;
+  globalThis.document = dom.window.document;
+  globalThis.localStorage = dom.window.localStorage;
+  globalThis.sessionStorage = dom.window.sessionStorage;
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  raiz = createRoot(document.getElementById('root'));
+});
+afterEach(async () => {
+  await act(() => raiz.unmount());
+  dom.window.close();
+  globalThis.fetch = fetchOriginal;
+  for (const chave of ['window', 'document', 'localStorage', 'sessionStorage', 'IS_REACT_ACT_ENVIRONMENT']) delete globalThis[chave];
+});
+
+for (const tela of ['termos', 'privacidade']) {
+  test(`publica ${tela} sem versao manual e mostra a versao devolvida pelo backend`, async () => {
+    let atual = { nome: 'Documento', versao: '7.0', conteudo: 'Texto vigente' };
+    const enviados = [];
+    globalThis.fetch = async (url, opcoes = {}) => {
+      if (String(url).endsWith('/administracao/permissoes')) return Response.json({ principal: true });
+      if (opcoes.method === 'POST') {
+        enviados.push(JSON.parse(opcoes.body));
+        atual = { ...enviados.at(-1), versao: '8.0' };
+        return Response.json(atual, { status: 201 });
+      }
+      return Response.json(String(url).endsWith('/politicas/ativas') ? [atual] : atual);
+    };
+    await act(async () => raiz.render(createElement(MemoryRouter, null,
+      createElement(Contexto.Provider, { value: { sessao: { nome: 'Principal', idUsuario: 1 } } },
+        createElement(Administracao, { tela })))));
+    assert.match(document.body.textContent, /Versão vigente: 7.0/);
+    assert.equal(document.querySelectorAll('form input').length, 1);
+    assert.match(document.body.textContent, /incrementada automaticamente/);
+    await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
+    await act(async () => document.querySelector('[role="dialog"] .btn-danger').click());
+    assert.deepEqual(enviados, [{ nome: 'Documento', conteudo: 'Texto vigente' }]);
+    assert.match(document.body.textContent, /Versão vigente: 8.0/);
+  });
+}

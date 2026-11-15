@@ -1,6 +1,6 @@
-export function validarDocumento(nome, versao, conteudo) {
+export function validarDocumento(nome, conteudo) {
   if (!nome.trim()) return 'Preencha o nome do documento.';
-  if (!versao.trim()) return 'Preencha a nova versão.';
+
   if (!conteudo.trim()) return 'Preencha o conteúdo do documento.';
   return '';
 }
