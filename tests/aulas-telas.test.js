@@ -105,7 +105,8 @@ test('catálogo exibe a capa do curso e recupera uma imagem que falhou', async (
   await renderizar('PaginaCatalogo', null, '/cursos');
   const imagem = document.querySelector('.curso-capa img');
   assert.match(imagem.alt, /React para web/);
-  assert.equal(imagem.width, imagem.height);
+  assert.equal(imagem.width, 550);
+  assert.equal(imagem.height, 250);
   await act(() => imagem.dispatchEvent(new dom.window.Event('error')));
   assert.ok(document.querySelector('.curso-capa-reserva'));
   assert.equal(document.querySelector('.curso-capa img'), null);
