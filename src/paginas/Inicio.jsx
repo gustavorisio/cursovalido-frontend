@@ -18,23 +18,28 @@ export default function Inicio() {
     <main id="conteudo-inicio">
       <section className="cv-hero" aria-labelledby="cv-titulo">
         <div className="cv-hero-copy">
-          <p className="cv-eyebrow">CursoVálido · Aulas, fórum e notícias</p>
-          <h1 id="cv-titulo">Estude tecnologia<br />e programação.</h1>
-          <p className="cv-lead">Acesse cursos com videoaulas organizadas em módulos e acompanhe seu progresso. No fórum, converse com alunos e professores sobre suas dúvidas. Nas notícias, acompanhe publicações sobre tecnologia e programação.</p>
+          <p className="cv-eyebrow">Aprender. Praticar. Compartilhar.</p>
+          <h1 id="cv-titulo">Seu próximo passo<br />na <span>tecnologia.</span></h1>
+          <p className="cv-lead">Cursos organizados, uma comunidade para trocar ideias e conteúdo para seguir descobrindo. Encontre seu caminho e estude no seu ritmo.</p>
           <div className="cv-hero-actions"><Link className="cv-button cv-button-primary" to="/cursos">Conhecer os cursos</Link><Link className="cv-button cv-button-outline" to="/forum">Visitar o fórum</Link></div>
           <p className="cv-hero-note">Já tem cadastro? <Link to="/login">Entre para continuar seus estudos</Link></p>
         </div>
-        <div className="cv-media">
-          <div className="cv-media-heading">Conteúdo em vídeo<span>YouTube</span></div>
-          <div className="cv-video"><iframe src="https://www.youtube.com/embed/e15WSmF2Ams" title="Vídeo sobre aprendizado de tecnologia" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div>
-          <div className="cv-media-footer"><strong>Videoaulas no CursoVálido</strong><span>Vídeos do YouTube integrados às aulas.</span></div>
-        </div>
+        <aside className="cv-study-map" aria-labelledby="cv-study-titulo">
+          <div className="cv-study-heading"><span className="cv-eyebrow">Seu ponto de partida</span><span className="cv-free">Acesso gratuito</span></div>
+          <h2 id="cv-study-titulo">Uma ideia de onde começar.</h2>
+          <ol className="cv-study-steps">
+            <li><Link to="/roadmap"><span className="cv-step-number" aria-hidden="true">01</span><span><strong>Descubra possibilidades</strong><small>Explore as áreas da tecnologia.</small></span><span aria-hidden="true">↗</span></Link></li>
+            <li><Link to="/cursos"><span className="cv-step-number" aria-hidden="true">02</span><span><strong>Escolha o que aprender</strong><small>Conheça os cursos e suas aulas.</small></span><span aria-hidden="true">↗</span></Link></li>
+            <li><Link to="/forum"><span className="cv-step-number" aria-hidden="true">03</span><span><strong>Aprenda em comunidade</strong><small>Pergunte, compartilhe e converse.</small></span><span aria-hidden="true">↗</span></Link></li>
+          </ol>
+          <p className="cv-study-note">Do primeiro contato à próxima dúvida.</p>
+        </aside>
       </section>
 
       <section className="cv-explore" aria-labelledby="cv-explore-titulo">
-        <div className="cv-section-heading"><div><p className="cv-eyebrow">Conheça a plataforma</p><h2 id="cv-explore-titulo">O que você encontra no CursoVálido</h2></div><p>Escolha por onde começar seus estudos.</p></div>
+        <div className="cv-section-heading"><div><p className="cv-eyebrow">Conheça a plataforma</p><h2 id="cv-explore-titulo">Aprender vai além de assistir.</h2></div><p>Escolha por onde começar seus estudos.</p></div>
         <div className="cv-area-grid">{areas.map((area) => <article className={'cv-area cv-area-' + area.tipo} key={area.tipo}>
-          <h3>{area.titulo}</h3><p>{area.texto}</p><Link to={area.destino}>{area.link}</Link>
+          <span className="cv-area-kicker">{area.tipo === 'aulas' ? 'ESTUDE' : area.tipo === 'forum' ? 'CONVERSE' : 'DESCUBRA'}</span><h3>{area.titulo}</h3><p>{area.texto}</p><Link to={area.destino}>{area.link}</Link>
         </article>)}</div>
       </section>
 
