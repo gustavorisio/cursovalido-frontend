@@ -7,7 +7,7 @@ import { createElement, act, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-let servidor, Formulario, Convite, AceiteDocumentos, DocumentoLegal, servico, dom, raiz, anteriorFetch;
+let servidor, Formulario, Convite, AceiteDocumentos, DocumentoLegal, servico, Suporte, suporteServico, dom, raiz, anteriorFetch;
 before(async () => {
   servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
   Formulario = (await servidor.ssrLoadModule('/src/componentes/autenticacao/FormularioCadastro.jsx')).default;
@@ -15,6 +15,8 @@ before(async () => {
   AceiteDocumentos = (await servidor.ssrLoadModule('/src/componentes/comuns/AceiteDocumentos.jsx')).default;
   DocumentoLegal = (await servidor.ssrLoadModule('/src/componentes/comuns/DocumentoLegal.jsx')).default;
   servico = await servidor.ssrLoadModule('/src/servicos/servicoAutenticacao.js');
+  Suporte = (await servidor.ssrLoadModule('/src/componentes/suporte/PaginaSuporte.jsx')).default;
+  suporteServico = await servidor.ssrLoadModule('/src/componentes/suporte/servicoSuporte.js');
 });
 after(async () => { await servidor?.close(); });
 beforeEach(() => {
@@ -173,4 +175,15 @@ test('reabrir leituras no mesmo formulário não repete requisições', async ()
     await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent.startsWith(i%2 ? 'Política de Privacidade —' : 'Termos de Aceite —')).click());
   }
   assert.equal(chamadas.length, 2);
+});
+
+test('suporte usa somente o email da conta e não envia contato legado', async () => {
+  await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Suporte))));
+  assert.equal(document.querySelector('#emailContato'), null);
+  assert.ok(document.querySelector('#emailConta'));
+  const enviados=[];
+  globalThis.fetch=async (_url, opcoes)=>{enviados.push(JSON.parse(opcoes.body));return Response.json({protocolo:'teste'});};
+  await suporteServico.enviarSolicitacao({emailConta:'conta@example.com',emailContato:'legado@example.com',usuario:'Maria',motivo:'OUTROS',assunto:'Teste',descricao:'Descrição para suporte'});
+  assert.equal(enviados[0].emailConta, 'conta@example.com');
+  assert.equal(Object.hasOwn(enviados[0], 'emailContato'), false);
 });
