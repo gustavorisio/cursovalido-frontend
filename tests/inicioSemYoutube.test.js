@@ -32,6 +32,8 @@ test('inicio nao incorpora YouTube nem carrega o player e preserva os caminhos d
   assert.equal(window.YT, undefined);
   assert.equal(window.onYouTubeIframeAPIReady, undefined);
   assert.equal(document.querySelector('.cv-study-map'), null);
-  assert.match(document.querySelector('h1').textContent, /Seu próximo passo na tecnologia\./);
+  assert.match(document.querySelector('h1').textContent, /Aprenda e compartilhe conhecimento em tecnologia\./);
   assert.deepEqual([...document.querySelectorAll('.cv-hero-actions a')].map(a => a.getAttribute('href')), ['/cursos', '/forum']);
+  assert.deepEqual([...document.querySelectorAll('.cv-area > a')].map(a => a.getAttribute('href')), ['/cursos', '/forum', '/noticias', '/roadmap']);
+  assert.match(document.querySelector('.cv-area-forum p').textContent, /tecnologia e programação em geral, incluindo assuntos das aulas/);
 });
