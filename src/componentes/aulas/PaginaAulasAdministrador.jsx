@@ -1,4 +1,5 @@
 import FormularioConteudo from './componentes/FormularioConteudo';
+import CapaCurso from './componentes/CapaCurso';
 import ConfirmacaoModal from '../forum/componentes/ConfirmacaoModal';
 import ModuloExpansivel from './componentes/ModuloExpansivel';
 import PesquisaConteudo from './componentes/PesquisaConteudo';
@@ -106,11 +107,11 @@ function ConsultaAulas({ idCurso, idAula }) {
       {dados.cursos ? <>
         {cursos.length === 0 ? <div className="card empty-list">Nenhum curso encontrado.</div> : null}
         <div className="aulas-grade aulas-conteudo-grade">
-          {cursos.map((curso) => <article className="card aulas-cartao" key={curso.id}>
-
+          {cursos.map((curso) => <article className="card aulas-cartao curso-cartao" key={curso.id}>
+            <CapaCurso curso={curso} />
             <div className="aulas-cartao-corpo">
               <h2 className="topic-title">{curso.titulo}</h2>
-
+              <p className="content-text">{curso.descricao}</p>
             </div>
             <footer className="aulas-cartao-acoes"><Link className="btn btn-primary" to={`/administracao/cursos/${curso.id}`}>Ver módulos e aulas</Link>{acoesCurso(curso)}</footer>
           </article>)}

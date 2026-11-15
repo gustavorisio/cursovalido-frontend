@@ -1,4 +1,5 @@
 import ModuloExpansivel from './componentes/ModuloExpansivel';
+import CapaCurso from './componentes/CapaCurso';
 import PesquisaConteudo from './componentes/PesquisaConteudo';
 import { correspondeAoNome } from './servicos/pesquisaConteudo';
 import { useEffect, useState } from 'react';
@@ -148,10 +149,11 @@ function GestaoConteudo({ idCurso, idModulo }) {
           <div className={`aulas-grade aulas-conteudo-grade${tipo === 'modulo' ? ' aulas-modulos-lista' : ''}`}>
             {itensFiltrados.map((item) => <CartaoConteudo key={item.id} tipo={tipo} item={item} expandido={Boolean(busca.trim())}>
 
+              {tipo === 'curso' && <CapaCurso curso={item} />}
               {tipo === 'aula' && <span className="aulas-etiqueta">{nome} {item.ordem}</span>}
               <div className="aulas-cartao-corpo">
                 {tipo !== 'modulo' && <h2 className="topic-title">{item.titulo}</h2>}
-                {tipo !== 'curso' && <p className="content-text">{item.descricao}</p>}
+                <p className="content-text">{item.descricao}</p>
                 {tipo === 'aula' ? <p className="texto-suave">Vídeo: <a href={`https://www.youtube.com/watch?v=${item.youtubeVideoId}`} target="_blank" rel="noreferrer">Abrir no YouTube</a></p> : null}
               </div>
               <footer className="aulas-cartao-acoes">
