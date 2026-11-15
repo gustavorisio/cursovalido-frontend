@@ -48,6 +48,7 @@ export default function DadosUsuario({ desabilitado = false }) {
         <div><dt>Nome</dt><dd>{dados.nomeCompleto || 'Não informado'}</dd></div>
         <div><dt>E-mail</dt><dd>{dados.email || 'Não informado'}</dd></div>
         <div><dt>Perfil do usuário</dt><dd>{nomePerfil}</dd></div>
+        {String(codigoPerfil).toUpperCase() === 'ALUNO' && <div><dt>Matrícula</dt><dd>{dados.matricula ?? 'Não informada'}</dd></div>}
         <div><dt>Data de nascimento</dt><dd>{dados.dataNascimento ? dados.dataNascimento.split('-').reverse().join('/') : 'Não informada'}</dd></div>
         <div><dt>Último aceite dos termos</dt><dd>{formatarDataHoraAceite(dados.dataHoraAceite)}</dd></div>
         <div><dt>Versão dos termos aceitos</dt><dd>{dados.versaoTermos || 'Não informada'}</dd></div>

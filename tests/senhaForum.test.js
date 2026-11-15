@@ -132,6 +132,22 @@ test('dados da conta exibem data e hora do último aceite e a versão aceita', a
   assert.equal(campos['Versão dos termos aceitos'], '2.1');
 });
 
+for (const perfil of ['ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
+  test(`dados da conta de ${perfil} exibem matrícula somente para aluno`, async () => {
+    globalThis.fetch = async () => Response.json({ id: 7, nomeCompleto: 'Usuário', email: 'usuario@example.com', perfil, matricula: '000123' });
+    await act(async () => raiz.render(h(contexto.Provider, { value: { sessao: { idUsuario: 7, perfil } } }, h(DadosUsuario))));
+    const campos = Object.fromEntries([...document.querySelectorAll('dl > div')].map(div => [div.querySelector('dt').textContent, div.querySelector('dd').textContent]));
+    assert.equal(campos['Matrícula'], perfil === 'ALUNO' ? '000123' : undefined);
+  });
+}
+
+test('aluno sem matrícula informada usa o perfil da sessão e não inventa um número', async () => {
+  globalThis.fetch = async () => Response.json({ id: 7, nomeCompleto: 'Aluno', email: 'aluno@example.com' });
+  await act(async () => raiz.render(h(contexto.Provider, { value: { sessao: { idUsuario: 7, perfil: 'ALUNO' } } }, h(DadosUsuario))));
+  const campo = [...document.querySelectorAll('dl > div')].find(div => div.querySelector('dt').textContent === 'Matrícula');
+  assert.equal(campo.querySelector('dd').textContent, 'Não informada');
+});
+
 test('dados da conta não inventam data ou versão quando o aceite não está informado', async () => {
   globalThis.fetch = async () => Response.json({ id: 7, nomeCompleto: 'Aluno', email: 'aluno@example.com' });
   await act(async () => raiz.render(h(contexto.Provider, { value: { sessao: { idUsuario: 7 } } }, h(DadosUsuario))));
