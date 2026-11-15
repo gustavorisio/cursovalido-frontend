@@ -19,21 +19,11 @@ export default function Inicio() {
       <section className="cv-hero" aria-labelledby="cv-titulo">
         <div className="cv-hero-copy">
           <p className="cv-eyebrow">Aprender. Praticar. Compartilhar.</p>
-          <h1 id="cv-titulo">Seu próximo passo<br />na <span>tecnologia.</span></h1>
+          <h1 id="cv-titulo">Seu próximo passo na <span>tecnologia.</span></h1>
           <p className="cv-lead">Cursos organizados, uma comunidade para trocar ideias e conteúdo para seguir descobrindo. Encontre seu caminho e estude no seu ritmo.</p>
           <div className="cv-hero-actions"><Link className="cv-button cv-button-primary" to="/cursos">Conhecer os cursos</Link><Link className="cv-button cv-button-outline" to="/forum">Visitar o fórum</Link></div>
           <p className="cv-hero-note">Já tem cadastro? <Link to="/login">Entre para continuar seus estudos</Link></p>
         </div>
-        <aside className="cv-study-map" aria-labelledby="cv-study-titulo">
-          <div className="cv-study-heading"><span className="cv-eyebrow">Seu ponto de partida</span><span className="cv-free">Acesso gratuito</span></div>
-          <h2 id="cv-study-titulo">Uma ideia de onde começar.</h2>
-          <ol className="cv-study-steps">
-            <li><Link to="/roadmap"><span className="cv-step-number" aria-hidden="true">01</span><span><strong>Descubra possibilidades</strong><small>Explore as áreas da tecnologia.</small></span><span aria-hidden="true">↗</span></Link></li>
-            <li><Link to="/cursos"><span className="cv-step-number" aria-hidden="true">02</span><span><strong>Escolha o que aprender</strong><small>Conheça os cursos e suas aulas.</small></span><span aria-hidden="true">↗</span></Link></li>
-            <li><Link to="/forum"><span className="cv-step-number" aria-hidden="true">03</span><span><strong>Aprenda em comunidade</strong><small>Pergunte, compartilhe e converse.</small></span><span aria-hidden="true">↗</span></Link></li>
-          </ol>
-          <p className="cv-study-note">Do primeiro contato à próxima dúvida.</p>
-        </aside>
       </section>
 
       <section className="cv-explore" aria-labelledby="cv-explore-titulo">
