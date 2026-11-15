@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react';
 import { createElement as h, act, useState } from 'react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-let servidor, createRoot, Cadastro, Convite, Reativacao, Documento, Configuracoes, RotaProtegida, Login, Contexto, dom, raiz;
+let servidor, createRoot, Cadastro, Convite, Reativacao, Privacidade, Documento, Configuracoes, RotaProtegida, Login, Contexto, dom, raiz;
 const fetchOriginal = globalThis.fetch;
 const documentos = {
   termos: { versao: '1.0', conteudo: '<h1>Termos de Aceite</h1><p>Condições <strong>obrigatórias</strong>.</p><ol><li>Primeira condição</li></ol>' },
@@ -23,6 +23,7 @@ before(async () => {
   Cadastro = (await servidor.ssrLoadModule('/src/paginas/Cadastro.jsx')).default;
   Convite = (await servidor.ssrLoadModule('/src/paginas/CadastroConvite.jsx')).default;
   Reativacao = (await servidor.ssrLoadModule('/src/paginas/TermosDeUso.jsx')).default;
+  Privacidade = (await servidor.ssrLoadModule('/src/paginas/PoliticaDePrivacidade.jsx')).default;
   Documento = (await servidor.ssrLoadModule('/src/componentes/comuns/DocumentoLegal.jsx')).default;
   Configuracoes = (await servidor.ssrLoadModule('/src/paginas/Configuracoes.jsx')).default;
   RotaProtegida = (await servidor.ssrLoadModule('/src/componentes/autenticacao/RotaProtegida.jsx')).default;
@@ -47,6 +48,23 @@ const botao = (texto) => [...document.querySelectorAll('button')].find((elemento
 const aceite = () => document.querySelector('.aceite-documentos input[type=checkbox]');
 const leitor = () => document.querySelector('.leitura-documento-texto');
 const confirmarLeitura = () => document.querySelector('.leitura-documento .btn-primary');
+
+for (const perfil of [null, 'ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
+  test(`consulta pública ${perfil ?? 'visitante'}: documento e rodapé únicos com o mesmo conteúdo`, async () => {
+    globalThis.fetch = async url => Response.json(String(url).endsWith('/politicas/ativas') ? [documentos.termos] : documentos.privacidade);
+    for (const [Pagina, tipo] of [[Reativacao, 'termos'], [Privacidade, 'privacidade']]) {
+      await act(async () => raiz.render(h(MemoryRouter, null,
+        h(Contexto.Provider, { value: { autenticado: Boolean(perfil), sessao: perfil ? { perfil } : null, sair() {} } }, h(Pagina)))));
+      assert.equal(document.querySelectorAll('.site-footer').length, 1);
+      assert.equal(document.querySelectorAll('.documento-conteudo').length, 1);
+      assert.equal(document.querySelectorAll('.conteudo-legal').length, 1);
+      assert.equal(document.querySelector('.conteudo-legal h1').textContent, tipo === 'termos' ? 'Termos de Aceite' : 'Política de Privacidade');
+      assert.equal(document.querySelector('.aceite-documentos'), null);
+      assert.equal(document.querySelectorAll('.site-footer a').length, 3);
+      await act(() => raiz.render(null));
+    }
+  });
+}
 
 async function rolar(elemento, posicao) {
   elemento.scrollTop = posicao;
@@ -148,6 +166,19 @@ for (const { fluxo, perfil } of [
     }
     assert.equal(aceite().checked, true);
     assert.equal(botao(textoFinal).disabled, false);
+
+    if (reativacao) {
+      // Consultar a política pelo rodapé não deve desmontar nem perder os aceites.
+      const linkPrivacidade = [...document.querySelectorAll('.site-footer a')].find(link => link.textContent === 'Política de Privacidade');
+      await act(async () => linkPrivacidade.click());
+      assert.equal(document.querySelector('.aceite-documentos').closest('[hidden]') !== null, true);
+      assert.equal(document.querySelector('.documento-conteudo .conteudo-legal').outerHTML, referencias.privacidade);
+      await act(async () => botao('Termos de Aceite').click());
+      assert.equal(document.querySelector('.aceite-documentos').closest('[hidden]'), null);
+      assert.equal(document.querySelector('.documento-conteudo'), null);
+      assert.equal(aceite().checked, true);
+      assert.equal(botao(textoFinal).disabled, false);
+    }
 
     // Revogar o aceite exige repetir a leitura dos dois documentos.
     await act(() => aceite().click());

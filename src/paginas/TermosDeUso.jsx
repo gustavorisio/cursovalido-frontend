@@ -1,7 +1,7 @@
 import { dadosDoToken } from '../servicos/sessaoNavegador';
 import AceiteDocumentos from '../componentes/comuns/AceiteDocumentos';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import DocumentoLegal from '../componentes/comuns/DocumentoLegal';
 import { aceitarTermosNovamente, buscarPoliticaAtiva } from '../servicos/servicoAutenticacao';
 import { useAutenticacao } from '../contextos/useAutenticacao';
@@ -21,11 +21,12 @@ export default function TermosDeUso() {
   const [carregandoMetadados, setCarregandoMetadados] = useState(true);
   const [revisaoDocumentos, setRevisaoDocumentos] = useState(0);
   const navegar = useNavigate();
+  const localizacao = useLocation();
   const { autenticado, sair } = useAutenticacao();
 
   function voltar() {
-    if (window.history.length > 1) navegar(-1);
-    else navegar(autenticado ? '/forum' : '/');
+    const retorno = localizacao.state?.retornoDocumentos;
+    navegar(retorno?.startsWith('/') && !retorno.startsWith('//') && !/termos|politica-privacidade/.test(retorno) ? retorno : autenticado ? '/cursos' : '/', { replace: true });
   }
 
   async function carregarDocumento() {
