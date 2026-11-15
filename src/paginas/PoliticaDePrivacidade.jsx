@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import DocumentoLegal from '../componentes/comuns/DocumentoLegal';
 import { buscarPrivacidadeAtiva } from '../servicos/servicoAutenticacao';
 import { useAutenticacao } from '../contextos/useAutenticacao';
@@ -11,11 +11,12 @@ export default function PoliticaDePrivacidade() {
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
   const navegar = useNavigate();
+  const localizacao = useLocation();
   const { autenticado } = useAutenticacao();
 
   function voltar() {
-    if (window.history.length > 1) navegar(-1);
-    else navegar(autenticado ? '/forum' : '/');
+    const retorno = localizacao.state?.retornoDocumentos;
+    navegar(retorno?.startsWith('/') && !retorno.startsWith('//') && !/termos|politica-privacidade/.test(retorno) ? retorno : autenticado ? '/cursos' : '/', { replace: true });
   }
 
   async function carregarDocumento() {
