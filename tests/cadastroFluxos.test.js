@@ -7,7 +7,7 @@ import { createElement, act, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-let servidor, Formulario, Convite, AceiteDocumentos, DocumentoLegal, servico, dom, raiz, anteriorFetch;
+let servidor, Formulario, Convite, AceiteDocumentos, DocumentoLegal, servico, Suporte, suporteServico, dom, raiz, anteriorFetch;
 before(async () => {
   servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
   Formulario = (await servidor.ssrLoadModule('/src/componentes/autenticacao/FormularioCadastro.jsx')).default;
@@ -15,6 +15,8 @@ before(async () => {
   AceiteDocumentos = (await servidor.ssrLoadModule('/src/componentes/comuns/AceiteDocumentos.jsx')).default;
   DocumentoLegal = (await servidor.ssrLoadModule('/src/componentes/comuns/DocumentoLegal.jsx')).default;
   servico = await servidor.ssrLoadModule('/src/servicos/servicoAutenticacao.js');
+  Suporte = (await servidor.ssrLoadModule('/src/componentes/suporte/PaginaSuporte.jsx')).default;
+  suporteServico = await servidor.ssrLoadModule('/src/componentes/suporte/servicoSuporte.js');
 });
 after(async () => { await servidor?.close(); });
 beforeEach(() => {
@@ -43,7 +45,7 @@ test('cadastro comum solicita somente os dados necessarios e mantem maioridade',
 });
 
 test('cadastro por convite nao solicita telefone e mantem maioridade', async () => {
-  globalThis.fetch = async (url) => String(url).includes('confirmar-email') ? new Response(null, { status: 204 }) : Response.json([{ nome: 'Termos', versao: '1.0', conteudo: 'Termos' }]);
+  globalThis.fetch = async (url) => String(url).includes('/convites/consultar') ? Response.json({ perfil: 'PROFESSOR', email: 'convidado@example.com' }) : String(url).includes('confirmar-email') ? new Response(null, { status: 204 }) : Response.json([{ nome: 'Termos', versao: '1.0', conteudo: 'Termos' }]);
   await act(async () => raiz.render(createElement(MemoryRouter, { initialEntries: ['/convites/cadastro?token=teste'] }, createElement(Convite))));
   await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent === 'Confirmar meu e-mail').click());
   assert.ok(document.querySelector('form'));
@@ -161,4 +163,44 @@ test('páginas de termos e privacidade exibem exatamente o mesmo documento forma
     assert.equal(document.querySelector('.conteudo-legal').outerHTML, documentoNoAceite);
     assert.equal(document.querySelector('iframe'), null);
   }
+});
+
+
+test('alternar documentos repetidamente mantém a página e reutiliza o conteúdo', async () => {
+  let chamadas = 0;
+  globalThis.fetch = async () => { chamadas++; return Response.json({versao: '2.0', conteudo: 'Política atual'}); };
+  await act(() => raiz.render(createElement(MemoryRouter, {initialEntries: ['/termos-aceite.html']},
+    createElement(DocumentoLegal, {tipo: 'termos', versao: '1.0', conteudo: 'Termos atuais'}))));
+  const alternar = () => document.querySelectorAll('.documento-navegacao button')[1].click();
+  await act(async () => { for(let i=0;i<30;i++) alternar(); });
+  assert.equal(chamadas, 1);
+  assert.equal(document.querySelector('main h1').textContent, 'Política de Privacidade');
+  for(let i=0;i<50;i++) await act(async () => alternar());
+  assert.equal(chamadas, 1);
+  assert.equal(document.querySelector('.documento-navegacao a'), null);
+  assert.equal(document.querySelectorAll('main').length, 1);
+});
+
+test('reabrir leituras no mesmo formulário não repete requisições', async () => {
+  const chamadas = [];
+  globalThis.fetch = async url => { chamadas.push(String(url)); return String(url).includes('/privacidade/')
+    ? Response.json({versao: '2.0', conteudo: 'Privacidade'})
+    : Response.json([{versao: '1.0', conteudo: 'Termos'}]); };
+  await act(() => raiz.render(createElement(AceiteDocumentos, {versaoTermos:'1.0', aceito:false, onAlterar(){}})));
+  for(let i=0;i<20;i++) {
+    await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent.startsWith(i%2 ? 'Política de Privacidade —' : 'Termos de Aceite —')).click());
+  }
+  assert.equal(chamadas.length, 2);
+});
+
+
+test('suporte usa somente o email da conta e não envia contato legado', async () => {
+  await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Suporte))));
+  assert.equal(document.querySelector('#emailContato'), null);
+  assert.ok(document.querySelector('#emailConta'));
+  const enviados=[];
+  globalThis.fetch=async (_url, opcoes)=>{enviados.push(JSON.parse(opcoes.body));return Response.json({protocolo:'teste'});};
+  await suporteServico.enviarSolicitacao({emailConta:'conta@example.com',emailContato:'legado@example.com',usuario:'Maria',motivo:'OUTROS',assunto:'Teste',descricao:'Descrição para suporte'});
+  assert.equal(enviados[0].emailConta, 'conta@example.com');
+  assert.equal(Object.hasOwn(enviados[0], 'emailContato'), false);
 });

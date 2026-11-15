@@ -60,7 +60,11 @@ export default function DashboardAdministrativo() {
     </div>
     <Estado estado={resumo} repetir={repetir}>{(dados) => <div className="dashboard-indicadores">{indicadores.map(([campo, nome, cor]) => <article className={`small-box text-bg-${cor}`} key={campo}>
       <div className="inner"><h3>{dados[campo].toLocaleString('pt-BR')}</h3><p>{nome}</p></div>
-    </article>)}</div>}</Estado>
+    </article>)}<article className="small-box text-bg-info">
+      <div className="inner"><h3>{dados.mediaIdadeAlunos == null ? '—' : `${dados.mediaIdadeAlunos.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} anos`}</h3><p>Média de idade dos alunos</p>
+        <small>{dados.mediaIdadeAlunos == null ? 'Sem datas de nascimento válidas disponíveis.' : `Base: ${dados.alunosComNascimentoInformado.toLocaleString('pt-BR')} alunos ativos com data de nascimento válida.`}</small>
+      </div>
+    </article></div>}</Estado>
     <p className="dashboard-nota">Contas ativas não representam usuários online. Totais e ranking consideram todo o histórico; o período abaixo se aplica apenas à série mensal.</p>
     <label className="dashboard-periodo">Período das matrículas <select className="form-select" value={meses} onChange={(evento) => setMeses(Number(evento.target.value))}>{[1, 3, 6, 12, 24].map((valor) => <option key={valor} value={valor}>{valor} {valor === 1 ? 'mês' : 'meses'}</option>)}</select></label>
     <div className="dashboard-graficos">

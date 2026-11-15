@@ -56,8 +56,9 @@ test('documentos usam mesma navegação e estrutura com conteúdo próprio', asy
     await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Documento, { tipo, versao: '1.0', dataPublicacao: '', conteudo, onVoltar() { }, onRecarregar() { } }))));
     const nav = document.querySelector('nav');
     assert.equal(nav.querySelector('button').textContent, 'Voltar');
-    assert.equal(nav.querySelector('a').className, 'btn btn-secondary');
-    assert.equal(nav.querySelector('a').getAttribute('href'), tipo === 'termos' ? '/politica-privacidade.html' : '/termos-aceite.html');
+    assert.equal(nav.querySelectorAll('button')[1].className, 'btn btn-secondary');
+    assert.equal(nav.querySelectorAll('button')[1].textContent, tipo === 'termos' ? 'Política de Privacidade' : 'Termos de Aceite');
+    assert.equal(nav.querySelector('a'), null);
     assert.equal(document.querySelector('iframe'), null);
     assert.equal(document.querySelector('.conteudo-legal h2').textContent, tipo === 'termos' ? 'Condições de uso' : 'Seus dados pessoais');
     assert.equal(document.querySelector('.conteudo-legal strong').textContent, 'este documento');
@@ -70,4 +71,32 @@ test('documentos não exibem conteúdo antigo durante o carregamento', async () 
   await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Documento, { tipo: 'termos', versao: '1.0', conteudo: '<p>Texto anterior</p>', carregando: true }))));
   assert.match(document.querySelector('[role=status]').textContent, /Carregando/);
   assert.equal(document.querySelector('.conteudo-legal'), null);
+});
+
+test('troca de documento oculta texto anterior, recupera falhas e reutiliza a consulta', async () => {
+  const fetchOriginal = globalThis.fetch;
+  let responder;
+  let chamadas = 0;
+  globalThis.fetch = () => {
+    chamadas++;
+    return new Promise(resolve => { responder = resolve; });
+  };
+  try {
+    await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Documento, { tipo: 'termos', versao: '1.0', conteudo: '<p>Termos atuais</p>' }))));
+    const trocar = () => document.querySelectorAll('.documento-navegacao button')[1];
+    await act(() => trocar().click());
+    assert.equal(document.querySelector('.conteudo-legal'), null);
+    await act(async () => responder(Response.json({}, { status: 503 })));
+    assert.match(document.querySelector('[role=alert]').textContent, /Não foi possível/);
+    await act(() => [...document.querySelectorAll('button')].find(botao => botao.textContent === 'Buscar novamente').click());
+    await act(async () => responder(Response.json({ versao: '2.0', conteudo: '<p>Privacidade atual</p>' })));
+    assert.equal(document.querySelector('[role=alert]'), null);
+    assert.equal(document.querySelector('.conteudo-legal').textContent, 'Privacidade atual');
+    await act(() => trocar().click());
+    assert.equal(document.querySelector('.conteudo-legal').textContent, 'Termos atuais');
+    await act(() => trocar().click());
+    assert.equal(document.querySelectorAll('.conteudo-legal').length, 1);
+    assert.equal(document.querySelector('.conteudo-legal').textContent, 'Privacidade atual');
+    assert.equal(chamadas, 2);
+  } finally { globalThis.fetch = fetchOriginal; }
 });

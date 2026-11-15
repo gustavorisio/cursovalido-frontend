@@ -47,7 +47,9 @@ export default function ListaComentarios({ comentarios, podeExcluir, podeEditar,
               </button>
             )}
           </div>
-          <p className="content-text">{comentario.conteudo}</p>
+          <p className={`content-text ${comentario.ativo === false ? 'texto-suave' : ''}`}>
+            {comentario.ativo === false ? 'Esta mensagem foi excluída.' : comentario.conteudo}
+          </p>
           {confirmando === comentario.id && (
             <ConfirmacaoModal
               titulo="Apagar comentário"

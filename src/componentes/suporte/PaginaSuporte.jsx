@@ -6,7 +6,7 @@ import { enviarSolicitacao } from './servicoSuporte';
 import '../forum/forum.css';
 import './suporte.css';
 
-const inicial = { emailConta: '', usuario: '', emailContato: '', motivo: 'REVISAO_BANIMENTO', assunto: '', descricao: '' };
+const inicial = { emailConta: '', usuario: '', motivo: 'REVISAO_BANIMENTO', assunto: '', descricao: '' };
 const motivos = [
   ['REVISAO_BANIMENTO', 'Revisão de banimento'], ['RECUPERACAO_CONTA', 'Recuperação de conta'],
   ['PROBLEMA_ACESSO', 'Problema de acesso'], ['ERRO_SISTEMA', 'Erro no sistema'],
@@ -65,7 +65,7 @@ export default function PaginaSuporte() {
         <section className="forum-topicos" aria-label="Solicitação de suporte">
           {resultado ? <div className="card" role="status" aria-live="polite">
             <h2>Solicitação enviada</h2><p>Guarde seu protocolo: <strong>{resultado.protocolo}</strong></p>
-            <p>A equipe responderá pelo e-mail de contato informado. Confira também a caixa de spam.</p>
+            <p>A equipe responderá pelo e-mail da conta informado. Confira também a caixa de spam.</p>
             <div className="suporte-acoes">
               <Link className="btn btn-secondary" to="/">Voltar ao início</Link>
             </div>
@@ -76,9 +76,6 @@ export default function PaginaSuporte() {
               <input className="input-field" id="emailConta" name="emailConta" type="email" autoComplete="email" maxLength={254} required value={dados.emailConta} onChange={alterar} />
               <label htmlFor="usuario">Nome de usuário ou nome cadastrado</label>
               <input className="input-field" id="usuario" name="usuario" autoComplete="username" maxLength={100} required value={dados.usuario} onChange={alterar} />
-              <label htmlFor="emailContato">E-mail para receber a resposta</label>
-              <input className="input-field" id="emailContato" name="emailContato" type="email" maxLength={254} required aria-describedby="contato-ajuda" value={dados.emailContato} onChange={alterar} />
-              <p id="contato-ajuda">Informe um e-mail ao qual você tenha acesso, mesmo que seja diferente do e-mail da conta.</p>
               <label htmlFor="motivo">Motivo do contato</label>
               <select className="input-field" id="motivo" name="motivo" value={dados.motivo} onChange={alterar}>{motivos.map(([valor, nome]) => <option key={valor} value={valor}>{nome}</option>)}</select>
               <label htmlFor="assunto">Assunto</label>
