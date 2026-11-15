@@ -49,6 +49,18 @@ A aplicação reúne cursos, aulas, acompanhamento de progresso, fórum, notíci
 - Consulta de usuários e aplicação ou revogação de suspensões.
 - Convites e aprovação de cadastros da equipe pelo administrador principal.
 - Gestão dos termos de uso e da política de privacidade pelo administrador principal.
+- Publicação de comunicados para todos os alunos, com título de até 255 caracteres e conteúdo de até 5.000 caracteres.
+
+### Notificações de comunicados
+
+- Administradores publicam em **Administração → Comunicados aos alunos** (`/administracao/comunicados`), preenchendo somente título e conteúdo.
+- Administradores podem editar qualquer comunicado publicado, mantendo os limites de título e conteúdo e as leituras já registradas. A exclusão exige confirmação na interface e remove o comunicado e seus registros de leitura.
+- Alunos acessam os comunicados pelo sino no cabeçalho (`/aluno/notificacoes`), com contador de notificações não lidas atualizado a cada minuto e ao retornar à página.
+- Abrir **Ler comunicado** registra a leitura no servidor somente para o aluno autenticado. Consultar a lista não marca automaticamente todos os comunicados como lidos.
+- Os comunicados são gerais e permanecem disponíveis para alunos que ingressarem posteriormente. Esta versão não envia e-mails nem notificações do navegador.
+- A API do backend utiliza `GET/POST /api/administracao/comunicados`, `PUT/DELETE /api/administracao/comunicados/{id}`, `GET /api/aluno/notificacoes`, `GET /api/aluno/notificacoes/nao-lidas` e `PUT /api/aluno/notificacoes/{id}/lida`. As listas aceitam `page` e `size` (de 1 a 50) e retornam `itens`, `pagina`, `totalPaginas`, `totalElementos` e `naoLidas`.
+- A migração Flyway `V6__comunicados_e_leituras.sql`, no repositório backend, cria as tabelas de comunicados e leituras individuais.
+- Ícone [Bell do Bootstrap Icons v1.13.1](https://icons.getbootstrap.com/icons/bell/), usado localmente sob licença MIT, incluída em `public/imagens/LICENCA-bootstrap-icons.txt`.
 
 As operações dependem da API do back-end, responsável por validar permissões, persistir os dados e executar integrações como envio de e-mails e consulta cadastral. Este repositório contém a interface e os clientes HTTP desses serviços.
 

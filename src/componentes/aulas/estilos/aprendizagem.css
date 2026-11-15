@@ -20,16 +20,26 @@
 .avaliacao-acerto { color: var(--color-success); }
 .avaliacao-revisar { color: var(--color-accent); }
 .avaliacao-resultado > .acoes-topico { margin-top: 28px; }
-.pagina-aulas .plano-estudos { border-radius: 0; margin: 0 40px; }
-.plano-avaliacoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.plano-avaliacoes article { padding: 20px; border: 1px solid var(--color-line); border-radius: 0; background: var(--color-page); min-width: 0; }
-.plano-avaliacoes h3 { margin: 12px 0; font-size: 16px; font-weight: 550; overflow-wrap: anywhere; }
-.plano-avaliacoes p { font-size: 12px; margin-bottom: 18px; }
-.plano-avaliacoes .btn { display: inline-block; text-decoration: none; font-size: 12px; }
-.plano-revisoes-titulo { margin: 28px 0 16px; font-size: 18px; font-weight: 550; }
-.plano-revisoes { display: grid; gap: 12px; list-style: none; padding: 0; margin: 16px 0; }
-.plano-revisoes li { display: flex; gap: 12px; align-items: center; font-size: 14px; }
-.plano-estudos > .texto-suave { font-size: 14px; line-height: 1.7; }
+.pagina-aulas .plano-estudos { @apply m-0 min-w-0 border-t border-line pt-8; }
+.plano-descricao { @apply m-0 mt-2 text-sm leading-relaxed text-muted; }
+.plano-avaliacoes { @apply grid grid-cols-1 gap-4 md:grid-cols-2; }
+.plano-avaliacoes article { @apply flex min-w-0 flex-col border border-line bg-surface p-5 shadow-panel sm:p-6; }
+.plano-avaliacao-cabecalho { @apply flex flex-wrap items-center justify-between gap-3; }
+.pagina-aulas .plano-avaliacao-cabecalho .aulas-etiqueta { @apply text-[10px]; }
+.plano-status { @apply shrink-0 border border-line bg-page px-2 py-1 text-xs text-muted; }
+.plano-status-respondido { @apply border-brand-100 bg-brand-50 text-brand-800; }
+.plano-avaliacoes h3 { @apply m-0 mt-4 text-lg font-semibold leading-snug break-words text-brand-950; }
+.plano-avaliacao-descricao { @apply m-0 mt-2 text-sm leading-relaxed text-muted; }
+.plano-avaliacao-resultado { @apply m-0 mt-5 mb-5 border-t border-line pt-4 text-sm text-muted; }
+.plano-avaliacao-resultado strong { @apply text-lg font-semibold text-brand-800; }
+.plano-avaliacoes .btn { @apply mt-auto w-full self-start sm:w-auto; }
+.plano-revisoes-painel { @apply mt-4 min-w-0 border border-line bg-surface p-5 sm:p-6; }
+.plano-revisoes-titulo { @apply m-0 text-lg font-semibold text-brand-950; }
+.plano-revisoes { @apply m-0 mt-5 grid list-none gap-3 p-0; }
+.plano-revisoes a { @apply flex min-w-0 flex-wrap items-center justify-between gap-x-5 gap-y-2 border border-line bg-page px-4 py-3 text-sm text-brand-950 no-underline transition-colors hover:border-accent hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent; }
+.plano-revisoes a > span:first-child { @apply min-w-0 break-words; }
+.plano-revisao-acao { @apply shrink-0 font-semibold text-brand-800; }
+.plano-vazio { @apply m-0 border border-dashed border-line bg-surface p-5 text-sm leading-relaxed text-muted sm:p-6; }
 .editor-questionario h2 { font-size: 24px; font-weight: 600; margin-bottom: 14px; }
 .editor-questionario label { display: block; margin: 14px 0 8px; font-size: 13px; font-weight: 500; }
 .editor-questionario textarea.input-field { min-height: 90px; }
@@ -119,17 +129,13 @@
   .editor-caminhos .editor-pergunta { padding: 16px; }
 }
 @media (max-width: 900px) {
-  .pagina-aulas .plano-estudos { margin-inline: 0; }
 }
 @media (max-width: 640px) {
-  .plano-avaliacoes { grid-template-columns: 1fr; }
   .editor-alternativa { grid-template-columns: 80px minmax(0, 1fr); }
   .editor-alternativa > input { grid-column: 1 / -1; }
   .editor-questionario .editor-pergunta { padding: 16px; }
 }
 
-.pagina-aulas .plano-estudos { @apply mx-0; }
-.plano-avaliacoes article { @apply border-brand-100 bg-brand-50; }
 .avaliacao-pergunta legend, .caminhos-etapa legend { @apply text-xl font-medium; }
 .avaliacao-opcao { @apply min-h-12 rounded-none border border-line bg-surface p-4; }
 .avaliacao-opcao:has(input:checked) { @apply border-accent bg-brand-50; }

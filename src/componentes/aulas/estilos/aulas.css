@@ -508,10 +508,9 @@
 
 /* A mesma capa acompanha o curso no catálogo e na gestão. */
 .pagina-aulas .aulas-cartao:has(.curso-capa) { width: 100%; max-width: 550px; padding: 0; gap: 0; overflow: hidden; border-radius: 16px; }
-.curso-capa { width: 100%; aspect-ratio: 550 / 250; max-height: 250px; overflow: hidden; background: var(--color-brand-50); }
+.curso-capa { @apply w-full aspect-[550/250] max-h-[250px] overflow-hidden bg-white; }
 .curso-capa img { display: block; width: 100%; height: 100%; object-fit: contain; }
-.curso-capa-reserva { display: flex; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px; text-align: center; color: var(--color-accent); background: radial-gradient(circle at 20% 20%, var(--color-surface), transparent 65%), var(--color-brand-50); }
-.curso-capa-reserva svg { width: 88px; height: 72px; }
+.curso-capa-reserva { @apply flex h-full items-center justify-center bg-white p-6 text-center text-gray-800; }
 .curso-capa-reserva span { font-size: 13px; font-weight: 600; }
 .pagina-aulas .aulas-cartao:has(.curso-capa) .aulas-cartao-corpo { padding: 22px 22px 0; }
 .pagina-aulas .aulas-cartao:has(.curso-capa) .aulas-cartao-acoes { margin-top: auto; padding: 20px 22px 22px; }

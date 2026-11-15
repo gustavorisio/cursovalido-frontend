@@ -182,6 +182,25 @@ test('aluno vê progresso calculado e links das aulas do curso', async () => {
   assert.equal(document.querySelector('progress').value, 50);
   assert.equal(document.querySelectorAll('.aulas-linha').length, 2);
   assert.ok(document.querySelector('a[href="/aluno/cursos/1/aulas/4"]'));
+  const modulos = document.querySelector('.catalogo-resultados');
+  const plano = document.querySelector('.plano-estudos');
+  assert.ok(modulos.compareDocumentPosition(plano) & window.Node.DOCUMENT_POSITION_FOLLOWING);
+  assert.equal(plano, plano.parentElement.lastElementChild);
+  assert.match(plano.textContent, /O professor ainda não publicou avaliações/);
+});
+
+test('plano ao final dos módulos mantém diagnóstico, resultados e aulas para revisão', async () => {
+  const consultar = globalThis.fetch;
+  globalThis.fetch = async (url, opcoes) => String(url).endsWith('/plano') ? Response.json({
+    avaliacoes: [{ titulo: 'Diagnóstico do curso', idModulo: null, percentual: null }, { titulo: 'Fundamentos', idModulo: 3, percentual: 75 }],
+    revisoes: [{ idAula: 4, titulo: 'Introdução' }],
+  }) : consultar(url, opcoes);
+  await renderizar('PaginaCursoAluno', 'ALUNO', '/aluno/cursos/1', '/aluno/cursos/:idCurso');
+  const plano = document.querySelector('.plano-estudos');
+  assert.equal(plano.querySelector('a[href="/aluno/cursos/1/diagnostico"]').textContent, 'Responder');
+  assert.equal(plano.querySelector('a[href="/aluno/cursos/1/modulos/3/questionario"]').textContent, 'Ver resultado e refazer');
+  assert.match(plano.textContent, /75% de acertos na última tentativa/);
+  assert.ok(plano.querySelector('.plano-revisoes a[href="/aluno/cursos/1/aulas/4"]'));
 });
 
 test('aluno recebe sala com trilha do módulo e navegação preservada', async () => {

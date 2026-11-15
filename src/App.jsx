@@ -29,6 +29,7 @@ import RotaProtegida from './componentes/autenticacao/RotaProtegida';
 import { AutenticacaoProvedor } from './contextos/ContextoAutenticacao';
 
 const Dashboard = lazy(() => import('./paginas/Dashboard'));
+const PaginaNotificacoes = lazy(() => import('./componentes/notificacoes/PaginaNotificacoes'));
 const Noticias = lazy(() => import('./paginas/Noticias'));
 const Noticia = lazy(() => import('./paginas/Noticia'));
 const EditorNoticia = lazy(() => import('./paginas/EditorNoticia'));
@@ -50,6 +51,8 @@ const titulosPaginas = [
   ['/configuracoes/alterar-senha', 'Alterar senha'],
   ['/administracao', 'Administração'],
   ['/administracao/dashboard', 'Dashboard'],
+  ['/administracao/comunicados', 'Comunicados aos alunos'],
+  ['/aluno/notificacoes', 'Notificações'],
   ['/administracao/termos', 'Administrar termos'],
   ['/administracao/privacidade', 'Administrar privacidade'],
   ['/administracao/usuarios', 'Usuários'],
@@ -128,6 +131,7 @@ export default function App() {
           </Route>
           <Route element={<RotaProtegida perfis={['ADMINISTRADOR']} />}>
             <Route path="/administracao/dashboard" element={<Dashboard />} />
+            <Route path="/administracao/comunicados" element={<PaginaNotificacoes administrador />} />
             <Route path="/noticias/nova" element={<EditorNoticia />} />
             <Route path="/noticias/:id/editar" element={<EditorNoticia />} />
             <Route path="/administracao" element={<Administracao key="geral" />} />
@@ -151,6 +155,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
           <Route element={<RotaProtegida perfis={['ALUNO']} />}>
+            <Route path="/aluno/notificacoes" element={<PaginaNotificacoes />} />
             <Route path="/aluno/cursos" element={<PaginaCatalogo />} />
             <Route path="/aluno/cursos/:idCurso" element={<PaginaCursoAluno />} />
             <Route path="/aluno/cursos/:idCurso/aulas/:idAula" element={<PaginaAulaAluno />} />

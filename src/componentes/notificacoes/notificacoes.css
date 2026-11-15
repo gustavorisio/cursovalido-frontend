@@ -1,0 +1,24 @@
+@reference "../../index.css";
+
+.cv-header .notificacoes-sino { @apply relative inline-flex size-11 shrink-0 items-center justify-center border border-line bg-surface text-brand-950 no-underline hover:bg-hover; }
+.cv-header .notificacoes-sino[aria-current] { @apply border-brand-700 text-brand-700; }
+/* Bell · Bootstrap Icons v1.13.1 · MIT; licença em public/imagens. */
+.notificacoes-sino-icone { @apply block size-5 bg-current; mask: url('/imagens/sino.svg') center / contain no-repeat; }
+.notificacoes-contador { @apply absolute -top-2 -right-2 flex min-h-5 min-w-5 items-center justify-center rounded-full border border-surface bg-brand-700 px-1 text-[10px] font-bold leading-none text-surface; }
+.pagina-notificacoes { @apply min-w-0; }
+.notificacoes-titulo { @apply m-0 text-xl font-semibold text-brand-950; }
+.notificacoes-formulario { @apply mt-5 grid gap-5; }
+.notificacoes-formulario label { @apply mb-2 block text-sm font-semibold; }
+.notificacoes-formulario textarea { @apply resize-y; }
+.notificacoes-formulario .texto-suave { @apply mt-2 text-right text-xs; }
+.notificacoes-acoes { @apply flex flex-wrap items-center gap-3; }
+.notificacoes-lista-cabecalho { @apply mb-5 flex flex-wrap items-center justify-between gap-4; }
+.notificacoes-resumo { @apply mb-4 text-sm text-muted; }
+.notificacoes-lista { @apply grid gap-4; }
+.notificacoes-comunicado { @apply min-w-0 border border-line bg-surface p-5 sm:p-6; }
+.notificacoes-nao-lida { @apply border-l-2 border-l-brand-700; }
+.notificacoes-meta { @apply mb-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted; }
+.notificacoes-nao-lida .notificacoes-meta > span { @apply text-brand-800; }
+.notificacoes-comunicado h3 { @apply m-0 text-lg font-semibold break-words; }
+.notificacoes-conteudo { @apply my-4 text-sm leading-relaxed whitespace-pre-wrap wrap-anywhere text-muted; }
+.notificacoes-paginacao { @apply mt-6 flex flex-wrap items-center justify-center gap-4 text-sm; }

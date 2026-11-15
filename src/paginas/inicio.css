@@ -51,6 +51,8 @@
 .cv-header .cv-logo { color: var(--color-brand-950); }
 
 .cv-logo img {
+  display: block;
+  flex-shrink: 0;
   object-fit: contain;
 }
 
@@ -215,7 +217,7 @@
 
 .cv-area-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
 }
 
@@ -397,7 +399,7 @@
   }
 
   .cv-logo img {
-    width: 58px;
+    width: 40px;
     height: 40px;
   }
 

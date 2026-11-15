@@ -46,7 +46,6 @@ function CursoAluno({ idCurso }) {
         <div className="aulas-indicadores"><span>{carga.dados.modulos.length} módulos</span><span>{carga.dados.modulos.reduce((total, modulo) => total + modulo.aulas.length, 0)} aulas</span></div>
         <div className="aulas-progresso"><div><span>Seu progresso</span><strong>{concluidas} de {aulas.length} aulas concluídas</strong></div><progress max="100" value={percentual} aria-label="Progresso do curso" /><span>{percentual}% concluído</span></div>
       </CabecalhoAulas>
-      <PlanoEstudos idCurso={idCurso} />
       <section className="catalogo-resultados" aria-labelledby="aulas-modulos-titulo">
       <div className="catalogo-secao-cabecalho"><div><span className="aulas-etiqueta">Sua jornada de aprendizagem</span><h2 id="aulas-modulos-titulo">Módulos e aulas</h2></div></div>
       <PesquisaConteudo valor={busca} onAlterar={setBusca} label="Pesquisar aula por nome" />
@@ -65,6 +64,7 @@ function CursoAluno({ idCurso }) {
         </div>)}
       </ModuloExpansivel>)}
       </section>
+      <PlanoEstudos idCurso={idCurso} />
     </> : null}
   </LayoutAulas>;
 }
