@@ -146,12 +146,14 @@
 .caminhos-passos button, .caminhos-passos span { border-radius: 10px; font-weight: 600; }
 .caminhos-passos button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
 .caminhos-passos button:disabled { cursor: default; opacity: .5; }
-.caminhos-etapas .avaliacao-opcao { align-items: center; gap: 14px; border-radius: 10px; padding: 16px 18px; min-height: 64px; line-height: 1.6; transition: border-color .15s, background-color .15s; }
+.caminhos-etapas .avaliacao-pergunta { margin: 0 0 16px; }
+.caminhos-etapas .avaliacao-pergunta legend { margin-bottom: 8px; font-size: 17px; line-height: 1.45; overflow-wrap: anywhere; }
+.caminhos-etapas .avaliacao-opcao { align-items: center; gap: 10px; margin-top: 6px; border-radius: 6px; padding: 9px 12px; min-height: 44px; font-size: 14px; line-height: 1.45; transition: border-color .15s, background-color .15s; }
 .caminhos-etapas .avaliacao-opcao:hover { border-color: var(--color-accent); background: var(--color-brand-50); }
 .caminhos-etapas .avaliacao-opcao:focus-within { outline: 2px solid var(--color-accent); outline-offset: 3px; }
-.caminhos-etapas .avaliacao-opcao input { width: 18px; height: 18px; margin: 0; }
+.caminhos-etapas .avaliacao-opcao input { width: 16px; height: 16px; margin: 0; }
 .caminhos-etapas .avaliacao-opcao > span:first-of-type { flex: 1; overflow-wrap: anywhere; }
-.caminhos-opcao-marca { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 28px; border: 1px solid var(--color-line); border-radius: 7px; font-size: 12px; color: var(--color-muted); }
+.caminhos-etapas .avaliacao-opcao .caminhos-opcao-marca { display: grid; place-items: center; flex-shrink: 0; width: 22px; height: 22px; border: 1px solid var(--color-line); border-radius: 4px; font-size: 11px; color: var(--color-muted); }
 .avaliacao-opcao:has(input:checked) .caminhos-opcao-marca { background: var(--color-accent); color: var(--color-surface); border-color: var(--color-accent); }
 .caminhos-etapa > .acoes-topico { display: flex; justify-content: flex-end; gap: 12px; padding-top: 20px; border-top: 1px solid var(--color-line); }
 .caminhos-etapa .btn { min-height: 44px; border-radius: 8px; }

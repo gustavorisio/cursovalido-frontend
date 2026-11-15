@@ -31,6 +31,7 @@ test('inicio nao incorpora YouTube nem carrega o player e preserva os caminhos d
   assert.equal(document.querySelector('iframe, video, script[src*="youtube"], script[src*="ytimg"]'), null);
   assert.equal(window.YT, undefined);
   assert.equal(window.onYouTubeIframeAPIReady, undefined);
-  assert.equal(document.querySelectorAll('.cv-study-steps a').length, 3);
-  assert.deepEqual([...document.querySelectorAll('.cv-study-steps a')].map(a => a.getAttribute('href')), ['/roadmap', '/cursos', '/forum']);
+  assert.equal(document.querySelector('.cv-study-map'), null);
+  assert.match(document.querySelector('h1').textContent, /Seu próximo passo na tecnologia\./);
+  assert.deepEqual([...document.querySelectorAll('.cv-hero-actions a')].map(a => a.getAttribute('href')), ['/cursos', '/forum']);
 });

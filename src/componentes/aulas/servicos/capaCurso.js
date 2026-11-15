@@ -1,5 +1,6 @@
 export const LIMITE_CAPA_BYTES = 2 * 1024 * 1024;
-export const RESOLUCAO_CAPA = 640;
+export const LARGURA_MAXIMA_CAPA = 550;
+export const ALTURA_MAXIMA_CAPA = 250;
 
 export function validarArquivoCapa(arquivo) {
   if (arquivo.type !== 'image/jpeg' || !/\.jpe?g$/i.test(arquivo.name)) {
@@ -9,8 +10,8 @@ export function validarArquivoCapa(arquivo) {
 }
 
 export function validarResolucaoCapa(largura, altura) {
-  if (largura < 320 || altura < 320 || largura > 2048 || altura > 2048) {
-    throw new Error('A imagem deve ter entre 320 e 2048 pixels de largura e de altura.');
+  if (!Number.isInteger(largura) || !Number.isInteger(altura) || largura < 1 || altura < 1 || largura > LARGURA_MAXIMA_CAPA || altura > ALTURA_MAXIMA_CAPA) {
+    throw new Error('A imagem deve ter no máximo 550 px de largura e 250 px de altura. Imagens menores são aceitas.');
   }
 }
 
@@ -26,11 +27,9 @@ export async function prepararCapaCurso(arquivo) {
     });
     validarResolucaoCapa(imagem.naturalWidth, imagem.naturalHeight);
     const tela = document.createElement('canvas');
-    tela.width = tela.height = RESOLUCAO_CAPA;
-    const lado = Math.min(imagem.naturalWidth, imagem.naturalHeight);
-    tela.getContext('2d').drawImage(imagem,
-      (imagem.naturalWidth - lado) / 2, (imagem.naturalHeight - lado) / 2,
-      lado, lado, 0, 0, RESOLUCAO_CAPA, RESOLUCAO_CAPA);
+    tela.width = imagem.naturalWidth;
+    tela.height = imagem.naturalHeight;
+    tela.getContext('2d').drawImage(imagem, 0, 0);
     return tela.toDataURL('image/jpeg', 0.85);
   } finally {
     URL.revokeObjectURL(url);
