@@ -38,7 +38,7 @@ function mensagemDeErro(status, dados) {
   if (status === 404) return 'O conteúdo solicitado não foi encontrado.';
   if (status === 409) return 'Esta operação entrou em conflito com dados existentes.';
   if (status === 401 && codigo !== 'CREDENCIAIS_INVALIDAS') return 'Sua sessão expirou. Faça login novamente.';
-  if (codigo === 'CREDENCIAIS_INVALIDAS') return 'E-mail ou senha incorretos.';
+  if (codigo === 'CREDENCIAIS_INVALIDAS') return formatarMensagem(dados) || 'E-mail ou senha incorretos.';
   if (codigo === 'EMAIL_NAO_CONFIRMADO') return 'Seu e-mail ainda não foi confirmado.';
   if (codigo === 'TERMOS_NAO_ACEITOS') return 'É necessário ler e aceitar os termos novamente para acessar a conta.';
 
@@ -85,12 +85,6 @@ export async function requisitar(caminho, opcoes = {}) {
     };
     if (Object.hasOwn(mensagensServico, dados?.codigo)) {
       throw new ErroApi(resposta.status, mensagensServico[dados.codigo], dados);
-    }
-    const contaExcluida = resposta.status === 409
-      && formatarMensagem(dados) === 'E-mail bloqueado por 15 dias apos a exclusao da conta.';
-    if (contaExcluida) {
-      throw new ErroApi(resposta.status,
-        'O e-mail informado está vinculado a uma conta excluída. Por isso, ele fica bloqueado para novos cadastros por 15 dias após a exclusão.', dados);
     }
     if (['EMAIL_JA_CADASTRADO', 'PERFIL_CONVITE_INVALIDO'].includes(dados?.codigo)) {
       throw new ErroApi(resposta.status, formatarMensagem(dados) ?? 'Não foi possível enviar o convite.', dados);

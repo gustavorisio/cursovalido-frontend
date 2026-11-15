@@ -10,3 +10,13 @@ test('idade distingue o aniversario de 18 anos do dia anterior', () => {
   nascimento.setDate(nascimento.getDate() + 1);
   assert.equal(validarIdade(formatar(nascimento)), 17);
 });
+
+
+test('senha aceita três caracteres com as classes obrigatórias e limita bytes', async () => {
+  const {senhaValida} = await import('../src/servicos/politicaSenha.js');
+  assert.equal(senhaValida('Aa!'), true);
+  assert.equal(senhaValida('A!' + 'a'.repeat(70)), true);
+  for(const senha of ['A!', 'aa!', 'AAA!', 'Aa', 'Aa!'+ 'a'.repeat(70), 'A!' + 'á'.repeat(36)]) {
+    assert.equal(senhaValida(senha), false, senha);
+  }
+});

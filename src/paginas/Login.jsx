@@ -1,3 +1,4 @@
+import { MENSAGEM_SENHA } from '../servicos/politicaSenha';
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import FormularioLogin from '../componentes/autenticacao/FormularioLogin';
@@ -81,7 +82,7 @@ export default function Login() {
           sair();
         }
       } else if (falha.codigo === 'CREDENCIAIS_INVALIDAS' || falha.status === 401) {
-        setErro('E-mail ou senha incorretos.');
+        setErro('E-mail ou senha incorretos. ' + MENSAGEM_SENHA);
       } else if (falha.codigo === 'PENDENTE_APROVACAO') {
         setErro('Seu cadastro está aguardando aprovação do administrador.');
       } else if (falha.codigo === 'ACESSO_REJEITADO') {

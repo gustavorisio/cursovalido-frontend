@@ -13,7 +13,7 @@ export default function SolicitarAlteracaoSenha() {
     evento.preventDefault(); setCarregando(true); setErro(''); setMensagem('');
     try {
       await solicitarAlteracaoSenha(email);
-      setMensagem('Se o e-mail estiver cadastrado, enviaremos um link para redefinir sua senha.');
+      setMensagem('Se a conta existir, enviaremos as instruções. Se o e-mail ainda não foi confirmado, enviaremos um novo link de confirmação.');
     } catch (falha) {
       setErro(falha.message || 'Não foi possível enviar o link para alterar sua senha.');
     } finally { setCarregando(false); }

@@ -1,3 +1,4 @@
+import { dadosDoToken } from '../servicos/sessaoNavegador';
 import AceiteDocumentos from '../componentes/comuns/AceiteDocumentos';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -10,11 +11,15 @@ export default function TermosDeUso() {
   const [conteudo, setConteudo] = useState('');
   const [dataPublicacao, setDataPublicacao] = useState('');
   const [aceitePendente, setAceitePendente] = useState(() => sessionStorage.getItem('curso-valido-token-termos') || '');
+  const perfil = dadosDoToken(aceitePendente)?.perfil;
+  const perfilValido = ['ALUNO', 'PROFESSOR', 'ADMINISTRADOR'].includes(perfil);
+  const [responsabilidade, setResponsabilidade] = useState({});
   const [aceito, setAceito] = useState(false);
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(false);
   const [carregandoMetadados, setCarregandoMetadados] = useState(true);
+  const [revisaoDocumentos, setRevisaoDocumentos] = useState(0);
   const navegar = useNavigate();
   const { autenticado, sair } = useAutenticacao();
 
@@ -26,6 +31,8 @@ export default function TermosDeUso() {
   async function carregarDocumento() {
     setCarregandoMetadados(true);
     setAceito(false);
+    setResponsabilidade({});
+    setRevisaoDocumentos((atual) => atual + 1);
     setErro('');
     try {
       const politica = await buscarPoliticaAtiva();
@@ -66,10 +73,11 @@ export default function TermosDeUso() {
   }, [navegar]);
 
   async function aceitar() {
-    if (!aceito || !aceitePendente || !versao) return;
+    if (!aceito || !aceitePendente || !versao || !perfilValido) return;
+    if (perfil !== 'ALUNO' && !responsabilidade.aceitouResponsabilidade) return;
     setCarregando(true); setErro('');
     try {
-      await aceitarTermosNovamente(aceitePendente, versao);
+      await aceitarTermosNovamente(aceitePendente, versao, responsabilidade);
       sessionStorage.removeItem('curso-valido-token-termos');
       setAceitePendente('');
       sair();
@@ -93,8 +101,8 @@ export default function TermosDeUso() {
     } finally { setCarregando(false); }
   }
 
-  return <DocumentoLegal tipo="termos" versao={versao} dataPublicacao={dataPublicacao} conteudo={conteudo} carregando={carregandoMetadados} erro={erro} onVoltar={voltar} onRecarregar={carregarDocumento}>
+  return <DocumentoLegal tipo="termos" versao={versao} dataPublicacao={dataPublicacao} conteudo={conteudo} exibirConteudo={!aceitePendente} carregando={carregandoMetadados} erro={erro} onVoltar={voltar} onRecarregar={carregarDocumento}>
     {mensagem && <div className="mensagem-sucesso" role="status">{mensagem}</div>}
-    {aceitePendente && versao && <section className="mensagem-cadastro-concluido"><h2>Aceite necessário</h2><p>É necessário aceitar os documentos atuais para acessar a conta.</p><AceiteDocumentos key={versao} versaoTermos={versao} aceito={aceito} onAlterar={setAceito} desabilitado={carregando || carregandoMetadados} /><button className="botao-destaque" type="button" disabled={!aceito || carregando || carregandoMetadados} onClick={aceitar}>{carregando ? 'Enviando...' : 'Aceitar termos e voltar ao login'}</button></section>}
+    {aceitePendente && versao && <section className="mensagem-cadastro-concluido"><h2>Aceite necessário</h2>{!perfilValido && <p role="alert">Não foi possível identificar seu perfil. Faça login novamente.</p>}<p>É necessário aceitar os documentos atuais para acessar a conta.</p><AceiteDocumentos key={versao + perfil + revisaoDocumentos} perfil={perfil} onResponsabilidade={setResponsabilidade} versaoTermos={versao} aceito={aceito} onAlterar={setAceito} desabilitado={carregando || carregandoMetadados} /><button className="botao-destaque" type="button" disabled={!aceito || !perfilValido || carregando || carregandoMetadados} onClick={aceitar}>{carregando ? 'Enviando...' : 'Aceitar termos e voltar ao login'}</button></section>}
   </DocumentoLegal>;
 }

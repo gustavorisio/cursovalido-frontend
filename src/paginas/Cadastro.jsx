@@ -1,3 +1,4 @@
+import { senhaValida } from '../servicos/politicaSenha';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormularioCadastro from '../componentes/autenticacao/FormularioCadastro';
@@ -24,7 +25,7 @@ export default function Cadastro() {
   const [cadastroConcluido, setCadastroConcluido] = useState(false);
   const idade = validarIdade(dados.dataNascimento);
   const formularioValido = useMemo(() => CAMPOS_OBRIGATORIOS.every((campo) => String(dados[campo]).trim())
-    && dados.senha.length >= 8 && idade >= 18 && dados.declarouMaiorIdade && dados.aceitouTermosLgpd && Boolean(dados.versaoTermos) && !carregandoPolitica, [dados, idade, carregandoPolitica]);
+    && senhaValida(dados.senha) && idade >= 18 && idade <= 90 && dados.declarouMaiorIdade && dados.aceitouTermosLgpd && Boolean(dados.versaoTermos) && !carregandoPolitica, [dados, idade, carregandoPolitica]);
 
   async function carregarPolitica() {
     setCarregandoPolitica(true);
@@ -63,6 +64,7 @@ export default function Cadastro() {
   async function enviar(evento) {
     evento.preventDefault();
     if (carregando) return;
+    if (idade > 90) { setErro('A idade máxima permitida é 90 anos.'); return; }
     if (idade < 18) { setErro('A plataforma Curso Válido é destinada a pessoas com 18 anos ou mais.'); return; }
     if (!politica?.versao) { setErro('A versão atual dos documentos ainda não foi carregada.'); return; }
     if (!formularioValido) { setErro('Preencha todos os campos obrigatórios e aceite os termos.'); return; }
