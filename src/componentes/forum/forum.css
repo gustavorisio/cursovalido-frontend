@@ -105,4 +105,16 @@
 .pagina-forum .formulario-container { @apply mx-auto max-w-[900px]; }
 .pagina-forum .content-text { @apply leading-8; }
 .pagina-forum .detalhe-topico > .card { @apply p-6 sm:p-8; }
+.pagina-forum .detalhe-topico .titulo-detalhe,
+.pagina-forum .detalhe-topico > .card > .content-text {
+  color: var(--color-muted);
+}
+
+.forum-paginacao {
+  @apply my-9 flex flex-wrap items-center justify-center gap-4 rounded-none border border-line bg-surface p-5 text-sm text-muted;
+}
+
+@media (max-width: 640px) {
+  .forum-paginacao { gap: 12px; }
+}
 @media (min-width: 901px) { .forum-regras { position: sticky; top: 24px; } }
