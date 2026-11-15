@@ -30,7 +30,7 @@ export default function Administracao({ tela = 'geral' }) {
   const [confirmacao, setConfirmacao] = useState(null);
   const [politica, setPolitica] = useState(null);
   const [nomePolitica, setNomePolitica] = useState(tela === 'privacidade' ? 'Política de Privacidade' : 'Termos de Aceite');
-  const [versaoPolitica, setVersaoPolitica] = useState('');
+
   const [conteudoPolitica, setConteudoPolitica] = useState('');
 
   const carregarDados = useCallback(async () => {
@@ -97,13 +97,13 @@ export default function Administracao({ tela = 'geral' }) {
 
   function publicar(evento) {
     evento.preventDefault();
-    const erroValidacao = validarDocumento(nomePolitica, versaoPolitica, conteudoPolitica);
+    const erroValidacao = validarDocumento(nomePolitica, conteudoPolitica);
     if (erroValidacao) { setErro(erroValidacao); return; }
     setErro('');
     solicitar(async () => {
       const publicarDocumento = tela === 'privacidade' ? publicarPrivacidade : publicarPolitica;
-      await publicarDocumento(nomePolitica.trim(), versaoPolitica.trim(), conteudoPolitica.trim());
-      setVersaoPolitica('');
+      await publicarDocumento(nomePolitica.trim(), conteudoPolitica.trim());
+
       setConteudoPolitica('');
     }, 'Publicar esta versão arquivará a atual e exigirá novo aceite na próxima autenticação. As sessões abertas continuarão funcionando. Deseja continuar?', 'Nova versão publicada. O novo aceite será solicitado na próxima autenticação.');
   }
@@ -148,7 +148,7 @@ export default function Administracao({ tela = 'geral' }) {
           <p className="texto-suave">Versão vigente: {politica?.versao ?? 'Nenhuma versão publicada'}</p>
           <form className="formulario-publico" onSubmit={publicar}>
             <label>Nome do documento<input required maxLength={255} value={nomePolitica} onChange={(evento) => setNomePolitica(evento.target.value)} /></label>
-            <label>Nova versão<input required maxLength={30} value={versaoPolitica} onChange={(evento) => setVersaoPolitica(evento.target.value)} /></label>
+            <p className="texto-suave">A versão será incrementada automaticamente pelo sistema ao publicar.</p>
             <p className="texto-suave">O conteúdo pode ser escrito em texto simples ou HTML básico (títulos, parágrafos e listas).</p>
             <label>Conteúdo<textarea className="input-field" required maxLength={10000} rows={12} value={conteudoPolitica} onChange={(evento) => setConteudoPolitica(evento.target.value)} /></label>
             <button className="btn btn-primary" disabled={processando}>Publicar nova versão</button>
