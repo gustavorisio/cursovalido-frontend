@@ -89,6 +89,25 @@ test('meus tópicos consulta endpoint próprio e mantém busca na paginação', 
   assert.equal(chamadas.filter(u => u.pathname.endsWith('/topicos')).at(-1).searchParams.get('page'), '0');
 });
 
+test('tópicos gerais permitem avançar com resposta em lista e encerram na página incompleta', async () => {
+  const chamadas = [];
+  globalThis.fetch = async (url) => {
+    const consulta = new URL(url);
+    chamadas.push(consulta);
+    const pagina = Number(consulta.searchParams.get('page'));
+    return Response.json(Array.from({ length: pagina === 0 ? 5 : 2 }, (_, indice) => ({ id: pagina * 5 + indice, titulo: 'Tecnologia' })));
+  };
+  function Harness() { forum = useForum(); return null; }
+  await act(async () => raiz.render(h(contexto.Provider, { value: { autenticado: false } }, h(Harness))));
+  assert.equal(forum.pagina, 0);
+  assert.ok(forum.totalPaginas > forum.pagina + 1);
+  await act(async () => forum.carregarTopicos(0, 'Tecnologia'));
+  await act(async () => forum.carregarTopicos(1));
+  assert.equal(forum.topicos.length, 2);
+  assert.equal(forum.pagina + 1, forum.totalPaginas);
+  assert.equal(chamadas.at(-1).searchParams.get('busca'), 'Tecnologia');
+});
+
 test('comentário excluído mantém o cartão, oculta conteúdo e ações', async () => {
   await act(() => raiz.render(h(ListaComentarios, {
     comentarios: [{ id: 1, ativo: false, conteudo: 'Texto original privado', nomeAutor: 'Aluno' }],

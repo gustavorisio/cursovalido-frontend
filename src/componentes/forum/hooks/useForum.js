@@ -8,8 +8,8 @@ import { useRestricoes } from '../../../contextos/useRestricoes';
 
 const TAMANHO_PAGINA = 5;
 
-function listaDaResposta(resposta) {
-  if (Array.isArray(resposta)) return { itens: resposta, totalPaginas: 1 };
+function listaDaResposta(resposta, pagina) {
+  if (Array.isArray(resposta)) return { itens: resposta, totalPaginas: pagina + (resposta.length === TAMANHO_PAGINA ? 2 : 1) };
   return { itens: resposta?.content || resposta?.itens || [], totalPaginas: resposta?.totalPages ?? 1 };
 }
 
@@ -65,7 +65,7 @@ export function useForum() {
     setMensagemErro('');
     try {
       const buscar = meusTopicos && autenticado ? buscarMeusTopicos : buscarTopicos;
-      const resultado = listaDaResposta(await buscar(numeroPagina, TAMANHO_PAGINA, busca));
+      const resultado = listaDaResposta(await buscar(numeroPagina, TAMANHO_PAGINA, busca), numeroPagina);
       if (consulta !== consultaAtual.current) return;
       setTopicos(resultado.itens);
       setPagina(numeroPagina);

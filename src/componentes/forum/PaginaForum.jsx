@@ -70,7 +70,7 @@ export default function PaginaForum() {
   return <div className="app-container pagina-forum"><main className="main-content">
     {(forum.mensagemErro || erroTela) && <div className="card aviso-erro" role="alert">{forum.mensagemErro || erroTela}<button className="btn btn-link" type="button" onClick={() => { forum.limparMensagem(); setErroTela(''); }}>Fechar</button></div>}
     {tela === 'lista' && <>
-      <CabecalhoPagina titulo="Fórum de dúvidas" acoes={<>
+      <CabecalhoPagina titulo="Fórum" acoes={<>
         {forum.autenticado ? <button className="btn btn-primary" type="button" disabled={forum.topicosBloqueados} onClick={() => setTela('criacao')}>Novo tópico</button> : <Link className="btn btn-primary" to="/login">Entrar para participar</Link>}
         <PesquisaPagina valor={termo} onAlterar={setTermo} onPesquisar={pesquisar} rotulo="Pesquisar por título" placeholder="Buscar por título" />
       </>} />
@@ -80,15 +80,21 @@ export default function PaginaForum() {
       </div>}
       <div className="forum-colunas"><section className="forum-topicos" aria-label="Tópicos do fórum">
         {forum.carregando ? <div className="card empty-list">Carregando tópicos...</div> : <ListaTopicos topicos={forum.topicos} usuarios={forum.usuarios} onSelecionar={selecionar} />}
-        {forum.totalPaginas > 1 && <div className="paginacao"><button className="btn btn-secondary" disabled={forum.pagina === 0 || forum.carregando} onClick={() => forum.carregarTopicos(forum.pagina - 1, termo)}>Anterior</button><span>Página {forum.pagina + 1} de {forum.totalPaginas}</span><button className="btn btn-secondary" disabled={forum.pagina + 1 >= forum.totalPaginas || forum.carregando} onClick={() => forum.carregarTopicos(forum.pagina + 1, termo)}>Próxima</button></div>}
+        <nav className="forum-paginacao" aria-label="Páginas do fórum"><button type="button" className="btn btn-secondary" disabled={forum.pagina === 0 || forum.carregando} onClick={() => forum.carregarTopicos(forum.pagina - 1)}>Anterior</button><span aria-live="polite">Página {forum.pagina + 1}</span><button type="button" className="btn btn-secondary" disabled={forum.pagina + 1 >= forum.totalPaginas || forum.carregando} onClick={() => forum.carregarTopicos(forum.pagina + 1)}>Próxima</button></nav>
       </section><aside className="forum-regras" aria-labelledby="forum-regras-titulo">
           <h2 id="forum-regras-titulo">Regras básicas</h2>
           <ul>
+            <li>Publique apenas tópicos relacionados à tecnologia: dúvidas, aulas, programação, ferramentas e discussões técnicas.</li>
+            <li>Assuntos sem relação com tecnologia ou com o conteúdo das aulas estão fora do escopo do fórum.</li>
             <li>Respeite as pessoas. Não publique ofensas ou discriminação.</li>
             <li>Busque antes de criar um tópico e use um título claro.</li>
+            <li>Ao pedir ajuda, explique o contexto, as tentativas realizadas e as mensagens de erro. Formate trechos de código para facilitar a leitura.</li>
             <li>Mantenha as respostas no assunto e compartilhe fontes.</li>
+            <li>Discuta ideias com respeito, evite desinformação e dê crédito aos autores de materiais compartilhados.</li>
             <li>Evite spam, publicidade e conteúdo ilegal.</li>
             <li>Proteja seus dados e os de outras pessoas.</li>
+            <li>Não compartilhe senhas, tokens, material pirateado ou instruções para invadir sistemas de terceiros.</li>
+            <li>Use o suporte para problemas da conta e respeite as orientações da moderação. Tópicos fora das regras poderão ser removidos.</li>
           </ul>
           <p>Ajude a manter o fórum útil e acolhedor para todos.</p>
         </aside></div>
