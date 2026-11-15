@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { prepararCapaCurso } from '../servicos/capaCurso';
 import { validarUrlYoutube } from '../../../servicos/validacoesFormulario';
 import FiltroTema from './FiltroTema';
 
@@ -9,15 +10,38 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
   const [youtubeUrl, setYoutubeUrl] = useState(item?.youtubeVideoId ? `https://www.youtube.com/watch?v=${item.youtubeVideoId}` : '');
   const [erro, setErro] = useState('');
   const [idTema, setIdTema] = useState(String(item?.idTema ?? ''));
+  const [capaJpeg, setCapaJpeg] = useState(item?.capaJpeg ?? null);
+  const [preparandoCapa, setPreparandoCapa] = useState(false);
+  const selecaoCapa = useRef(0);
+  const arquivoCapa = useRef(null);
+
+  async function selecionarCapa(evento) {
+    const arquivo = evento.target.files?.[0];
+    if (!arquivo) return;
+    const selecao = ++selecaoCapa.current;
+    setPreparandoCapa(true);
+    setErro('');
+    try {
+      const capa = await prepararCapaCurso(arquivo);
+      if (selecao === selecaoCapa.current) setCapaJpeg(capa);
+    } catch (falha) {
+      if (selecao === selecaoCapa.current) setErro(falha.message);
+      evento.target.value = '';
+    } finally {
+      if (selecao === selecaoCapa.current) setPreparandoCapa(false);
+    }
+  }
 
   function salvar(evento) {
     evento.preventDefault();
+    if (processando || preparandoCapa) return;
     if (!titulo.trim()) { setErro('Preencha o título.'); return; }
     if (!descricao.trim()) { setErro('Preencha a descrição.'); return; }
     const dados = { titulo: titulo.trim(), descricao: descricao.trim() };
     if (tipo === 'curso') {
       dados.idTema = idTema ? Number(idTema) : null;
       dados.idArea = item?.idArea ?? null;
+      dados.capaJpeg = capaJpeg;
     }
     if (tipo !== 'curso') {
       if (!Number.isInteger(Number(ordem))) { setErro('A ordem deve ser um inteiro positivo.'); return; }
@@ -45,7 +69,16 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
         <label htmlFor="conteudo-descricao">Descrição</label>
         <textarea id="conteudo-descricao" className="input-field" value={descricao} onChange={(evento) => setDescricao(evento.target.value)} maxLength={5000} required />
         <div className={`contador ${descricao.length >= 5000 ? 'limite' : ''}`}>{descricao.length}/5000</div>
-        {tipo === 'curso' && <><FiltroTema valor={idTema} onAlterar={setIdTema} cadastro gerenciar /></>}
+        {tipo === 'curso' && <>
+          <FiltroTema valor={idTema} onAlterar={setIdTema} cadastro gerenciar />
+          <div className="curso-capa-editor">
+              <label htmlFor="conteudo-capa">Capa do curso (JPEG)</label>
+              <input ref={arquivoCapa} id="conteudo-capa" type="file" accept="image/jpeg,.jpg,.jpeg" aria-describedby="curso-capa-ajuda" disabled={preparandoCapa} onChange={selecionarCapa} />
+              <p id="curso-capa-ajuda" className="texto-suave">JPEG de até 2 MB, entre 320 e 2048 px por lado. Recorte quadrado automático.</p>
+              {preparandoCapa && <p role="status">Processando imagem...</p>}
+              {capaJpeg && <button className="btn btn-link" type="button" disabled={preparandoCapa} onClick={() => { setCapaJpeg(null); arquivoCapa.current.value = ''; }}>Remover capa</button>}
+          </div>
+        </>}
         {tipo !== 'curso' ? <>
           <label htmlFor="conteudo-ordem">Ordem</label>
           <input id="conteudo-ordem" className="input-field" type="number" min="1" max="2147483647" step="1" value={ordem} onChange={(evento) => setOrdem(evento.target.value)} required />
@@ -56,7 +89,7 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
           <p className="texto-suave">Use um link HTTPS youtube.com/watch?v= ou youtu.be/. O vídeo será validado ao salvar.</p>
           {item ? <p className="texto-suave">Trocar o vídeo remove os progressos anteriores desta aula.</p> : null}
         </> : null}
-        <div className="acoes-formulario"><button className="btn btn-primary" type="submit">{processando ? 'Salvando...' : 'Salvar'}</button></div>
+        <div className="acoes-formulario"><button className="btn btn-primary" type="submit" disabled={preparandoCapa}>{processando ? 'Salvando...' : 'Salvar'}</button></div>
       </fieldset>
     </form>
   </div>;

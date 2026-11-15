@@ -29,6 +29,7 @@ before(async () => {
   for (const nome of ['PaginaCatalogo', 'PaginaGestaoCursos', 'PaginaAulasAdministrador', 'PaginaCursoAluno', 'PaginaAulaAluno', 'PaginaQuestionarioAluno', 'PaginaEditorQuestionario']) {
     telas[nome] = (await servidor.ssrLoadModule(`/src/componentes/aulas/${nome}.jsx`)).default;
   }
+  telas.QuestionarioCaminhos = (await servidor.ssrLoadModule('/src/componentes/aulas/componentes/QuestionarioCaminhos.jsx')).default;
 });
 after(async () => { await servidor?.close(); });
 beforeEach(() => {
@@ -74,6 +75,42 @@ async function renderizar(tela, perfil, caminho, rota = caminho) {
   assert.equal(document.querySelector('[role="alert"]'), null);
 }
 
+test('questionário confirma a escolha antes de avançar e descarta o ramo anterior ao corrigir', async () => {
+  const questionario = { id: 7, versao: 1, titulo: 'Seu caminho', descricao: 'Descubra uma área.', perguntaInicial: 'inicio', perguntas: [
+    { chave: 'inicio', enunciado: 'O que você gosta de criar?', opcoes: [{ texto: 'Interfaces', proximaPergunta: 'web' }, { texto: 'Dados', resultado: 'dados' }] },
+    { chave: 'web', enunciado: 'Qual interface?', opcoes: [{ texto: 'Sites', resultado: 'web' }, { texto: 'Aplicativos', resultado: 'apps' }] },
+  ] };
+  await act(() => raiz.render(h(MemoryRouter, null, h(telas.QuestionarioCaminhos, { dados: { questionario, resultado: null }, aluno: false, catalogo: '/cursos' }))));
+  const botao = texto => [...document.querySelectorAll('button')].find(b => b.textContent === texto);
+  assert.equal(botao('Continuar').disabled, true);
+  await act(() => document.querySelector('input[value="0"]').click());
+  assert.match(document.querySelector('legend').textContent, /O que você gosta/);
+  await act(() => botao('Continuar').click());
+  assert.match(document.querySelector('legend').textContent, /Qual interface/);
+  await act(() => document.querySelector('input[value="0"]').click());
+  await act(() => botao('Revisar respostas').click());
+  assert.equal(document.querySelectorAll('.caminhos-revisao li').length, 2);
+  await act(() => botao('Corrigir resposta 1').click());
+  await act(() => document.querySelector('input[value="1"]').click());
+  await act(() => botao('Revisar respostas').click());
+  assert.equal(document.querySelectorAll('.caminhos-revisao li').length, 1);
+  assert.match(document.querySelector('.caminhos-revisao').textContent, /Dados/);
+});
+
+test('catálogo exibe a capa do curso e recupera uma imagem que falhou', async () => {
+  const fetchSucesso = globalThis.fetch;
+  globalThis.fetch = async (url, opcoes) => url.endsWith('/catalogo/cursos')
+    ? new Response(JSON.stringify([{ ...cursos[0], capaJpeg: 'data:image/jpeg;base64,teste' }]))
+    : fetchSucesso(url, opcoes);
+  await renderizar('PaginaCatalogo', null, '/cursos');
+  const imagem = document.querySelector('.curso-capa img');
+  assert.match(imagem.alt, /React para web/);
+  assert.equal(imagem.width, imagem.height);
+  await act(() => imagem.dispatchEvent(new dom.window.Event('error')));
+  assert.ok(document.querySelector('.curso-capa-reserva'));
+  assert.equal(document.querySelector('.curso-capa img'), null);
+});
+
 for (const [perfil, tela, caminho] of [
   [null, 'PaginaCatalogo', '/cursos'],
   ['ALUNO', 'PaginaCatalogo', '/aluno/cursos'],
@@ -84,7 +121,8 @@ for (const [perfil, tela, caminho] of [
     await renderizar(tela, perfil, caminho);
     assert.equal(document.querySelector('.catalogo-temas'), null);
     assert.equal(document.querySelectorAll('.aulas-cartao').length, 2);
-    assert.equal(document.querySelector('.aulas-cartao .content-text'), null);
+    assert.ok(document.querySelector('.aulas-cartao .content-text'));
+    assert.equal(document.querySelectorAll('.curso-capa').length, 2);
     assert.equal(document.querySelector('.aulas-cartao img'), null);
     assert.equal(document.querySelector('.aulas-cartao .aulas-etiqueta'), null);
     assert.equal(document.querySelector('.aulas-icone'), null);
@@ -191,7 +229,7 @@ for (const [perfil, tela, caminho, botao, endpoint] of [
       tema.value = '9'; tema.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
     });
     await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
-    assert.deepEqual(enviados, { titulo: cursos[0].titulo, descricao: cursos[0].descricao, idTema: 9, idArea: 8 });
+    assert.deepEqual(enviados, { titulo: cursos[0].titulo, descricao: cursos[0].descricao, idTema: 9, idArea: 8, capaJpeg: null });
     assert.equal(document.querySelector('.aulas-editor'), null);
   });
 }
