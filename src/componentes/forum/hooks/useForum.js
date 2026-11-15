@@ -6,7 +6,7 @@ import {
 import { useAutenticacao } from '../../../contextos/useAutenticacao';
 import { useRestricoes } from '../../../contextos/useRestricoes';
 
-const TAMANHO_PAGINA = 5;
+const TAMANHO_PAGINA = 10;
 
 function listaDaResposta(resposta, pagina) {
   if (Array.isArray(resposta)) return { itens: resposta, totalPaginas: pagina + (resposta.length === TAMANHO_PAGINA ? 2 : 1) };
@@ -14,14 +14,7 @@ function listaDaResposta(resposta, pagina) {
 }
 
 function mensagemDoErro(erro) {
-  if (erro?.status === 401) return 'Sua sessão expirou. Faça login novamente.';
-  if (erro?.codigo === 'TERMOS_NAO_ACEITOS') return 'É necessário ler e aceitar os termos novamente para acessar sua conta.';
-  if (erro?.codigo === 'EMAIL_NAO_CONFIRMADO') return 'Seu e-mail ainda não foi confirmado.';
-  if (erro?.status === 403) return erro?.message || 'Você não tem permissão para esta operação.';
-  if (erro?.status === 404) return 'O recurso solicitado não foi encontrado.';
-  if (erro?.status === 409) return 'Esta operação entrou em conflito com dados existentes.';
-  if (erro?.status >= 500) return 'O serviço está indisponível. Tente novamente mais tarde.';
-  return erro?.message || 'Não foi possível concluir a operação.';
+  return erro?.message || 'Não foi possível concluir esta ação. Tente novamente.';
 }
 
 function idDoAutor(item) {
@@ -49,6 +42,7 @@ export function useForum() {
   const [comentarios, setComentarios] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [mensagemErro, setMensagemErro] = useState('');
+  const [mensagemSucesso, setMensagemSucesso] = useState('');
   const [carregando, setCarregando] = useState(false);
 
   const tratarErro = useCallback((erro) => {
@@ -81,6 +75,11 @@ export function useForum() {
     return undefined;
   }, [autenticado, carregarTopicos, tratarErro]);
 
+  function limparMensagem() {
+    setMensagemErro('');
+    setMensagemSucesso('');
+  }
+
   async function carregarComentarios(idTopico) {
     if (comentariosBloqueados) return;
     try { setComentarios(await buscarComentarios(idTopico) || []); } catch (erro) { tratarErro(erro); }
@@ -94,15 +93,17 @@ export function useForum() {
   }
 
   async function salvarTopico(titulo, descricao) {
-    if (!autenticado || topicosBloqueados) return null;
-    try { const novo = await criarTopico({ titulo, descricao }); await carregarTopicos(pagina); return novo; }
+    limparMensagem();
+    if (!autenticado || topicosBloqueados) { setMensagemErro(!autenticado ? 'Entre na sua conta para publicar um tópico.' : 'Sua conta está impedida de publicar tópicos. Consulte o aviso de restrição ou fale com o Suporte.'); return null; }
+    try { const novo = await criarTopico({ titulo, descricao }); setMensagemSucesso('Tópico publicado.'); await carregarTopicos(0); return novo; }
     catch (erro) { tratarErro(erro); return null; }
   }
 
   async function salvarComentario(texto) {
-    if (!autenticado || comentariosBloqueados) return false;
-    if (!topicoSelecionado || topicoSelecionado.fechado) return false;
-    try { await criarComentario(topicoSelecionado.id, texto); await carregarComentarios(topicoSelecionado.id); return true; }
+    limparMensagem();
+    if (!autenticado || comentariosBloqueados) { setMensagemErro(!autenticado ? 'Entre na sua conta para comentar.' : 'Sua conta está impedida de comentar. Consulte o aviso de restrição ou fale com o Suporte.'); return false; }
+    if (!topicoSelecionado || topicoSelecionado.fechado) { setMensagemErro('Este tópico não está disponível para novos comentários. Escolha outro tópico.'); return false; }
+    try { await criarComentario(topicoSelecionado.id, texto); setMensagemSucesso('Comentário publicado.'); await carregarComentarios(topicoSelecionado.id); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
@@ -125,10 +126,12 @@ export function useForum() {
   function podeExcluirComentario(comentario) { return !comentariosBloqueados && (ehAdministrador() || ehAutor(comentario)); }
 
   async function editarTopico(idTopico, titulo, descricao) {
+    limparMensagem();
     const atual = topicos.find((item) => Number(item.id) === Number(idTopico));
-    if (!podeEditarTopico(atual)) return false;
+    if (!podeEditarTopico(atual)) { setMensagemErro('Você só pode editar os seus tópicos quando sua conta tem permissão para participar.'); return false; }
     try {
       const resposta = await atualizarTopico(idTopico, { titulo, descricao });
+      setMensagemSucesso('Tópico atualizado.');
       const atualizado = { ...atual, ...(resposta || {}), titulo, descricao };
       setTopicos((itens) => itens.map((item) => Number(item.id) === Number(idTopico) ? atualizado : item));
       setTopicoSelecionado((item) => item && Number(item.id) === Number(idTopico) ? atualizado : item);
@@ -140,39 +143,44 @@ export function useForum() {
   }
 
   async function editarComentario(comentario, conteudo) {
-    if (!podeEditarComentario(comentario)) return false;
-    try { await atualizarComentario(comentario.id, { conteudo }); await carregarComentarios(topicoSelecionado.id); return true; }
+    limparMensagem();
+    if (!podeEditarComentario(comentario)) { setMensagemErro('Você só pode editar os seus comentários quando sua conta tem permissão para participar.'); return false; }
+    try { await atualizarComentario(comentario.id, { conteudo }); setMensagemSucesso('Comentário atualizado.'); await carregarComentarios(topicoSelecionado.id); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
   async function excluirTopico(topico) {
-    if (!podeApagarTopico(topico)) return false;
-    try { await apagarTopico(topico.id); await carregarTopicos(pagina); setTopicoSelecionado(null); return true; }
+    limparMensagem();
+    if (!podeApagarTopico(topico)) { setMensagemErro('Você não tem permissão para excluir este tópico.'); return false; }
+    try { await apagarTopico(topico.id); setMensagemSucesso('Tópico excluído.'); await carregarTopicos(pagina); setTopicoSelecionado(null); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
   async function fecharTopicoSelecionado(topico) {
-    if (!podeGerenciarTopico(topico) || topico.fechado) return false;
-    try { await fecharTopico(topico.id); setTopicoSelecionado({ ...topico, fechado: true }); await carregarTopicos(pagina); return true; }
+    limparMensagem();
+    if (!podeGerenciarTopico(topico) || topico.fechado) { setMensagemErro('Você não pode fechar este tópico ou ele já está fechado.'); return false; }
+    try { await fecharTopico(topico.id); setMensagemSucesso('Tópico fechado. Novos comentários não serão aceitos.'); setTopicoSelecionado({ ...topico, fechado: true }); await carregarTopicos(pagina); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
   async function arquivarTopicoSelecionado(topico) {
-    if (!podeArquivarTopico(topico) || topico.arquivado) return false;
-    try { await arquivarTopico(topico.id); await carregarTopicos(pagina); return true; }
+    limparMensagem();
+    if (!podeArquivarTopico(topico) || topico.arquivado) { setMensagemErro('Você não tem permissão para arquivar este tópico ou ele já foi arquivado.'); return false; }
+    try { await arquivarTopico(topico.id); setMensagemSucesso('Tópico arquivado e removido da lista.'); await carregarTopicos(pagina); setTopicoSelecionado(null); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
   async function excluirComentarioSelecionado(comentario) {
-    if (!podeExcluirComentario(comentario)) return false;
-    try { await apagarComentario(comentario.id); await carregarComentarios(topicoSelecionado.id); return true; }
+    limparMensagem();
+    if (!podeExcluirComentario(comentario)) { setMensagemErro('Você não tem permissão para excluir este comentário.'); return false; }
+    try { await apagarComentario(comentario.id); setMensagemSucesso('Comentário excluído.'); await carregarComentarios(topicoSelecionado.id); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
   return {
     meusTopicos, setMeusTopicos, topicosBloqueados, comentariosBloqueados,
-    autenticado, sessao, topicos, usuarios, pagina, totalPaginas, carregando, topicoSelecionado, comentarios, mensagemErro,
-    limparMensagem: () => setMensagemErro(''), carregarTopicos, selecionarTopico, salvarTopico, salvarComentario,
+    autenticado, sessao, topicos, usuarios, pagina, totalPaginas, carregando, topicoSelecionado, comentarios, mensagemErro, mensagemSucesso,
+    limparMensagem, carregarTopicos, selecionarTopico, salvarTopico, salvarComentario,
     editarTopico, editarComentario, excluirTopico, fecharTopicoSelecionado, arquivarTopicoSelecionado,
     excluirComentarioSelecionado, podeGerenciarTopico, podeArquivarTopico, podeEditarTopico, podeEditarComentario, podeApagarTopico, podeExcluirComentario
   };

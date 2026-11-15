@@ -505,6 +505,22 @@
 
 .pagina-aulas .catalogo-cursos-grade .btn { @apply min-h-11 text-sm; }
 .pagina-aulas .aulas-conteudo-grade .content-text { @apply text-sm; }
+
+/* A mesma capa acompanha o curso no catálogo e na gestão. */
+.pagina-aulas .aulas-cartao:has(.curso-capa) { padding: 0; gap: 0; overflow: hidden; border-radius: 16px; }
+.curso-capa { width: 100%; aspect-ratio: 1; overflow: hidden; background: var(--color-brand-50); }
+.curso-capa img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.curso-capa-reserva { display: flex; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px; text-align: center; color: var(--color-accent); background: radial-gradient(circle at 20% 20%, var(--color-surface), transparent 65%), var(--color-brand-50); }
+.curso-capa-reserva svg { width: 88px; height: 72px; }
+.curso-capa-reserva span { font-size: 13px; font-weight: 600; }
+.pagina-aulas .aulas-cartao:has(.curso-capa) .aulas-cartao-corpo { padding: 22px 22px 0; }
+.pagina-aulas .aulas-cartao:has(.curso-capa) .aulas-cartao-acoes { margin-top: auto; padding: 20px 22px 22px; }
+.pagina-aulas .aulas-cartao:has(.curso-capa) .content-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.curso-cartao-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--color-muted); font-size: 12px; }
+.curso-matriculado { padding: 4px 8px; border-radius: 6px; color: var(--color-success); background: var(--color-brand-50); }
+.curso-capa-editor { margin: 24px 0; }
+.curso-capa-editor p { margin-top: 8px; line-height: 1.7; font-size: 13px; }
+.curso-capa-editor input { max-width: 100%; font: inherit; font-size: 13px; }
 .pagina-aulas .aulas-linha .texto-suave { @apply text-sm; }
 .pagina-aulas .aulas-sala-trilha { @apply bg-surface; }
 .aulas-sala-trilha nav a[aria-current="page"] { @apply border-brand-100 bg-brand-50 font-semibold text-brand-800; }

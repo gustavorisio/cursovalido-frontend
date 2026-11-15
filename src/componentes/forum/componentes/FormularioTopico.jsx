@@ -1,24 +1,24 @@
-export default function FormularioTopico({ titulo, descricao, onMudarTitulo, onMudarDescricao, onPublicar, onCancelar, modoEdicao = false }) {
+export default function FormularioTopico({ titulo, descricao, onMudarTitulo, onMudarDescricao, onPublicar, onCancelar, modoEdicao = false, desabilitado = false }) {
   return (
     <div className="formulario-container">
-      <button className="btn btn-link" onClick={onCancelar}>Cancelar</button>
+      <button className="btn btn-link" disabled={desabilitado} onClick={onCancelar}>Cancelar</button>
 
       <div className="card">
         <input
           type="text"
-          className="input-field"
+          className="input-field" disabled={desabilitado}
           placeholder="Título da postagem"
           aria-label="Título da postagem"
           aria-describedby="limite-titulo-topico"
-          maxLength={40}
+          maxLength={80}
           value={titulo}
           onChange={(evento) => onMudarTitulo(evento.target.value)}
         />
-        <p id="limite-titulo-topico" className={`contador ${titulo.length >= 40 ? 'limite' : ''}`}>
-          {titulo.length}/40 caracteres{titulo.length >= 40 && <span role="status"> · Limite máximo alcançado</span>}
+        <p id="limite-titulo-topico" className={`contador ${titulo.length >= 80 ? 'limite' : ''}`}>
+          {titulo.length}/80 caracteres{titulo.length >= 80 && <span role="status"> · Limite máximo alcançado</span>}
         </p>
         <textarea
-          className="input-field"
+          className="input-field" disabled={desabilitado}
           placeholder="Escreva a descrição detalhada do seu tópico..."
           value={descricao}
           maxLength={5000}
@@ -28,7 +28,7 @@ export default function FormularioTopico({ titulo, descricao, onMudarTitulo, onM
           {descricao.length}/5000{descricao.length >= 5000 && <span role="status"> · Limite máximo alcançado</span>}
         </div>
         <div className="acoes-formulario">
-          <button className="btn btn-primary" onClick={onPublicar}>{modoEdicao ? 'Salvar alterações' : 'Publicar'}</button>
+          <button className="btn btn-primary" disabled={desabilitado} onClick={onPublicar}>{desabilitado ? 'Aguarde...' : modoEdicao ? 'Salvar alterações' : 'Publicar'}</button>
         </div>
       </div>
     </div>

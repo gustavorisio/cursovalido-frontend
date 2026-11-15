@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import PesquisaPagina from '../comuns/PesquisaPagina';
-import { aplicarSuspensao, revogarSuspensao } from '../../servicos/servicoAdministracao';
+import { aplicarSuspensao, revogarSuspensao, excluirUsuarioAdministrativo } from '../../servicos/servicoAdministracao';
 
 const ESCOPOS = { CONTA: 'Acesso à conta', FORUM: 'Acesso ao fórum', TOPICOS: 'Acesso a tópicos e comentários', COMENTARIOS: 'Acesso a tópicos e comentários' };
 
@@ -31,6 +31,14 @@ export default function ModeracaoUsuarios({ usuarios, processando, onExecutar })
     }, `Aplicar restrição de ${ESCOPOS[escopo].toLowerCase()} a ${selecionado.nome}? ${permanente ? 'Ela permanecerá até ser revogada.' : `Término: ${new Date(expiracao).toLocaleString('pt-BR')}.`}`, 'Restrição aplicada.');
   }
 
+  function excluir(usuario) {
+    if (processando || !usuario.podeExcluir) return;
+    onExecutar(async () => {
+      await excluirUsuarioAdministrativo(usuario.id);
+      if (selecionado?.id === usuario.id) setSelecionado(null);
+    }, `Excluir a conta de ${usuario.nome}? O acesso será encerrado e os dados principais serão desidentificados. Publicações, aceites e registros necessários de auditoria serão preservados. Esta ação não pode ser desfeita.`, 'Conta excluída. Dados principais desidentificados e histórico preservado.');
+  }
+
   const termo = busca.trim().toLowerCase();
   const resultados = termo ? usuarios.filter((usuario) => `${usuario.nome} ${usuario.email} ${usuario.perfil}`.toLowerCase().includes(termo)) : [];
   const equipe = usuarios.filter((usuario) => ['PROFESSOR', 'ADMINISTRADOR'].includes(usuario.perfil));
@@ -44,7 +52,8 @@ export default function ModeracaoUsuarios({ usuarios, processando, onExecutar })
     <h2 className="titulo-detalhe">Moderação de usuários</h2>
     <p className="texto-suave">Restrinja a conta inteira ou apenas ações do fórum. Restrições temporárias expiram automaticamente; permanentes podem ser revogadas.</p>
     <div className="administracao-resumo"><span><strong>{usuarios.length}</strong> contas</span><span><strong>{equipe.length}</strong> membros da equipe</span><span><strong>{usuarios.filter((usuario) => usuario.suspensoes.length > 0).length}</strong> com restrições</span></div>
-    <PesquisaPagina valor={busca} onAlterar={setBusca} rotulo="Buscar usuário" placeholder="Nome, e-mail ou perfil" />
+    <p className="texto-suave">E-mails de alunos são exibidos parcialmente. Busque alunos pelo nome ou perfil; os e-mails completos da equipe ficam disponíveis à administração.</p>
+    <PesquisaPagina valor={busca} onAlterar={setBusca} rotulo="Buscar usuário" placeholder="Nome, perfil ou e-mail da equipe" />
     {!termo ? <p className="texto-suave">Digite um nome, e-mail ou perfil para encontrar um usuário.</p> : null}
     {selecionado ? <form className="formulario-publico moderacao-formulario" onSubmit={solicitar}>
       <h3>Restringir {selecionado.nome}</h3>
@@ -67,7 +76,10 @@ export default function ModeracaoUsuarios({ usuarios, processando, onExecutar })
         {lista.map((usuario) => <article key={usuario.id} className="moderacao-usuario">
           <div className="post-heading">
             <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">{usuario.email}</p><div className="administracao-badges"><span>{usuario.perfil}</span><span className={usuario.ativo ? 'status-ativo' : ''}>{usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</span></div></div>
-            {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => { setSelecionado(usuario); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
+            <div className="acoes-topico">
+              {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => { setSelecionado(usuario); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
+              {usuario.podeExcluir ? <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => excluir(usuario)}>Excluir conta</button> : null}
+            </div>
           </div>
           {usuario.suspensoes.length === 0 ? <p className="texto-suave">Sem restrições vigentes.</p> : null}
           {usuario.suspensoes.map((item) => <div className="moderacao-restricao" key={item.id}>

@@ -67,7 +67,7 @@ test('contratos dos dois cadastros nao enviam telefone mesmo em dados legados', 
   }
 });
 
-test('aceite abre na página e exige chegar ao fim de ambos os documentos', async () => {
+test('aceite abre ambos os documentos e permite aceitar sem rolagem', async () => {
   globalThis.fetch = async (url) => String(url).includes('/privacidade/')
     ? Response.json({ versao: '2.0', conteudo: '<h2>Privacidade</h2><p>Texto da <strong>política de privacidade</strong>.</p>' })
     : Response.json([{ versao: '1.0', conteudo: '<h2>Termos</h2><p>Texto dos <strong>termos de aceite</strong>.</p>' }]);
@@ -89,14 +89,7 @@ test('aceite abre na página e exige chegar ao fim de ambos os documentos', asyn
     assert.doesNotMatch(texto.textContent, /<\/?(?:h2|p|strong)>/);
     assert.equal(document.activeElement, texto);
     const aceitar = document.querySelector('.leitura-documento .btn-primary');
-    Object.defineProperties(texto, { clientHeight: { value: 200 }, scrollHeight: { value: 1000 } });
-    await act(() => aceitar.click());
-    assert.equal(aceitar.disabled, true);
-    texto.scrollTop = 400;
-    await act(() => texto.dispatchEvent(new window.Event('scroll', { bubbles: true })));
-    assert.equal(aceitar.disabled, true);
-    texto.scrollTop = 800;
-    await act(() => texto.dispatchEvent(new window.Event('scroll', { bubbles: true })));
+    assert.equal(texto.scrollTop, 0);
     assert.equal(aceitar.disabled, false);
     await act(async () => aceitar.click());
   }
@@ -118,7 +111,7 @@ test('documento indisponível bloqueia o aceite e permite tentar novamente', asy
   await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent === 'Tentar novamente').click());
   assert.equal(document.querySelector('[role=alert]'), null);
   assert.equal(document.querySelector('[role=region]').textContent, 'Documento válido');
-  assert.equal(document.querySelector('.leitura-documento .btn-primary').disabled, true);
+  assert.equal(document.querySelector('.leitura-documento .btn-primary').disabled, false);
 });
 
 test('termos de outra versão não podem ser aceitos', async () => {
@@ -145,7 +138,7 @@ test('HTML legal preserva a formatação sem executar código nem aplicar estilo
   const links = texto.querySelectorAll('a');
   assert.equal(links[0].hasAttribute('href'), false);
   assert.equal(links[1].getAttribute('href'), 'https://example.com');
-  assert.equal(document.querySelector('.leitura-documento .btn-primary').disabled, true);
+  assert.equal(document.querySelector('.leitura-documento .btn-primary').disabled, false);
 });
 
 test('páginas de termos e privacidade exibem exatamente o mesmo documento formatado do aceite', async () => {

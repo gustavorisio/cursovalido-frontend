@@ -9,6 +9,7 @@ import useCarregamento from './hooks/useCarregamento';
 import * as servico from './servicos/servicoAluno';
 import CabecalhoAulas from './componentes/CabecalhoAulas';
 import FiltroTema from './componentes/FiltroTema';
+import CapaCurso from './componentes/CapaCurso';
 import { correspondeAoTema } from './servicos/filtroTema';
 
 
@@ -80,11 +81,12 @@ export default function PaginaCatalogo() {
       <div className="aulas-grade catalogo-cursos-grade">
         {cursos.map((curso) => {
           const matriculado = matriculas.some((item) => item.idCurso === curso.id);
-          return <article className="card aulas-cartao" key={curso.id}>
-
+          return <article className="card aulas-cartao curso-cartao" key={curso.id}>
+            <CapaCurso curso={curso} />
             <div className="aulas-cartao-corpo">
+              <div className="curso-cartao-meta"><span>{curso.nomeTema || 'Tecnologia'}</span>{matriculado && <span className="curso-matriculado">Matriculado</span>}</div>
               <h2 className="topic-title">{curso.titulo}</h2>
-
+              <p className="content-text">{curso.descricao}</p>
             </div>
             <footer className="aulas-cartao-acoes">
               <div className="acoes-topico">
