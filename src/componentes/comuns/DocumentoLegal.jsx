@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import Rodape from './Rodape';
 import ConteudoLegal from './ConteudoLegal';
 
-export default function DocumentoLegal({ tipo, versao, dataPublicacao, conteudo, carregando, erro, onVoltar, onRecarregar, children }) {
+export default function DocumentoLegal({ tipo, versao, dataPublicacao, conteudo, carregando, erro, onVoltar, onRecarregar, exibirConteudo = true, children }) {
   const privacidade = tipo === 'privacidade';
   const titulo = privacidade ? 'Política de Privacidade' : 'Termos de Aceite';
   return <div className="pagina-publica"><main className="pagina-documento">
@@ -15,6 +15,6 @@ export default function DocumentoLegal({ tipo, versao, dataPublicacao, conteudo,
     {versao && <p className="texto-suave">Versão vigente: {versao}{dataPublicacao && (' · Publicada em: ' + new Intl.DateTimeFormat('pt-BR').format(new Date(dataPublicacao)))}</p>}
     {erro && <div className="mensagem-erro" role="alert">{erro}<div><button className="btn btn-secondary" type="button" disabled={carregando} onClick={onRecarregar}>Buscar novamente</button></div></div>}
     {children}
-    {!carregando && conteudo && <div className="documento-conteudo" role="region" aria-label={titulo}><ConteudoLegal conteudo={conteudo} /></div>}
+    {!carregando && exibirConteudo && conteudo && <div className="documento-conteudo" role="region" aria-label={titulo}><ConteudoLegal conteudo={conteudo} /></div>}
   </main><Rodape /></div>;
 }

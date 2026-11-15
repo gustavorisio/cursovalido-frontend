@@ -19,7 +19,7 @@ export default function Configuracoes() {
   async function revogarAceite() {
     if (carregando) return;
     setCarregando(true); setErro('');
-    try { await revogarTermos(); sair(); navegar('/login', { replace: true, state: { mensagem: 'Os termos foram revogados. Faça login novamente para continuar.' } }); }
+    try { await revogarTermos(); await sair(); navegar('/login', { replace: true, state: { mensagem: 'Os termos foram revogados. Faça login novamente para continuar.' } }); }
     catch (falha) { setErro(falha.message); setCarregando(false); setConfirmacao(null); }
   }
 

@@ -106,11 +106,11 @@ export function revogarTermos() {
   return requisitar('/autenticacao/revogar-termos', { method: 'POST' });
 }
 
-export function aceitarTermosNovamente(token, versaoTermos) {
+export function aceitarTermosNovamente(token, versaoTermos, responsabilidade = {}) {
   return requisitar('/autenticacao/aceitar-termos-novamente', {
     method: 'POST',
     tokenAutenticacao: token,
-    body: JSON.stringify({ versaoTermos })
+    body: JSON.stringify({ versaoTermos, ...responsabilidade })
   });
 }
 
@@ -163,10 +163,29 @@ export function confirmarEmailConvite(token) {
   });
 }
 
+export async function consultarConvite(token) {
+  const dados = await requisitar('/convites/consultar', {
+    method: 'POST', semAutenticacao: true, body: JSON.stringify({ token })
+  });
+  if (!['PROFESSOR', 'ADMINISTRADOR'].includes(dados?.perfil) || typeof dados?.email !== 'string' || !dados.email.trim()) {
+    throw new Error('Não foi possível identificar o perfil do convite. Solicite um novo convite.');
+  }
+  return dados;
+}
+
+export async function buscarResponsabilidade(perfil) {
+  if (!['PROFESSOR', 'ADMINISTRADOR'].includes(perfil)) throw new Error('Perfil de responsabilidade inválido.');
+  const documento = await requisitar('/politicas/responsabilidade/' + perfil, { semAutenticacao: true });
+  if (documento?.perfil !== perfil || !documento?.versao || typeof documento?.conteudo !== 'string' || !documento.conteudo.trim()) {
+    throw new Error('O termo de responsabilidade está indisponível. Tente novamente.');
+  }
+  return documento;
+}
+
 export function completarCadastroConvite(token, cadastro) {
   const { nomeCompleto, email, senha, dataNascimento,
     declarouMaiorIdade,
-    aceitouTermosLgpd, versaoTermos } = cadastro;
+    aceitouTermosLgpd, versaoTermos, aceitouResponsabilidade, versaoResponsabilidade } = cadastro;
   return requisitar('/convites/completar-cadastro', {
     method: 'POST', semAutenticacao: true, body: JSON.stringify({
       token,
@@ -178,7 +197,9 @@ export function completarCadastroConvite(token, cadastro) {
 
         declarouMaiorIdade,
         aceitouTermosLgpd,
-        versaoTermos
+        versaoTermos,
+        aceitouResponsabilidade,
+        versaoResponsabilidade
       }
     })
   });
