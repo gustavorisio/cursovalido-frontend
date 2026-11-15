@@ -11,7 +11,7 @@ export default function Cabecalho() {
 
   return (
     <header className="cv-header cv-home">
-      <Link className="cv-logo" to="/" aria-label="CursoVálido — início"><span>Curso<span>Válido</span></span></Link>
+      <Link className="cv-logo" to="/" aria-label="CursoVálido — início"><img src="/favicon.svg" width="44" height="44" alt="" /><span>Curso<span>Válido</span></span></Link>
       <nav className="cv-nav" aria-label="Navegação principal">
         {!autenticado && <NavLink to="/" end>Início</NavLink>}
         <NavLink to={!autenticado ? '/cursos' : ehAdministrador ? '/administracao/cursos' : sessao?.perfil === 'PROFESSOR' ? '/professor/cursos' : '/aluno/cursos'}>Aulas online</NavLink>
