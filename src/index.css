@@ -37,6 +37,7 @@
 @layer base {
   * {
     @apply box-border;
+    font-family: inherit;
     border-radius: 0;
   }
 
