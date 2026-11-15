@@ -44,13 +44,13 @@ test('dashboard exibe conteúdo sem menu lateral nem botão de menu', async () =
   assert.equal(document.querySelector('.app-sidebar'), null);
   assert.equal(document.querySelector('button[aria-controls="menu-dashboard"]'), null);
   assert.ok(document.querySelector('main#conteudo-dashboard'));
-  assert.equal(document.querySelectorAll('.small-box').length, 7);
+  assert.equal(document.querySelectorAll('.small-box').length, 8);
 });
 
 test('painel consulta quatro endpoints e restringe a troca de período à série mensal', async () => {
   await act(async () => { raiz.render(createElement(Dashboard)); });
   assert.equal(chamadas.length, 4);
-  assert.equal(document.querySelectorAll('.small-box').length, 7);
+  assert.equal(document.querySelectorAll('.small-box').length, 8);
   assert.equal(document.querySelectorAll('.dashboard-grafico').length, 3);
   assert.match(document.querySelector('.small-box').textContent, /12/);
   assert.match(document.body.textContent, /Nenhum registro/);
@@ -72,7 +72,7 @@ test('falha em uma seção preserva as demais e permite tentar novamente', async
   globalThis.fetch = fetchSucesso;
   await act(async () => { document.querySelector('[role="alert"] button').click(); });
   assert.equal(document.querySelector('[role="alert"]'), null);
-  assert.equal(document.querySelectorAll('.small-box').length, 7);
+  assert.equal(document.querySelectorAll('.small-box').length, 8);
 });
 
 test('períodos inválidos são rejeitados sem chamar a API', () => {
@@ -96,4 +96,20 @@ test('resposta atrasada do período anterior não substitui a consulta atual', a
   assert.equal(document.querySelector('[role="alert"]'), null);
   assert.equal(periodo.value, '3');
   assert.match(document.querySelector('.dashboard-grafico').textContent, /Nenhum registro/);
+});
+
+ test("média de idade mostra valor e quantidade de alunos considerados", async () => {
+  const fetchSucesso = globalThis.fetch;
+  globalThis.fetch = (url) => url.endsWith("/resumo") ? Promise.resolve(new Response(JSON.stringify({ ...resumo, mediaIdadeAlunos: 27.5, alunosComNascimentoInformado: 10 }))) : fetchSucesso(url);
+  await act(async () => raiz.render(createElement(Dashboard)));
+  const indicador = [...document.querySelectorAll(".small-box")].find((item) => item.textContent.includes("Média de idade"));
+  assert.match(indicador.textContent, /27,5 anos/);
+  assert.match(indicador.textContent, /10 alunos ativos/);
+});
+
+test("média indisponível não aparece como idade zero", async () => {
+  await act(async () => raiz.render(createElement(Dashboard)));
+  const indicador = [...document.querySelectorAll(".small-box")].find((item) => item.textContent.includes("Média de idade"));
+  assert.equal(indicador.querySelector("h3").textContent, "—");
+  assert.match(indicador.textContent, /Sem datas de nascimento válidas/);
 });
