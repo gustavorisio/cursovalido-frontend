@@ -43,7 +43,7 @@ test('cadastro comum solicita somente os dados necessarios e mantem maioridade',
 });
 
 test('cadastro por convite nao solicita telefone e mantem maioridade', async () => {
-  globalThis.fetch = async (url) => String(url).includes('confirmar-email') ? new Response(null, { status: 204 }) : Response.json([{ nome: 'Termos', versao: '1.0', conteudo: 'Termos' }]);
+  globalThis.fetch = async (url) => String(url).includes('/convites/consultar') ? Response.json({ perfil: 'PROFESSOR', email: 'convidado@example.com' }) : String(url).includes('confirmar-email') ? new Response(null, { status: 204 }) : Response.json([{ nome: 'Termos', versao: '1.0', conteudo: 'Termos' }]);
   await act(async () => raiz.render(createElement(MemoryRouter, { initialEntries: ['/convites/cadastro?token=teste'] }, createElement(Convite))));
   await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent === 'Confirmar meu e-mail').click());
   assert.ok(document.querySelector('form'));
@@ -161,4 +161,16 @@ test('páginas de termos e privacidade exibem exatamente o mesmo documento forma
     assert.equal(document.querySelector('.conteudo-legal').outerHTML, documentoNoAceite);
     assert.equal(document.querySelector('iframe'), null);
   }
+});
+
+test('reabrir leituras no mesmo formulário não repete requisições', async () => {
+  const chamadas = [];
+  globalThis.fetch = async url => { chamadas.push(String(url)); return String(url).includes('/privacidade/')
+    ? Response.json({versao: '2.0', conteudo: 'Privacidade'})
+    : Response.json([{versao: '1.0', conteudo: 'Termos'}]); };
+  await act(() => raiz.render(createElement(AceiteDocumentos, {versaoTermos:'1.0', aceito:false, onAlterar(){}})));
+  for(let i=0;i<20;i++) {
+    await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent.startsWith(i%2 ? 'Política de Privacidade —' : 'Termos de Aceite —')).click());
+  }
+  assert.equal(chamadas.length, 2);
 });
