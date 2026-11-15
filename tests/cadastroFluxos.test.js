@@ -165,6 +165,22 @@ test('páginas de termos e privacidade exibem exatamente o mesmo documento forma
   }
 });
 
+
+test('alternar documentos repetidamente mantém a página e reutiliza o conteúdo', async () => {
+  let chamadas = 0;
+  globalThis.fetch = async () => { chamadas++; return Response.json({versao: '2.0', conteudo: 'Política atual'}); };
+  await act(() => raiz.render(createElement(MemoryRouter, {initialEntries: ['/termos-aceite.html']},
+    createElement(DocumentoLegal, {tipo: 'termos', versao: '1.0', conteudo: 'Termos atuais'}))));
+  const alternar = () => document.querySelectorAll('.documento-navegacao button')[1].click();
+  await act(async () => { for(let i=0;i<30;i++) alternar(); });
+  assert.equal(chamadas, 1);
+  assert.equal(document.querySelector('main h1').textContent, 'Política de Privacidade');
+  for(let i=0;i<50;i++) await act(async () => alternar());
+  assert.equal(chamadas, 1);
+  assert.equal(document.querySelector('.documento-navegacao a'), null);
+  assert.equal(document.querySelectorAll('main').length, 1);
+});
+
 test('reabrir leituras no mesmo formulário não repete requisições', async () => {
   const chamadas = [];
   globalThis.fetch = async url => { chamadas.push(String(url)); return String(url).includes('/privacidade/')
@@ -176,6 +192,7 @@ test('reabrir leituras no mesmo formulário não repete requisições', async ()
   }
   assert.equal(chamadas.length, 2);
 });
+
 
 test('suporte usa somente o email da conta e não envia contato legado', async () => {
   await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Suporte))));
