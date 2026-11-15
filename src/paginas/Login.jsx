@@ -1,4 +1,4 @@
-import { MENSAGEM_SENHA } from '../servicos/politicaSenha';
+
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import FormularioLogin from '../componentes/autenticacao/FormularioLogin';
@@ -69,7 +69,7 @@ export default function Login() {
     } catch (falha) {
       if (falha.codigo === 'EMAIL_NAO_CONFIRMADO') {
         setContaNaoConfirmada(true);
-        setErro('Seu e-mail ainda não foi confirmado.');
+        setErro('Confirme seu e-mail para entrar. Abra a mensagem de confirmação ou peça um novo envio.');
       } else if (falha.codigo === 'TERMOS_NAO_ACEITOS') {
         const tokenPendente = falha.dados?.token || falha.dados?.jwt || falha.dados?.accessToken;
         if (tokenPendente) {
@@ -82,14 +82,14 @@ export default function Login() {
           sair();
         }
       } else if (falha.codigo === 'CREDENCIAIS_INVALIDAS' || falha.status === 401) {
-        setErro('E-mail ou senha incorretos. ' + MENSAGEM_SENHA);
+        setErro('E-mail ou senha incorretos. Confira os dados e tente novamente.');
       } else if (falha.codigo === 'PENDENTE_APROVACAO') {
         setErro('Seu cadastro está aguardando aprovação do administrador.');
       } else if (falha.codigo === 'ACESSO_REJEITADO') {
-        setErro('Seu cadastro foi rejeitado pelo administrador.');
+        setErro('Seu cadastro não foi aprovado. Entre em contato pelo Suporte para pedir uma revisão.');
       } else if (segundoFator && falha.codigo === 'CODIGO_2FA_EXPIRADO') {
         setExibirReenvio2fa(true);
-        setErro('O código 2FA expirou.');
+        setErro('O código enviado ao seu e-mail venceu. Peça um novo código e tente novamente.');
       } else {
         setErro(falha.message || 'O serviço está indisponível. Tente novamente mais tarde.');
       }
