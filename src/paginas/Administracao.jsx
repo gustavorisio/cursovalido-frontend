@@ -105,7 +105,7 @@ export default function Administracao({ tela = 'geral' }) {
       await publicarDocumento(nomePolitica.trim(), conteudoPolitica.trim());
 
       setConteudoPolitica('');
-    }, 'Publicar esta versão arquivará a atual e exigirá novo aceite na próxima autenticação. As sessões abertas continuarão funcionando. Deseja continuar?', 'Nova versão publicada. O novo aceite será solicitado na próxima autenticação.');
+    }, 'Publicar esta versão arquivará a atual. Os usuários precisarão revisar os documentos e confirmar o aceite após se autenticar. Deseja continuar?', 'Nova versão publicada.');
   }
 
   return <div className="app-container"><main className="main-content administracao">
@@ -149,7 +149,7 @@ export default function Administracao({ tela = 'geral' }) {
           <p className="texto-suave">Versão vigente: {politica?.versao ?? 'Nenhuma versão publicada'}</p>
           <form className="formulario-publico" onSubmit={publicar}>
             <label>Nome do documento<input required maxLength={255} value={nomePolitica} onChange={(evento) => setNomePolitica(evento.target.value)} /></label>
-            <p className="texto-suave">A versão será incrementada automaticamente pelo sistema ao publicar.</p>
+            <p className="texto-suave">A versão será incrementada automaticamente ao publicar{tela === 'termos' ? ' (v1.2, v1.4, v1.6, v1.8, v2.0...)' : ''}.</p>
             <p className="texto-suave">O conteúdo pode ser escrito em texto simples ou HTML básico (títulos, parágrafos e listas).</p>
             <label>Conteúdo<textarea className="input-field" required maxLength={10000} rows={12} value={conteudoPolitica} onChange={(evento) => setConteudoPolitica(evento.target.value)} /></label>
             <button className="btn btn-primary" disabled={processando}>Publicar nova versão</button>
