@@ -34,6 +34,8 @@ before(async () => {
 after(async () => servidor?.close());
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000', pretendToBeVisual: true });
+  dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; };
   Object.assign(globalThis, { window: dom.window, document: dom.window.document, localStorage: dom.window.localStorage, sessionStorage: dom.window.sessionStorage, IS_REACT_ACT_ENVIRONMENT: true });
   raiz = createRoot(document.getElementById('root'));
 });
@@ -235,8 +237,8 @@ test('recarregar documentos após rejeição invalida todos os aceites mesmo com
   await act(async () => botao('Buscar novamente').click());
   assert.equal(aceite().checked, false);
   assert.equal(botao('Aceitar termos e voltar ao login').disabled, true);
-  assert.equal(botao('Política de Privacidade — Aceito'), undefined);
-  assert.equal(botao('Termo de Responsabilidade — Aceito'), undefined);
+  assert.equal(botao('Política de Privacidade - Aceito'), undefined);
+  assert.equal(botao('Termo de Responsabilidade - Aceito'), undefined);
   await act(async () => aceite().click());
   assert.equal(confirmarLeitura().disabled, false);
   await act(async () => confirmarLeitura().click());
