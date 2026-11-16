@@ -53,7 +53,10 @@ function mensagemDeErro(status, dados) {
   };
   if (Object.hasOwn(mensagens, dados?.codigo)) return mensagens[dados.codigo];
   if (status >= 500) return 'O serviço está indisponível no momento. Tente novamente em alguns minutos.';
-  if (status === 429) return 'Você fez muitas tentativas. Aguarde alguns minutos e tente novamente.';
+  if (status === 429) {
+    return (dados?.codigo === 'OPERACAO_RECUSADA' && formatarMensagem(dados))
+      || 'Você fez muitas tentativas. Aguarde alguns minutos e tente novamente.';
+  }
   if (status === 401) return 'Sua sessão terminou. Entre na sua conta novamente.';
   if (status === 403) return dados?.codigo === 'OPERACAO_RECUSADA' && formatarMensagem(dados)
     ? formatarMensagem(dados) : 'Você não tem permissão para fazer isso. Se precisar, fale com o Suporte.';

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Paginacao from '../comuns/Paginacao';
 import PesquisaPagina from '../comuns/PesquisaPagina';
 import { aplicarSuspensao, revogarSuspensao, excluirUsuarioAdministrativo } from '../../servicos/servicoAdministracao';
 
@@ -71,23 +72,26 @@ export default function ModeracaoUsuarios({ usuarios, processando, onExecutar })
     </form> : null}
     {grupos.map(({ titulo, lista, vazio }) => <section key={titulo} aria-label={titulo}>
       <h3 className="titulo-respostas">{titulo} <span className="administracao-contagem">{lista.length}</span></h3>
-      <div className="moderacao-lista">
-        {lista.length === 0 ? <p className="texto-suave">{vazio}</p> : null}
-        {lista.map((usuario) => <article key={usuario.id} className="moderacao-usuario">
-          <div className="post-heading">
-            <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">{usuario.email}</p><div className="administracao-badges"><span>{usuario.perfil}</span><span className={usuario.ativo ? 'status-ativo' : ''}>{usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</span></div></div>
-            <div className="acoes-topico">
-              {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => { setSelecionado(usuario); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
-              {usuario.podeExcluir ? <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => excluir(usuario)}>Excluir conta</button> : null}
+      <Paginacao key={termo} itens={lista} tamanho={10} rotulo={"Páginas de " + titulo.toLowerCase()} desabilitada={processando}>
+        {(usuariosDaPagina) => <div className="moderacao-lista">
+          {lista.length === 0 ? <p className="texto-suave">{vazio}</p> : null}
+          {usuariosDaPagina.map((usuario) => <article key={usuario.id} className="moderacao-usuario">
+            <div className="post-heading">
+              <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">{usuario.email}</p><div className="administracao-badges"><span>{usuario.perfil}</span><span className={usuario.ativo ? 'status-ativo' : ''}>{usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</span></div></div>
+              <div className="acoes-topico">
+                {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => { setSelecionado(usuario); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
+                {usuario.podeExcluir ? <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => excluir(usuario)}>Excluir conta</button> : null}
+              </div>
             </div>
-          </div>
-          {usuario.suspensoes.length === 0 ? <p className="texto-suave">Sem restrições vigentes.</p> : null}
-          {usuario.suspensoes.map((item) => <div className="moderacao-restricao" key={item.id}>
-            <p className="content-text"><strong>{ESCOPOS[item.escopo]}</strong> · {item.expiraEm ? `Até ${new Date(item.expiraEm).toLocaleString('pt-BR')}` : 'Permanente'}</p>
-            <p className="content-text">Motivo: {item.motivo}</p>
-            {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => onExecutar(() => revogarSuspensao(usuario.id, item.id), `Revogar esta restrição de ${usuario.nome}?`, 'Restrição revogada.')}>Revogar restrição</button> : null}
-          </div>)}
-        </article>)}
-      </div></section>)}
+            {usuario.suspensoes.length === 0 ? <p className="texto-suave">Sem restrições vigentes.</p> : null}
+            {usuario.suspensoes.map((item) => <div className="moderacao-restricao" key={item.id}>
+              <p className="content-text"><strong>{ESCOPOS[item.escopo]}</strong> · {item.expiraEm ? `Até ${new Date(item.expiraEm).toLocaleString('pt-BR')}` : 'Permanente'}</p>
+              <p className="content-text">Motivo: {item.motivo}</p>
+              {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => onExecutar(() => revogarSuspensao(usuario.id, item.id), `Revogar esta restrição de ${usuario.nome}?`, 'Restrição revogada.')}>Revogar restrição</button> : null}
+            </div>)}
+          </article>)}
+        </div>}
+      </Paginacao>
+    </section>)}
   </section>;
 }

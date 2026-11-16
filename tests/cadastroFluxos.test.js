@@ -21,6 +21,8 @@ before(async () => {
 after(async () => { await servidor?.close(); });
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000' });
+  dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; };
   globalThis.window = dom.window;
   globalThis.document = dom.window.document;
   globalThis.localStorage = dom.window.localStorage;
@@ -88,6 +90,7 @@ test('aceite abre ambos os documentos e permite aceitar sem rolagem', async () =
     assert.ok(texto.querySelector('p strong'));
     assert.doesNotMatch(texto.textContent, /<\/?(?:h2|p|strong)>/);
     assert.equal(document.activeElement, texto);
+    assert.ok(document.querySelector('dialog.leitura-documento[open]'));
     const aceitar = document.querySelector('.leitura-documento .btn-primary');
     assert.equal(texto.scrollTop, 0);
     assert.equal(aceitar.disabled, false);
@@ -181,7 +184,7 @@ test('reabrir leituras no mesmo formulário não repete requisições', async ()
     : Response.json([{versao: '1.0', conteudo: 'Termos'}]); };
   await act(() => raiz.render(createElement(AceiteDocumentos, {versaoTermos:'1.0', aceito:false, onAlterar(){}})));
   for(let i=0;i<20;i++) {
-    await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent.startsWith(i%2 ? 'Política de Privacidade —' : 'Termos de Aceite —')).click());
+    await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent.startsWith(i%2 ? 'Política de Privacidade -' : 'Termos de Aceite -')).click());
   }
   assert.equal(chamadas.length, 2);
 });

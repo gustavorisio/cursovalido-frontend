@@ -114,16 +114,19 @@ test('sair limpa a conta e chama o logout autenticado do servidor', async () => 
   assert.ok(chamadas.some((item) => item.caminho.endsWith('/logout') ? item.opcoes.headers.Authorization === `Bearer ${anterior}` : false));
 });
 
-test('login em outra aba encerra a conta anterior sem apagar o controle novo', async () => {
+test('login em outra aba atualiza a sessao sem revogar o novo token', async () => {
   await montar();
   await entrar('ana@example.com');
-  localStorage.setItem(sessaoModulo.CHAVE_CONTROLE_SESSAO, 'login-de-outra-aba');
+  const nova = JSON.stringify({ token: token('bruno@example.com'), nome: 'Bruno' });
+  const total = chamadas.filter(item => item.caminho.endsWith('/logout')).length;
+  localStorage.setItem(sessaoModulo.CHAVE_SESSAO, nova);
   await act(async () => {
-    window.dispatchEvent(new window.StorageEvent('storage', { key: sessaoModulo.CHAVE_CONTROLE_SESSAO, newValue: 'login-de-outra-aba' }));
+    window.dispatchEvent(new window.StorageEvent('storage', { key: sessaoModulo.CHAVE_SESSAO, newValue: nova }));
   });
-  assert.equal(atual.autenticado, false);
-  assert.equal(localStorage.getItem(sessaoModulo.CHAVE_CONTROLE_SESSAO), 'login-de-outra-aba');
-  assert.ok(chamadas.some((item) => item.caminho.endsWith('/logout')));
+  assert.equal(atual.autenticado, true);
+  assert.equal(atual.sessao.nome, 'Bruno');
+  assert.equal(localStorage.getItem(sessaoModulo.CHAVE_SESSAO), nova);
+  assert.equal(chamadas.filter(item => item.caminho.endsWith('/logout')).length, total);
 });
 
 test('abrir o email para consultar o codigo nao cancela o segundo fator', async () => {

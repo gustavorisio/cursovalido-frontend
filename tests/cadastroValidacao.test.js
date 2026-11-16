@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validarIdade } from '../src/paginas/validacoesCadastro.js';
+import { limparNomeCompleto, validarIdade } from '../src/paginas/validacoesCadastro.js';
 
 test('idade distingue o aniversario de 18 anos do dia anterior', () => {
   const hoje = new Date();
@@ -19,4 +19,9 @@ test('senha aceita três caracteres com as classes obrigatórias e limita bytes'
   for(const senha of ['A!', 'aa!', 'AAA!', 'Aa', 'Aa!'+ 'a'.repeat(70), 'A!' + 'á'.repeat(36)]) {
     assert.equal(senhaValida(senha), false, senha);
   }
+});
+
+test('nome completo preserva letras acentuadas e remove números e símbolos', () => {
+  assert.equal(limparNomeCompleto('  Joa\u0303o 123 da! Silva?'), 'João da Silva');
+  assert.equal(limparNomeCompleto('123#$'), '');
 });

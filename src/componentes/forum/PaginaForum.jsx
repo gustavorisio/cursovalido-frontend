@@ -1,3 +1,4 @@
+import { useAutenticacao } from '../../contextos/useAutenticacao';
 import CabecalhoPagina from '../comuns/CabecalhoPagina';
 import PesquisaPagina from '../comuns/PesquisaPagina';
 import { Link } from 'react-router-dom';
@@ -10,6 +11,12 @@ import Rodape from '../comuns/Rodape';
 import { perfilDoUsuario, useForum } from './hooks/useForum';
 
 export default function PaginaForum() {
+  const { autenticado } = useAutenticacao();
+  if (autenticado) return <ForumAutenticado />;
+  return <div className="app-container"><main className="main-content"><p className="mensagem-erro" role="alert">Você não tem permissão.</p></main><Rodape /></div>;
+}
+
+function ForumAutenticado() {
   const forum = useForum();
   const [tela, setTela] = useState('lista');
   const [termo, setTermo] = useState('');
