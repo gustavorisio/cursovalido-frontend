@@ -10,7 +10,7 @@ export default function Login() {
   const { autenticado, autenticarUsuario, validarCodigo2fa, sair } = useAutenticacao();
   const navegar = useNavigate();
   const localizacao = useLocation();
-  const [dados, setDados] = useState({ email: '', senha: '' });
+  const [emailEnviado, setEmailEnviado] = useState('');
   const [erro, setErro] = useState('');
   const [mensagemReenvio, setMensagemReenvio] = useState('');
   const [contaNaoConfirmada, setContaNaoConfirmada] = useState(false);
@@ -35,15 +35,11 @@ export default function Login() {
 
   if (autenticado) return <Navigate to="/cursos" replace />;
 
-  function alterar(campo, valor) {
-    setDados((atuais) => ({ ...atuais, [campo]: valor }));
-  }
-
   function cancelarSegundoFator() {
     sair();
     setSegundoFator(false);
     setCodigo('');
-    setDados({ email: '', senha: '' });
+    setEmailEnviado('');
     setErro('');
     setMensagemReenvio('');
     setExibirReenvio2fa(false);
@@ -60,7 +56,10 @@ export default function Login() {
     setCarregando(true);
     try {
       if (!segundoFator) {
-        const resposta = await autenticarUsuario(dados.email, dados.senha);
+        const campos = evento.currentTarget.elements;
+        const email = campos.namedItem('email').value;
+        setEmailEnviado(email);
+        const resposta = await autenticarUsuario(email, campos.namedItem('senha').value);
         if (resposta?.requerCodigo2fa) {
           setSegundoFator(true);
           setExibirReenvio2fa(true);
@@ -68,7 +67,7 @@ export default function Login() {
           return;
         }
       } else {
-        await validarCodigo2fa(dados.email, codigo);
+        await validarCodigo2fa(emailEnviado, codigo);
         navegar('/cursos', { replace: true });
       }
     } catch (falha) {
@@ -111,7 +110,7 @@ export default function Login() {
     setErro('');
     setMensagemReenvio('');
     try {
-      await reenviarCodigo2fa(dados.email);
+      await reenviarCodigo2fa(emailEnviado);
       setCodigo('');
       setExibirReenvio2fa(true);
       setMensagemReenvio('Um novo código foi enviado para seu e-mail.');
@@ -127,7 +126,7 @@ export default function Login() {
   async function reenviar() {
     setReenviando(true); setErro('');
     try {
-      await reenviarConfirmacao(dados.email);
+      await reenviarConfirmacao(emailEnviado);
       setMensagemReenvio('Se o e-mail estiver cadastrado, um novo link de confirmação será enviado.');
       setContaNaoConfirmada(false);
     } catch (falha) {
@@ -143,7 +142,7 @@ export default function Login() {
         <div className="marca-publica">CURSO VÁLIDO </div>
         <h1>Entrar na plataforma</h1>
         <p className="texto-suave">Acesse o fórum e continue sua jornada de aprendizagem.</p>
-        <FormularioLogin dados={dados} codigo={codigo} segundoFator={segundoFator} erro={erro} carregando={carregando} mensagem={mensagemReenvio || localizacao.state?.mensagem} onAlterar={alterar} onCodigo={setCodigo} onEnviar={enviar} />
+        <FormularioLogin codigo={codigo} segundoFator={segundoFator} erro={erro} carregando={carregando} mensagem={mensagemReenvio || localizacao.state?.mensagem} onCodigo={setCodigo} onEnviar={enviar} />
         {segundoFator ? <button className="btn btn-link" type="button" disabled={carregando} onClick={cancelarSegundoFator}>Cancelar login e usar outra conta</button> : null}
         {contaNaoConfirmada && <button className="botao-destaque" type="button" disabled={reenviando} onClick={reenviar}>{reenviando ? 'Enviando...' : 'Reenviar confirmação'}</button>}
         {segundoFator && exibirReenvio2fa && <button className="botao-destaque botao-reenvio-2fa" type="button" disabled={carregando || reenviando2fa || segundosReenvio2fa > 0} onClick={reenviarCodigo}>{reenviando2fa ? 'Reenviando...' : segundosReenvio2fa > 0 ? `Reenviar código novamente em ${segundosReenvio2fa}s` : 'Reenviar código'}</button>}

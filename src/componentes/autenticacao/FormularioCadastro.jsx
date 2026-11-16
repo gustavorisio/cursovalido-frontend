@@ -11,10 +11,9 @@ export default function FormularioCadastro({ dados, idade, carregando, formulari
         <label>E-mail<input required type="email" value={dados.email} onChange={(evento) => onAlterar('email', evento.target.value)} /></label>
         <CampoSenha required value={dados.senha} onChange={(evento) => onAlterar('senha', evento.target.value)} />
         <CampoSenha rotulo="Confirmar senha" required validarPolitica={false} maxLength={72} value={dados.confirmacaoSenha} onChange={(evento) => onAlterar('confirmacaoSenha', evento.target.value)} />
-        {dados.confirmacaoSenha && dados.senha !== dados.confirmacaoSenha && <p className="erro-campo" role="status">As senhas devem coincidir.</p>}
-
         <label>Data de nascimento<input required type="date" value={dados.dataNascimento} onChange={(evento) => onAlterar('dataNascimento', evento.target.value)} />{dados.dataNascimento && idade > 90 && <small className="erro-campo">A idade máxima permitida é 90 anos.</small>}{dados.dataNascimento && idade < 18 && <small className="erro-campo">A plataforma Curso Válido é destinada a pessoas com 18 anos ou mais.</small>}</label>
       </div></fieldset>
+      {dados.confirmacaoSenha && dados.senha !== dados.confirmacaoSenha && <p className="erro-campo" role="status">As senhas devem coincidir.</p>}
       <label className="checkbox"><input type="checkbox" checked={dados.declarouMaiorIdade} onChange={(evento) => onAlterar('declarouMaiorIdade', evento.target.checked)} />Declaro que tenho 18 anos ou mais.</label>
       <AceiteDocumentos key={dados.versaoTermos} versaoTermos={dados.versaoTermos} aceito={dados.aceitouTermosLgpd} desabilitado={carregando} onAlterar={(valor) => onAlterar('aceitouTermosLgpd', valor)} />
       <button className="botao-destaque" disabled={!formularioValido || carregando}>{carregando ? 'Cadastrando...' : 'Cadastrar'}</button>

@@ -46,6 +46,23 @@ test('cancelar o segundo fator limpa as credenciais para outro login', async (t)
   assert.equal(document.querySelector('input[type="password"]').value, '');
 });
 
+test('login envia as credenciais preenchidas pelo navegador sem evento de alteração', async (t) => {
+  const autenticarUsuario = t.mock.fn(async () => ({ requerCodigo2fa: true }));
+  const validarCodigo2fa = t.mock.fn();
+  await renderizar(Login, { autenticacao: { autenticarUsuario, validarCodigo2fa } });
+
+  await preencher('input[type="email"]', 'outra-conta@example.com');
+  await preencher('input[type="password"]', 'SenhaAntiga123!');
+  document.querySelector('input[type="email"]').value = 'aluno@example.com';
+  document.querySelector('input[type="password"]').value = 'SenhaNova123!';
+  await enviar();
+
+  assert.deepEqual(autenticarUsuario.mock.calls[0].arguments, ['aluno@example.com', 'SenhaNova123!']);
+  await preencher('input[inputmode="numeric"]', '012345');
+  await enviar();
+  assert.deepEqual(validarCodigo2fa.mock.calls[0].arguments, ['aluno@example.com', '012345']);
+});
+
 for (const [codigo, mensagem] of [
   ['CREDENCIAIS_INVALIDAS', /E-mail ou senha incorretos/],
   ['PENDENTE_APROVACAO', /aguardando aprovação/],
