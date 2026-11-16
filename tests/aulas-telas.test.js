@@ -37,7 +37,7 @@ beforeEach(() => {
   globalThis.localStorage = dom.window.localStorage;
   globalThis.sessionStorage = dom.window.sessionStorage;
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  window.YT = { Player: class { destroy() {} }, PlayerState: { PLAYING: 1, PAUSED: 2, ENDED: 0 } };
+  window.YT = { Player: class { destroy() { } }, PlayerState: { PLAYING: 1, PAUSED: 2, ENDED: 0 } };
   globalThis.fetch = async (url) => {
     const path = new URL(url).pathname.replace(/^\/api/, '');
     let dados;
@@ -74,10 +74,12 @@ async function renderizar(tela, perfil, caminho, rota = caminho) {
 }
 
 test('questionário confirma a escolha antes de avançar e descarta o ramo anterior ao corrigir', async () => {
-  const questionario = { id: 7, versao: 1, titulo: 'Seu caminho', descricao: 'Descubra uma área.', perguntaInicial: 'inicio', perguntas: [
-    { chave: 'inicio', enunciado: 'O que você gosta de criar?', opcoes: [{ texto: 'Interfaces', proximaPergunta: 'web' }, { texto: 'Dados', resultado: 'dados' }] },
-    { chave: 'web', enunciado: 'Qual interface?', opcoes: [{ texto: 'Sites', resultado: 'web' }, { texto: 'Aplicativos', resultado: 'apps' }] },
-  ] };
+  const questionario = {
+    id: 7, versao: 1, titulo: 'Seu caminho', descricao: 'Descubra uma área.', perguntaInicial: 'inicio', perguntas: [
+      { chave: 'inicio', enunciado: 'O que você gosta de criar?', opcoes: [{ texto: 'Interfaces', proximaPergunta: 'web' }, { texto: 'Dados', resultado: 'dados' }] },
+      { chave: 'web', enunciado: 'Qual interface?', opcoes: [{ texto: 'Sites', resultado: 'web' }, { texto: 'Aplicativos', resultado: 'apps' }] },
+    ]
+  };
   await act(() => raiz.render(h(MemoryRouter, null, h(telas.QuestionarioCaminhos, { dados: { questionario, resultado: null }, aluno: false, catalogo: '/cursos' }))));
   const botao = texto => [...document.querySelectorAll('button')].find(b => b.textContent === texto);
   assert.equal(botao('Continuar').disabled, true);

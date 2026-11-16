@@ -120,7 +120,7 @@ export async function requisitar(caminho, opcoes = {}) {
       throw new ErroApi(resposta.status, formatarMensagem(dados) ?? 'Há uma restrição ativa na sua conta.', dados);
     }
     if (resposta.status === 403 && !semAutenticacao && token && tokenAutenticacao === undefined
-        && dados?.codigo === 'TERMOS_REAUTENTICACAO' && obterTokenSessao() === token) {
+      && dados?.codigo === 'TERMOS_REAUTENTICACAO' && obterTokenSessao() === token) {
       globalThis.dispatchEvent?.(new CustomEvent('curso-valido-termos-atualizados'));
     }
     if (resposta.status === 401 && !semAutenticacao) {

@@ -35,7 +35,7 @@ afterEach(async () => {
 
 test('olho alterna visibilidade sem enviar formulário nem alterar senha', async () => {
   let envios = 0;
-  await act(() => raiz.render(h('form', { onSubmit: () => envios++ }, h(CampoSenha, { value: 'Segredo123!', onChange() {} }))));
+  await act(() => raiz.render(h('form', { onSubmit: () => envios++ }, h(CampoSenha, { value: 'Segredo123!', onChange() { } }))));
   const campo = document.querySelector('input');
   const olho = document.querySelector('button');
   assert.equal(campo.type, 'password');

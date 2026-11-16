@@ -47,22 +47,22 @@ function CursoAluno({ idCurso }) {
         <div className="aulas-progresso"><div><span>Seu progresso</span><strong>{concluidas} de {aulas.length} aulas concluídas</strong></div><progress max="100" value={percentual} aria-label="Progresso do curso" /><span>{percentual}% concluído</span></div>
       </CabecalhoAulas>
       <section className="catalogo-resultados" aria-labelledby="aulas-modulos-titulo">
-      <div className="catalogo-secao-cabecalho"><div><span className="aulas-etiqueta">Sua jornada de aprendizagem</span><h2 id="aulas-modulos-titulo">Módulos e aulas</h2></div></div>
-      <PesquisaConteudo valor={busca} onAlterar={setBusca} label="Pesquisar aula por nome" />
-      {busca.trim() && modulos.length === 0 && <p className="card empty-list" role="status">Nenhuma aula encontrada para esta pesquisa.</p>}
-      {carga.dados.modulos.length === 0 ? <div className="card empty-list">Este curso ainda não possui módulos disponíveis.</div> : null}
-      {modulos.map((modulo) => <ModuloExpansivel key={modulo.id} modulo={modulo} expandido={Boolean(busca.trim())}>
-        <p className="content-text">{modulo.descricao}</p>
-        {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível neste módulo.</p> : null}
-        {modulo.aulas.map((aula) => <div className="aulas-linha" key={aula.id}>
+        <div className="catalogo-secao-cabecalho"><div><span className="aulas-etiqueta">Sua jornada de aprendizagem</span><h2 id="aulas-modulos-titulo">Módulos e aulas</h2></div></div>
+        <PesquisaConteudo valor={busca} onAlterar={setBusca} label="Pesquisar aula por nome" />
+        {busca.trim() && modulos.length === 0 && <p className="card empty-list" role="status">Nenhuma aula encontrada para esta pesquisa.</p>}
+        {carga.dados.modulos.length === 0 ? <div className="card empty-list">Este curso ainda não possui módulos disponíveis.</div> : null}
+        {modulos.map((modulo) => <ModuloExpansivel key={modulo.id} modulo={modulo} expandido={Boolean(busca.trim())}>
+          <p className="content-text">{modulo.descricao}</p>
+          {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível neste módulo.</p> : null}
+          {modulo.aulas.map((aula) => <div className="aulas-linha" key={aula.id}>
 
-          <div>
-            <span className="aulas-etiqueta">Aula {aula.ordem}</span><h3>{aula.titulo}</h3>
-            <p className="texto-suave">{aula.progresso.concluida ? 'Concluída' : aula.progresso.posicaoSegundos > 0 ? `Em andamento · posição salva: ${aula.progresso.posicaoSegundos}s` : 'Não iniciada'}</p>
-          </div>
-          <Link className="btn btn-secondary" to={`/aluno/cursos/${idCurso}/aulas/${aula.id}`}>{aula.progresso.posicaoSegundos > 0 ? 'Continuar aula' : 'Abrir aula'}</Link>
-        </div>)}
-      </ModuloExpansivel>)}
+            <div>
+              <span className="aulas-etiqueta">Aula {aula.ordem}</span><h3>{aula.titulo}</h3>
+              <p className="texto-suave">{aula.progresso.concluida ? 'Concluída' : aula.progresso.posicaoSegundos > 0 ? `Em andamento · posição salva: ${aula.progresso.posicaoSegundos}s` : 'Não iniciada'}</p>
+            </div>
+            <Link className="btn btn-secondary" to={`/aluno/cursos/${idCurso}/aulas/${aula.id}`}>{aula.progresso.posicaoSegundos > 0 ? 'Continuar aula' : 'Abrir aula'}</Link>
+          </div>)}
+        </ModuloExpansivel>)}
       </section>
       <PlanoEstudos idCurso={idCurso} />
     </> : null}

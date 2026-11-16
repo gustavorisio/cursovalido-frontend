@@ -129,18 +129,18 @@ function GestaoConteudo({ idCurso, idModulo }) {
   const itensFiltrados = itens.filter((item) => correspondeAoNome(item.titulo, busca) && (tipo !== 'curso' || correspondeAoTema(item, tema)));
 
   return <LayoutAulas>
-      <nav className="acoes-topico" aria-label="Navegação dos cursos">
-        <Link className="btn btn-link" to="/professor/cursos">Meus cursos</Link>
-        {curso ? <Link className="btn btn-link" to={`/professor/cursos/${curso.id}/modulos`}>{curso.titulo}</Link> : null}
-        {modulo ? <span>{modulo.titulo}</span> : null}
-      </nav>
-      {erro ? <div className="card aviso-erro" role="alert">{erro}</div> : null}
-      {sucesso ? <div className="mensagem-sucesso" role="status">{sucesso}</div> : null}
-      {formulario ? <FormularioConteudo tipo={nome} item={editando} processando={processando} onSalvar={salvar} onCancelar={() => { setFormulario(false); setErro(''); }} /> : <>
-        <CabecalhoAulas etiqueta="Área do professor · Gestão de conteúdo" titulo={modulo?.titulo ?? curso?.titulo ?? titulo} tipo={tipo} descricao={tipo === 'curso' ? 'Organize seus cursos e crie uma jornada de aprendizagem.' : tipo === 'modulo' ? 'Organize os módulos na sequência em que devem ser estudados.' : 'Adicione vídeos e organize as aulas deste módulo.'} acao={<button className="btn btn-primary catalogo-cta" type="button" disabled={carregando || falhaCarga || processando} onClick={() => abrirFormulario()}>Cadastrar {nome} </button>}>
-          {!carregando && !falhaCarga && <div className="aulas-indicadores"><span>{itens.length} {tipo === 'curso' ? 'cursos' : tipo === 'modulo' ? 'módulos' : 'aulas'}</span></div>}
-        </CabecalhoAulas>
-        <section className="catalogo-resultados aulas-gestao-resultados" id="catalogo-cursos" aria-label={titulo}>
+    <nav className="acoes-topico" aria-label="Navegação dos cursos">
+      <Link className="btn btn-link" to="/professor/cursos">Meus cursos</Link>
+      {curso ? <Link className="btn btn-link" to={`/professor/cursos/${curso.id}/modulos`}>{curso.titulo}</Link> : null}
+      {modulo ? <span>{modulo.titulo}</span> : null}
+    </nav>
+    {erro ? <div className="card aviso-erro" role="alert">{erro}</div> : null}
+    {sucesso ? <div className="mensagem-sucesso" role="status">{sucesso}</div> : null}
+    {formulario ? <FormularioConteudo tipo={nome} item={editando} processando={processando} onSalvar={salvar} onCancelar={() => { setFormulario(false); setErro(''); }} /> : <>
+      <CabecalhoAulas etiqueta="Área do professor · Gestão de conteúdo" titulo={modulo?.titulo ?? curso?.titulo ?? titulo} tipo={tipo} descricao={tipo === 'curso' ? 'Organize seus cursos e crie uma jornada de aprendizagem.' : tipo === 'modulo' ? 'Organize os módulos na sequência em que devem ser estudados.' : 'Adicione vídeos e organize as aulas deste módulo.'} acao={<button className="btn btn-primary catalogo-cta" type="button" disabled={carregando || falhaCarga || processando} onClick={() => abrirFormulario()}>Cadastrar {nome} </button>}>
+        {!carregando && !falhaCarga && <div className="aulas-indicadores"><span>{itens.length} {tipo === 'curso' ? 'cursos' : tipo === 'modulo' ? 'módulos' : 'aulas'}</span></div>}
+      </CabecalhoAulas>
+      <section className="catalogo-resultados aulas-gestao-resultados" id="catalogo-cursos" aria-label={titulo}>
         <div className="catalogo-secao-cabecalho"><div><span className="aulas-etiqueta">Conteúdo educacional</span><h2>{titulo}</h2></div></div>
         <PesquisaConteudo valor={busca} onAlterar={setBusca} label={tipo === 'curso' ? 'Pesquisar curso por nome' : tipo === 'aula' ? 'Pesquisar aula por nome' : 'Pesquisar módulo por nome'} />
         {tipo === 'curso' && <FiltroTema valor={tema} onAlterar={setTema} gerenciar onAtualizar={() => { setCarregando(true); setTentativa((valor) => valor + 1); }} />}
@@ -172,9 +172,9 @@ function GestaoConteudo({ idCurso, idModulo }) {
             </div>}
           </Paginacao>
         </>}
-        </section>
-      </>}
-      {excluindo ? <ConfirmacaoModal titulo={`Excluir ${nome}`} processando={processando} mensagem={`Deseja excluir “${excluindo.titulo}”? O conteúdo será inativado.${tipo === 'aula' ? '' : ' O acesso ao conteúdo vinculado também será bloqueado.'}`} onConfirmar={excluir} onCancelar={() => { if (!processando) setExcluindo(null); }} /> : null}
+      </section>
+    </>}
+    {excluindo ? <ConfirmacaoModal titulo={`Excluir ${nome}`} processando={processando} mensagem={`Deseja excluir “${excluindo.titulo}”? O conteúdo será inativado.${tipo === 'aula' ? '' : ' O acesso ao conteúdo vinculado também será bloqueado.'}`} onConfirmar={excluir} onCancelar={() => { if (!processando) setExcluindo(null); }} /> : null}
   </LayoutAulas>;
 }
 
