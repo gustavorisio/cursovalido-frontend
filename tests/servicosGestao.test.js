@@ -1,22 +1,19 @@
-import test, { before, after } from 'node:test';
+import { test, beforeAll, vi } from 'vitest';
 import assert from 'node:assert/strict';
-import { createServer } from './apoio/servidor.js';
 
-let servidor, aulas, aulasAdmin, administracao, autenticacao;
+let aulas, aulasAdmin, administracao, autenticacao;
 
-before(async () => {
-  servidor = await createServer({ configFile: false, server: { middlewareMode: true }, logLevel: 'silent' });
-  aulas = await servidor.ssrLoadModule('/src/componentes/aulas/servicos/servicoAulas.js');
-  aulasAdmin = await servidor.ssrLoadModule('/src/componentes/aulas/servicos/servicoAdministradorAulas.js');
-  administracao = await servidor.ssrLoadModule('/src/servicos/servicoAdministracao.js');
-  autenticacao = await servidor.ssrLoadModule('/src/servicos/servicoAutenticacao.js');
+beforeAll(async () => {
+  aulas = await import('/src/componentes/aulas/servicos/servicoAulas.js');
+  aulasAdmin = await import('/src/componentes/aulas/servicos/servicoAdministradorAulas.js');
+  administracao = await import('/src/servicos/servicoAdministracao.js');
+  autenticacao = await import('/src/servicos/servicoAutenticacao.js');
 });
 
-after(async () => { await servidor?.close(); });
 
-function registrarRequisicoes(t) {
+function registrarRequisicoes() {
   const chamadas = [];
-  t.mock.method(globalThis, 'fetch', async (url, opcoes) => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, opcoes) => {
     chamadas.push({
       caminho: new URL(url).pathname.replace(/^\/api/, ''),
       metodo: opcoes.method ?? 'GET',
@@ -27,8 +24,8 @@ function registrarRequisicoes(t) {
   return chamadas;
 }
 
-test('professor usa rotas distintas para cadastrar e editar curso e módulo', async (t) => {
-  const chamadas = registrarRequisicoes(t);
+test('professor usa rotas distintas para cadastrar e editar curso e módulo', async () => {
+  const chamadas = registrarRequisicoes();
   const curso = { titulo: 'Desenvolvimento web' };
   const modulo = { titulo: 'Primeiros passos', ordem: 1 };
   await aulas.salvarCurso(null, curso);
@@ -48,8 +45,8 @@ test('professor usa rotas distintas para cadastrar e editar curso e módulo', as
   ]);
 });
 
-test('administração usa ações distintas para editar e alterar o estado da aula', async (t) => {
-  const chamadas = registrarRequisicoes(t);
+test('administração usa ações distintas para editar e alterar o estado da aula', async () => {
+  const chamadas = registrarRequisicoes();
   const dados = { titulo: 'Introdução a HTML' };
   await aulasAdmin.editarAula(5, dados);
   await aulasAdmin.arquivarAula(5);
@@ -62,18 +59,18 @@ test('administração usa ações distintas para editar e alterar o estado da au
   ]);
 });
 
-test('serviços administrativos orientam nova tentativa quando uma rota está indisponível', async (t) => {
-  const fetch = t.mock.method(globalThis, 'fetch', async () => Response.json({}, { status: 404 }));
+test('serviços administrativos orientam nova tentativa quando uma rota está indisponível', async () => {
+  const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => Response.json({}, { status: 404 }));
   await assert.rejects(aulasAdmin.listarCursos(), /Não foi possível consultar os cursos/);
   await assert.rejects(administracao.buscarPermissoesAdministrativas(), /A administração está indisponível/);
 
-  fetch.mock.mockImplementation(async () => Response.json({}, { status: 503 }));
+  fetch.mockImplementation(async () => Response.json({}, { status: 503 }));
   await assert.rejects(aulasAdmin.listarCursos(), { status: 503 });
   await assert.rejects(administracao.buscarPermissoesAdministrativas(), { status: 503 });
 });
 
-test('administração envia ações de convite à rota correspondente', async (t) => {
-  const chamadas = registrarRequisicoes(t);
+test('administração envia ações de convite à rota correspondente', async () => {
+  const chamadas = registrarRequisicoes();
   const email = 'professora@example.com';
   await autenticacao.criarConvite(email, 'PROFESSOR');
   await autenticacao.buscarConvites();
@@ -97,8 +94,8 @@ test('administração envia ações de convite à rota correspondente', async (t
   assert.deepEqual(chamadas[0].dados, { email, perfil: 'PROFESSOR' });
 });
 
-test('serviço de exclusão recusa código incompleto antes de chamar a API', (t) => {
-  const chamadas = registrarRequisicoes(t);
+test('serviço de exclusão recusa código incompleto antes de chamar a API', () => {
+  const chamadas = registrarRequisicoes();
   assert.throws(() => autenticacao.excluirConta('12345'), /seis dígitos/);
   assert.throws(() => autenticacao.excluirConta(123456), /seis dígitos/);
   assert.equal(chamadas.length, 0);

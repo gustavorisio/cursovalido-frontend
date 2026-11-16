@@ -1,20 +1,17 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { createElement, act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { correspondeAoNome } from '../src/componentes/aulas/servicos/pesquisaConteudo.js';
 
-let servidor, Modal, Documento, dom, raiz;
-before(async () => {
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  Modal = (await servidor.ssrLoadModule('/src/componentes/forum/componentes/ConfirmacaoModal.jsx')).default;
-  Documento = (await servidor.ssrLoadModule('/src/componentes/comuns/DocumentoLegal.jsx')).default;
+let Modal, Documento, dom, raiz;
+beforeAll(async () => {
+  Modal = (await import('/src/componentes/forum/componentes/ConfirmacaoModal.jsx')).default;
+  Documento = (await import('/src/componentes/comuns/DocumentoLegal.jsx')).default;
 });
-after(async () => { await servidor?.close(); });
+
 beforeEach(() => {
   dom = new JSDOM('<button id="origem">Abrir</button><div id="root"></div>', { url: 'http://localhost:3000', pretendToBeVisual: true });
   globalThis.window = dom.window;

@@ -1,13 +1,11 @@
 import { Buffer } from 'node:buffer';
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { createElement as h, act, useState } from 'react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-let servidor, createRoot, Cadastro, Convite, Reativacao, Privacidade, Documento, Configuracoes, RotaProtegida, Login, Contexto, Provedor, controleSessao, dom, raiz;
+let createRoot, Cadastro, Convite, Reativacao, Privacidade, Documento, Configuracoes, RotaProtegida, Login, Contexto, Provedor, controleSessao, dom, raiz;
 const fetchOriginal = globalThis.fetch;
 const customEventOriginal = globalThis.CustomEvent;
 const documentos = {
@@ -15,26 +13,25 @@ const documentos = {
   privacidade: { versao: '2.0', conteudo: '<h1>Política de Privacidade</h1><p>Tratamento de <em>dados pessoais</em>.</p><ul><li>Seus direitos</li></ul>' }
 };
 
-before(async () => {
+beforeAll(async () => {
   const inicial = new JSDOM('<div></div>');
   globalThis.window = inicial.window;
   globalThis.document = inicial.window.document;
   ({ createRoot } = await import('react-dom/client'));
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  Cadastro = (await servidor.ssrLoadModule('/src/paginas/Cadastro.jsx')).default;
-  Convite = (await servidor.ssrLoadModule('/src/paginas/CadastroConvite.jsx')).default;
-  Reativacao = (await servidor.ssrLoadModule('/src/paginas/TermosDeUso.jsx')).default;
-  Privacidade = (await servidor.ssrLoadModule('/src/paginas/PoliticaDePrivacidade.jsx')).default;
-  Documento = (await servidor.ssrLoadModule('/src/componentes/comuns/DocumentoLegal.jsx')).default;
-  Configuracoes = (await servidor.ssrLoadModule('/src/paginas/Configuracoes.jsx')).default;
-  RotaProtegida = (await servidor.ssrLoadModule('/src/componentes/autenticacao/RotaProtegida.jsx')).default;
-  Login = (await servidor.ssrLoadModule('/src/paginas/Login.jsx')).default;
-  Contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
-  Provedor = (await servidor.ssrLoadModule('/src/contextos/AutenticacaoContexto.jsx')).AutenticacaoProvedor;
-  ({ controleSessao } = await servidor.ssrLoadModule('/src/servicos/sessaoNavegador.js'));
+  Cadastro = (await import('/src/paginas/Cadastro.jsx')).default;
+  Convite = (await import('/src/paginas/CadastroConvite.jsx')).default;
+  Reativacao = (await import('/src/paginas/TermosDeUso.jsx')).default;
+  Privacidade = (await import('/src/paginas/PoliticaDePrivacidade.jsx')).default;
+  Documento = (await import('/src/componentes/comuns/DocumentoLegal.jsx')).default;
+  Configuracoes = (await import('/src/paginas/Configuracoes.jsx')).default;
+  RotaProtegida = (await import('/src/componentes/autenticacao/RotaProtegida.jsx')).default;
+  Login = (await import('/src/paginas/Login.jsx')).default;
+  Contexto = (await import('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+  Provedor = (await import('/src/contextos/AutenticacaoContexto.jsx')).AutenticacaoProvedor;
+  ({ controleSessao } = await import('/src/servicos/sessaoNavegador.js'));
   inicial.window.close();
 });
-after(async () => servidor?.close());
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000', pretendToBeVisual: true });
   dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };

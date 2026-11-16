@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test, vi } from 'vitest';
 import assert from 'node:assert/strict';
 import { prepararTela, clicar, preencher, enviar, simularApi } from './apoio/tela.js';
 
@@ -13,8 +13,8 @@ const pedido = {
   assunto: 'Acesso ao curso', descricao: 'Minha conta perdeu o acesso ao curso ontem.',
 };
 
-test('suporte valida os campos antes de enviar a solicitação', async (t) => {
-  const chamadas = simularApi(t, () => Response.json({ protocolo: 'SUP-104' }));
+test('suporte valida os campos antes de enviar a solicitação', async () => {
+  const chamadas = simularApi(() => Response.json({ protocolo: 'SUP-104' }));
   await renderizar(Suporte);
   await enviar();
   assert.match(document.querySelector('[role="alert"]').textContent, /E-mail da conta/);
@@ -37,8 +37,8 @@ test('suporte valida os campos antes de enviar a solicitação', async (t) => {
   assert.match(document.querySelector('[role="status"]').textContent, /SUP-104/);
 });
 
-test('suporte mantém o formulário se a resposta não trouxer protocolo', async (t) => {
-  simularApi(t, () => Response.json({}));
+test('suporte mantém o formulário se a resposta não trouxer protocolo', async () => {
+  simularApi(() => Response.json({}));
   await renderizar(Suporte);
   for (const campo of ['emailConta', 'usuario', 'assunto', 'descricao']) {
     await preencher('#' + campo, pedido[campo]);
@@ -50,9 +50,9 @@ test('suporte mantém o formulário se a resposta não trouxer protocolo', async
   assert.equal(document.querySelector('fieldset').disabled, false);
 });
 
-test('gestão cria e renomeia um tema e pede confirmação antes de excluir', async (t) => {
-  const chamadas = simularApi(t, () => new Response(null, { status: 204 }));
-  const onAtualizar = t.mock.fn();
+test('gestão cria e renomeia um tema e pede confirmação antes de excluir', async () => {
+  const chamadas = simularApi(() => new Response(null, { status: 204 }));
+  const onAtualizar = vi.fn();
   await renderizar(GerenciarTemas, { props: { temas: [{ id: 4, nome: 'Web' }], onAtualizar } });
 
   await preencher('#tema-nome', ' Dados ');
@@ -74,5 +74,5 @@ test('gestão cria e renomeia um tema e pede confirmação antes de excluir', as
   await clicar('Confirmar');
   assert.equal(chamadas[2].metodo, 'DELETE');
   assert.equal(chamadas[2].rota, '/temas/4');
-  assert.deepEqual(onAtualizar.mock.calls[2].arguments, [4]);
+  assert.deepEqual(onAtualizar.mock.calls[2], [4]);
 });
