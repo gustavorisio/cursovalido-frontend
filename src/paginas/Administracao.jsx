@@ -18,6 +18,7 @@ import { validarDocumento } from '../servicos/validacoesFormulario';
 export default function Administracao({ tela = 'geral' }) {
   const { sessao } = useAutenticacao();
   const [usuarios, setUsuarios] = useState(null);
+  const [filtroRestricao, setFiltroRestricao] = useState(null);
   const [principal, setPrincipal] = useState(false);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
@@ -39,7 +40,7 @@ export default function Administracao({ tela = 'geral' }) {
       const permissoes = await buscarPermissoesAdministrativas();
       setPrincipal(permissoes.principal);
       const tarefas = [];
-      if (tela === 'usuarios') tarefas.push(buscarUsuariosAdministrativos().then(setUsuarios));
+      if (tela === 'usuarios') tarefas.push(buscarUsuariosAdministrativos(filtroRestricao).then(setUsuarios));
       if (permissoes.principal && tela === 'termos') {
         tarefas.push(buscarPoliticasAtivas().then((politicas) => {
           const atual = politicas[0] ?? null;
@@ -65,9 +66,16 @@ export default function Administracao({ tela = 'geral' }) {
     } finally {
       setCarregando(false);
     }
-  }, [tela]);
+  }, [tela, filtroRestricao]);
 
   useEffect(() => { queueMicrotask(carregarDados); }, [carregarDados]);
+
+  function filtrarUsuarios(valor) {
+    setErro('');
+    setUsuarios([]);
+    setCarregando(true);
+    setFiltroRestricao(valor);
+  }
 
   async function acionar(acao, sucesso) {
     setProcessando(true);
@@ -181,7 +189,7 @@ export default function Administracao({ tela = 'geral' }) {
           </section>
         </> : null}
       </> : null}
-      {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios ?? []} processando={processando} onExecutar={solicitar} /> : null}
+      {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios ?? []} processando={processando} carregando={carregando} filtroRestricao={filtroRestricao} onFiltrarRestricao={filtrarUsuarios} onExecutar={solicitar} /> : null}
     </>}
     {confirmacao ? <ConfirmacaoModal titulo="Confirmar ação" processando={processando} mensagem={confirmacao.texto} onConfirmar={() => { if (!processando) acionar(confirmacao.acao, confirmacao.sucesso); }} onCancelar={() => { if (!processando) setConfirmacao(null); }} /> : null}
   </main><Rodape /></div>;

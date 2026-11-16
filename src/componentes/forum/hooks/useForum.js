@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  apagarComentario, apagarTopico, atualizarComentario, atualizarTopico, buscarComentarios,
+  apagarComentario, atualizarComentario, atualizarTopico, buscarComentarios,
   buscarTopicos, buscarMeusTopicos, buscarUsuarios, criarComentario, criarTopico, fecharTopico, arquivarTopico
 } from '../servicos/servicoForum';
 import { useAutenticacao } from '../../../contextos/useAutenticacao';
@@ -119,10 +119,7 @@ export function useForum() {
     return ehAutor(comentario);
   }
   function ehAdministrador() { return autenticado && ['ADMINISTRADOR', 'ADMIN', 'ROLE_ADMIN'].includes(sessao?.perfil); }
-  function ehProfessor() { return autenticado && ['PROFESSOR', 'PROF', 'ROLE_PROFESSOR'].includes(sessao?.perfil); }
   function podeGerenciarTopico(topico) { return !topicosBloqueados && (ehAdministrador() || ehAutor(topico)); }
-  function podeArquivarTopico(topico) { return !topicosBloqueados && (ehAdministrador() || (ehProfessor() && ehAutor(topico))); }
-  function podeApagarTopico() { return !topicosBloqueados && ehAdministrador(); }
   function podeExcluirComentario(comentario) { return !comentariosBloqueados && (ehAdministrador() || ehAutor(comentario)); }
 
   async function editarTopico(idTopico, titulo, descricao) {
@@ -149,13 +146,6 @@ export function useForum() {
     catch (erro) { tratarErro(erro); return false; }
   }
 
-  async function excluirTopico(topico) {
-    limparMensagem();
-    if (!podeApagarTopico(topico)) { setMensagemErro('Você não tem permissão para excluir este tópico.'); return false; }
-    try { await apagarTopico(topico.id); setMensagemSucesso('Tópico excluído.'); await carregarTopicos(pagina); setTopicoSelecionado(null); return true; }
-    catch (erro) { tratarErro(erro); return false; }
-  }
-
   async function fecharTopicoSelecionado(topico) {
     limparMensagem();
     if (!podeGerenciarTopico(topico) || topico.fechado) { setMensagemErro('Você não pode fechar este tópico ou ele já está fechado.'); return false; }
@@ -165,7 +155,7 @@ export function useForum() {
 
   async function arquivarTopicoSelecionado(topico) {
     limparMensagem();
-    if (!podeArquivarTopico(topico) || topico.arquivado) { setMensagemErro('Você não tem permissão para arquivar este tópico ou ele já foi arquivado.'); return false; }
+    if (!podeGerenciarTopico(topico) || topico.arquivado) { setMensagemErro('Você não tem permissão para arquivar este tópico ou ele já foi arquivado.'); return false; }
     try { await arquivarTopico(topico.id); setMensagemSucesso('Tópico arquivado e removido da lista.'); await carregarTopicos(pagina); setTopicoSelecionado(null); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
@@ -181,7 +171,7 @@ export function useForum() {
     meusTopicos, setMeusTopicos, topicosBloqueados, comentariosBloqueados,
     autenticado, sessao, topicos, usuarios, pagina, totalPaginas, carregando, topicoSelecionado, comentarios, mensagemErro, mensagemSucesso,
     limparMensagem, carregarTopicos, selecionarTopico, salvarTopico, salvarComentario,
-    editarTopico, editarComentario, excluirTopico, fecharTopicoSelecionado, arquivarTopicoSelecionado,
-    excluirComentarioSelecionado, podeGerenciarTopico, podeArquivarTopico, podeEditarTopico, podeEditarComentario, podeApagarTopico, podeExcluirComentario
+    editarTopico, editarComentario, fecharTopicoSelecionado, arquivarTopicoSelecionado,
+    excluirComentarioSelecionado, podeGerenciarTopico, podeEditarTopico, podeEditarComentario, podeExcluirComentario
   };
 }

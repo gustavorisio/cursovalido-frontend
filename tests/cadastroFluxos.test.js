@@ -1,7 +1,7 @@
 import test, { before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from 'vite';
+import { createServer } from './apoio/servidor.js';
 import react from '@vitejs/plugin-react';
 import { createElement, act, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -80,6 +80,7 @@ test('aceite abre ambos os documentos e permite aceitar sem rolagem', async () =
   }
   await act(() => raiz.render(createElement(Fluxo)));
   const checkbox = document.querySelector('input[type=checkbox]');
+  assert.equal(document.querySelector('.aceite-documentos button'), null);
   await act(async () => checkbox.click());
   assert.equal(checkbox.checked, false);
   assert.equal(document.querySelector('iframe, a'), null);
@@ -107,8 +108,8 @@ test('aceite abre ambos os documentos e permite aceitar sem rolagem', async () =
 test('documento indisponível bloqueia o aceite e permite tentar novamente', async () => {
   globalThis.fetch = async () => Response.json({ versao: '1.0', conteudo: '' });
   await act(() => raiz.render(createElement(AceiteDocumentos, { versaoTermos: '1.0', aceito: false, onAlterar() { assert.fail('Aceite indevido'); } })));
-  await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent.startsWith('Política')).click());
-  assert.match(document.querySelector('[role=alert]').textContent, /indisponível/);
+  await act(async () => document.querySelector('input').click());
+  assert.match(document.querySelector('[role=alert]').textContent, /indisponíve(?:l|is)/);
   assert.equal(document.querySelector('.leitura-documento .btn-primary').disabled, true);
   globalThis.fetch = async () => Response.json({ versao: '1.0', conteudo: 'Documento válido' });
   await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent === 'Tentar novamente').click());
@@ -153,7 +154,8 @@ test('páginas de termos e privacidade exibem exatamente o mesmo documento forma
     ? Response.json(documentos.privacidade) : Response.json([documentos.termos]);
   for (const tipo of ['termos', 'privacidade']) {
     await act(() => raiz.render(createElement(AceiteDocumentos, { key: tipo, versaoTermos: '1.0', aceito: false, onAlterar() { } })));
-    await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent.startsWith(tipo === 'termos' ? 'Termos' : 'Política')).click());
+    await act(async () => document.querySelector('input').click());
+    if (tipo === 'privacidade') await act(async () => document.querySelector('dialog .btn-primary').click());
     const documentoNoAceite = document.querySelector('.conteudo-legal').outerHTML;
     await act(() => raiz.render(createElement(MemoryRouter, null, createElement(DocumentoLegal, { tipo, ...documentos[tipo] }))));
     assert.equal(document.querySelector('.conteudo-legal').outerHTML, documentoNoAceite);
@@ -183,8 +185,12 @@ test('reabrir leituras no mesmo formulário não repete requisições', async ()
     ? Response.json({versao: '2.0', conteudo: 'Privacidade'})
     : Response.json([{versao: '1.0', conteudo: 'Termos'}]); };
   await act(() => raiz.render(createElement(AceiteDocumentos, {versaoTermos:'1.0', aceito:false, onAlterar(){}})));
-  for(let i=0;i<20;i++) {
-    await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent.startsWith(i%2 ? 'Política de Privacidade -' : 'Termos de Aceite -')).click());
+  await act(async () => document.querySelector('input').click());
+  await act(async () => document.querySelector('dialog .btn-primary').click());
+  for (let i = 0; i < 3; i++) {
+    await act(async () => document.querySelector('dialog .btn-secondary').click());
+    await act(async () => document.querySelector('input').click());
+    assert.equal(document.querySelector('dialog h3').textContent, 'Política de Privacidade');
   }
   assert.equal(chamadas.length, 2);
 });

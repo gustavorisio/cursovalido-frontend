@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'vite';
+import { createServer } from './apoio/servidor.js';
 
 test('fórum impede envio acima do limite ao criar e editar tópicos e comentários', async () => {
   const servidor = await createServer({ configFile: false, server: { middlewareMode: true }, logLevel: 'silent' });

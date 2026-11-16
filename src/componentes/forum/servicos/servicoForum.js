@@ -59,12 +59,6 @@ export function criarComentario(idTopico, conteudo) {
   });
 }
 
-export function apagarTopico(idTopico) {
-  return requisitar(`/forum/topicos/${idTopico}`, {
-    method: 'DELETE',
-  });
-}
-
 export function fecharTopico(idTopico) {
   return requisitar(`/forum/topicos/${idTopico}/fechar`, {
     method: 'PUT',

@@ -18,7 +18,6 @@ function TelaTermos() {
   const [aceitePendente, setAceitePendente] = useState(() => sessionStorage.getItem('curso-valido-token-termos') || '');
   const perfil = dadosDoToken(aceitePendente)?.perfil;
   const perfilValido = ['ALUNO', 'PROFESSOR', 'ADMINISTRADOR'].includes(perfil);
-  const [responsabilidade, setResponsabilidade] = useState({});
   const [aceito, setAceito] = useState(false);
   const [erro, setErro] = useState('');
   const enviando = useRef(false);
@@ -39,7 +38,6 @@ function TelaTermos() {
   async function carregarDocumento() {
     setCarregandoMetadados(true);
     setAceito(false);
-    setResponsabilidade({});
     setRevisaoDocumentos((atual) => atual + 1);
     setErro('');
     try {
@@ -80,11 +78,11 @@ function TelaTermos() {
     return () => { ativo = false; };
   }, [navegar]);
 
-  async function decidir(confirmou) {
+  async function decidir(confirmou, responsabilidade = {}) {
     const token = atualizacao ? sessao?.token : aceitePendente;
     if (enviando.current || !token) return;
     if (confirmou && (!versao || carregandoMetadados)) return;
-    if (confirmou && !atualizacao && (!aceito || !perfilValido ||
+    if (confirmou && !atualizacao && (!perfilValido ||
         (perfil !== 'ALUNO' && !responsabilidade.aceitouResponsabilidade))) return;
 
     enviando.current = true;
@@ -113,6 +111,10 @@ function TelaTermos() {
         navegar('/login', { replace: true, state: { mensagem: 'Não foi possível validar a decisão. Faça login novamente.' } });
       } else {
         setErro(falha.message || 'Não foi possível enviar sua decisão. Tente novamente.');
+        if (confirmou && !atualizacao) {
+          setAceito(false);
+          setRevisaoDocumentos((atual) => atual + 1);
+        }
       }
     } finally {
       enviando.current = false;
@@ -125,8 +127,8 @@ function TelaTermos() {
     onVoltar={voltar} onRecarregar={carregarDocumento}>
     {atualizacao && <section className="mensagem-cadastro-concluido">
       <h2>Novos termos de uso</h2>
-      <p>Leia a versão atual. Sua decisão encerra a sessão. Você poderá confirmar o aceite depois de entrar novamente.</p>
-      <button className="botao-destaque" type="button" disabled={!versao || carregando || carregandoMetadados} onClick={() => decidir(true)}>Aceitar</button>
+      <p>Entre novamente para revisar e confirmar os documentos atualizados.</p>
+      <button className="botao-destaque" type="button" disabled={!versao || carregando || carregandoMetadados} onClick={() => decidir(true)}>Entrar novamente</button>
       <button className="btn btn-secondary" type="button" disabled={carregando} onClick={() => decidir(false)}>Recusar</button>
     </section>}
     {!atualizacao && aceitePendente && <section className="mensagem-cadastro-concluido">
@@ -134,10 +136,10 @@ function TelaTermos() {
       {!perfilValido && <p role="alert">Não foi possível identificar seu perfil. Faça login novamente.</p>}
       <p>É necessário aceitar os documentos atuais para acessar a conta.</p>
       {versao && <AceiteDocumentos key={versao + perfil + revisaoDocumentos} perfil={perfil}
-        onResponsabilidade={setResponsabilidade} versaoTermos={versao} aceito={aceito}
-        onAlterar={setAceito} desabilitado={carregando || carregandoMetadados} />}
-      <button className="botao-destaque" type="button" disabled={!versao || !aceito || !perfilValido || carregando || carregandoMetadados}
-        onClick={() => decidir(true)}>{carregando ? 'Enviando...' : 'Aceitar termos e continuar'}</button>
+        versaoTermos={versao} aceito={aceito} onAlterar={setAceito}
+        desabilitado={!perfilValido || carregando || carregandoMetadados}
+        onConcluir={(responsabilidade) => decidir(true, responsabilidade)} />}
+      {carregando && <p role="status">Enviando confirmação...</p>}
       <button className="btn btn-secondary" type="button" disabled={carregando} onClick={() => decidir(false)}>Recusar</button>
     </section>}
   </DocumentoLegal>;

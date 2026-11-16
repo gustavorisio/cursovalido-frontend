@@ -1,7 +1,7 @@
 import test, { before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from 'vite';
+import { createServer } from './apoio/servidor.js';
 import react from '@vitejs/plugin-react';
 import { createElement as h, act } from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -191,7 +191,6 @@ test('fórum confirma cada alteração e preserva orientação quando o servidor
   recusar = false;
   await verificar(() => forum.fecharTopicoSelecionado(topico), 'Tópico fechado. Novos comentários não serão aceitos.');
   await verificar(() => forum.arquivarTopicoSelecionado(topico), 'Tópico arquivado e removido da lista.');
-  await verificar(() => forum.excluirTopico(topico), 'Tópico excluído.');
   assert.equal(forum.topicoSelecionado, null);
 });
 test('tela confirma publicação, bloqueia envio repetido e mantém formulário quando há erro', async () => {

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'vite';
+import { createServer } from './apoio/servidor.js';
 
 test('mensagens orientam login, permissão, termos e correção de campos sem detalhes técnicos', async () => {
   const servidor = await createServer({ configFile: false, server: { middlewareMode: true }, logLevel: 'silent' });
