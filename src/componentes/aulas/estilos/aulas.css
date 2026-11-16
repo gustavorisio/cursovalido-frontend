@@ -414,7 +414,7 @@
 .pagina-aulas .aulas-conteudo-grade .btn { padding: 9px 12px; font-size: 12px; text-decoration: none; }
 .pagina-aulas .aulas-conteudo-grade .btn-danger { margin-left: 0; }
 .pagina-aulas .aulas-modulo { margin-bottom: 18px; border-radius: 0; background: var(--color-surface); }
-.pagina-aulas .aulas-modulo-cabecalho { padding-bottom: 18px;  }
+.pagina-aulas .aulas-modulo-cabecalho { padding-bottom: 18px; }
 .pagina-aulas .aulas-modulo-cabecalho .topic-title { margin: 6px 0 0; padding: 0; font-size: 21px; }
 .pagina-aulas .aulas-numero { background: var(--color-hover); border-color: var(--color-brand-100); }
 .pagina-aulas .aulas-linha { gap: 16px; }
@@ -434,14 +434,15 @@
 .pagina-aulas .aulas-sala-player { padding: 22px; border-radius: 0; }
 .aulas-sobre-titulo { margin: 24px 0 12px; font-size: 20px; font-weight: 550; }
 .aulas-sala-player > .texto-suave { margin: 18px 0; font-size: 13px; line-height: 1.7; }
-.aulas-sala-player > .content-text { line-height: 1.8; font-size: 14px; }
+.aulas-sala-player > .content-text { line-height: 1.7; font-size: 16px; white-space: pre-line; overflow-wrap: anywhere; }
 .pagina-aulas .aulas-sala-trilha { padding: 22px; }
 .aulas-sala-trilha h2 { margin: 10px 0; font-size: 18px; font-weight: 550; overflow-wrap: anywhere; }
 .aulas-sala-trilha > .texto-suave { font-size: 12px; }
-.aulas-sala-trilha nav { display: grid; gap: 8px; margin: 22px -10px; }
+.aulas-sala-trilha nav { display: grid; gap: 8px; margin: 20px 0; }
 .aulas-sala-trilha nav a { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid transparent; border-radius: 0; color: var(--color-brand-700); text-decoration: none; font-size: 13px; }
 .aulas-sala-trilha nav a:hover, .aulas-sala-trilha nav a[aria-current="page"] { color: var(--color-brand-800); border-color: var(--color-line); background: var(--color-hover); }
-.aulas-sala-trilha nav small { display: block; margin-bottom: 5px; font-size: 10px; }
+.aulas-sala-trilha nav a[aria-current="page"] { border-left-color: var(--color-accent); font-weight: 600; }
+.aulas-sala-trilha nav small { display: block; margin-bottom: 4px; font-size: 12px; }
 .aulas-sala-trilha nav a > span:last-child { overflow-wrap: anywhere; min-width: 0; }
 .aulas-sala-trilha > .btn { display: block; border-radius: 0; font-size: 12px; text-decoration: none; }
 .pagina-aulas .aulas-editor { max-width: 860px; width: 100%; margin-inline: auto; }
@@ -497,26 +498,32 @@
 
 .aulas-modulo-expansivel { display: block; }
 .pagina-aulas .aulas-modulo-expansivel > summary { display: flex; align-items: center; gap: 16px; cursor: pointer; list-style: none; margin: 0; }
-.pagina-aulas .aulas-modulo-expansivel:not([open]) > summary { padding-bottom: 0; border-bottom: 0; }
+.pagina-aulas .aulas-modulo-expansivel:not([open]) > summary { padding-bottom: 0; }
 .pagina-aulas .aulas-modulos-lista { grid-template-columns: minmax(0, 1fr); }
 .aulas-modulo-expansivel > summary::-webkit-details-marker { display: none; }
 .aulas-modulo-expansivel > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 6px; border-radius: 0; }
-.aulas-modulo-conteudo { display: grid; gap: 16px; margin-top: 20px; }
+.aulas-modulo-expansivel[open] > summary { border-bottom: 1px solid var(--color-line); }
+.aulas-modulo-expansivel > summary > div { min-width: 0; overflow-wrap: anywhere; }
+.aulas-modulo-conteudo { display: grid; gap: 0; margin-top: 16px; }
+.aulas-modulo-conteudo > .content-text { margin: 0 0 16px; line-height: 1.65; overflow-wrap: anywhere; }
+.pagina-aulas .aulas-modulo-conteudo > .aulas-linha { border-top: 1px solid var(--color-line); }
+.pagina-aulas .aulas-modulo-conteudo > .aulas-linha:first-child { border-top: 0; }
+.pagina-aulas .aulas-modulo-conteudo .aulas-linha h3 { line-height: 1.4; font-weight: 600; }
+.pagina-aulas .aulas-modulo-conteudo .aulas-linha .texto-suave { line-height: 1.5; }
+.pagina-aulas .aulas-modulo-conteudo .aulas-linha > .btn { min-height: 44px; }
 
 .pagina-aulas .catalogo-cursos-grade .btn { @apply min-h-11 text-sm; }
 .pagina-aulas .aulas-conteudo-grade .content-text { @apply text-sm; }
 
 /* A mesma capa acompanha o curso no catálogo e na gestão. */
-.pagina-aulas .aulas-cartao:has(.curso-capa) { width: 100%; max-width: 550px; padding: 0; gap: 0; overflow: hidden; border-radius: 16px; }
+.pagina-aulas .aulas-cartao:has(.curso-capa) { width: 100%; max-width: 550px; padding: 0; gap: 0; overflow: hidden; border-radius: 0; }
 .curso-capa { @apply w-full aspect-[550/250] max-h-[250px] overflow-hidden bg-white; }
 .curso-capa img { display: block; width: 100%; height: 100%; object-fit: contain; }
-.curso-capa-reserva { @apply flex h-full items-center justify-center bg-white p-6 text-center text-gray-800; }
-.curso-capa-reserva span { font-size: 13px; font-weight: 600; }
 .pagina-aulas .aulas-cartao:has(.curso-capa) .aulas-cartao-corpo { padding: 22px 22px 0; }
 .pagina-aulas .aulas-cartao:has(.curso-capa) .aulas-cartao-acoes { margin-top: auto; padding: 20px 22px 22px; }
 .pagina-aulas .aulas-cartao:has(.curso-capa) .content-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .curso-cartao-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--color-muted); font-size: 12px; }
-.curso-matriculado { padding: 4px 8px; border-radius: 6px; color: var(--color-success); background: var(--color-brand-50); }
+.curso-matriculado { padding: 4px 8px; border-radius: 0; color: var(--color-success); background: var(--color-brand-50); }
 .curso-capa-editor { margin: 24px 0; }
 .curso-capa-editor p { margin-top: 8px; line-height: 1.7; font-size: 13px; }
 .curso-capa-editor input { max-width: 100%; font: inherit; font-size: 13px; }
@@ -527,6 +534,14 @@
 .aulas-progresso progress { @apply h-2; }
 
 .aulas-modulo-acao { margin-left: auto; color: var(--color-accent); font-size: 14px; white-space: nowrap; }
+@media (max-width: 640px) {
+  .pagina-aulas .aulas-modulo-expansivel > summary { flex-wrap: wrap; gap: 8px 12px; }
+  .aulas-modulo-expansivel > summary > div { flex: 1 1 160px; }
+  .aulas-modulo-expansivel .aulas-modulo-acao { margin-left: 0; }
+  .pagina-aulas .aulas-modulo-conteudo .aulas-linha > div:first-child { flex-basis: 100%; }
+  .pagina-aulas .aulas-modulo-conteudo .aulas-linha > .btn { margin-left: 0; }
+}
+
 .aulas-modulo-fechar { display: none; }
 .aulas-modulo-expansivel[open] > summary .aulas-modulo-abrir { display: none; }
 .aulas-modulo-expansivel[open] > summary .aulas-modulo-fechar { display: inline; }
