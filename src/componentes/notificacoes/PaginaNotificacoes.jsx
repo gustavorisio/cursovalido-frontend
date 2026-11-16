@@ -63,7 +63,7 @@ function ConteudoNotificacoes({ administrador }) {
       else await publicarComunicado({ titulo, conteudo });
       if (!montado.current) return;
       setTitulo(''); setConteudo(''); setEditando(null);
-      setMensagem(editando ? 'Comunicado atualizado.' : 'Comunicado publicado para todos os alunos.');
+      setMensagem(editando ? 'Comunicado atualizado.' : 'Comunicado publicado para todos os usuários.');
       carregar(editando ? pagina : 0);
     } catch (falha) { if (montado.current) setErro(falha.message); }
     finally { envioEmCurso.current = false; if (montado.current) setPublicando(false); }
@@ -116,7 +116,7 @@ function ConteudoNotificacoes({ administrador }) {
 
   return <div className="app-container"><main className="main-content pagina-notificacoes">
     {administrador && <VoltarAdministracao />}
-    <CabecalhoPagina titulo={administrador ? 'Comunicados aos alunos' : 'Notificações'} descricao={administrador ? 'Publique avisos para todos os alunos da plataforma.' : 'Acompanhe os comunicados publicados pela administração.'} />
+    <CabecalhoPagina titulo={administrador ? 'Comunicados' : 'Notificações'} descricao={administrador ? 'Publique avisos para todos os usuários da plataforma.' : 'Acompanhe os comunicados publicados pela administração.'} />
     {erro && <p className="mensagem-erro" role="alert">{erro}</p>}
     {mensagem && <p className="mensagem-sucesso" role="status">{mensagem}</p>}
     {administrador && <section className="card" aria-labelledby="novo-comunicado-titulo">
@@ -141,5 +141,5 @@ function ConteudoNotificacoes({ administrador }) {
         {dados.totalPaginas > 1 && <nav className="notificacoes-paginacao" aria-label="Páginas de comunicados"><button className="btn btn-secondary" disabled={pagina === 0 || lendo !== null || ocupado} onClick={() => carregar(pagina - 1)}>Anterior</button><span>Página {pagina + 1} de {dados.totalPaginas}</span><button className="btn btn-secondary" disabled={pagina + 1 >= dados.totalPaginas || lendo !== null || ocupado} onClick={() => carregar(pagina + 1)}>Próxima</button></nav>}
       </>}
     </section>
-  </main>{confirmacao && <ConfirmacaoModal titulo="Excluir comunicado" mensagem={`Deseja excluir “${confirmacao.titulo}”? O comunicado será removido para todos os alunos. Esta ação não pode ser desfeita.`} processando={excluindo} onConfirmar={excluir} onCancelar={() => { if (!envioEmCurso.current) setConfirmacao(null); }} />}<Rodape /></div>;
+  </main>{confirmacao && <ConfirmacaoModal titulo="Excluir comunicado" mensagem={`Deseja excluir “${confirmacao.titulo}”? O comunicado será removido para todos os usuários. Esta ação não pode ser desfeita.`} processando={excluindo} onConfirmar={excluir} onCancelar={() => { if (!envioEmCurso.current) setConfirmacao(null); }} />}<Rodape /></div>;
 }

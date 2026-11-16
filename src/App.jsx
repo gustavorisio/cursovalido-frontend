@@ -51,8 +51,8 @@ const titulosPaginas = [
   ['/configuracoes/alterar-senha', 'Alterar senha'],
   ['/administracao', 'Administração'],
   ['/administracao/dashboard', 'Dashboard'],
-  ['/administracao/comunicados', 'Comunicados aos alunos'],
-  ['/aluno/notificacoes', 'Notificações'],
+  ['/administracao/comunicados', 'Comunicados'],
+  ['/notificacoes', 'Notificações'],
   ['/administracao/termos', 'Administrar termos'],
   ['/administracao/privacidade', 'Administrar privacidade'],
   ['/administracao/usuarios', 'Usuários'],
@@ -127,6 +127,8 @@ export default function App() {
           <Route path="/politica-privacidade.html" element={<PoliticaDePrivacidade />} />
           <Route element={<RotaProtegida />}>
             <Route path="/configuracoes" element={<Configuracoes />} />
+            <Route path="/notificacoes" element={<PaginaNotificacoes />} />
+            <Route path="/aluno/notificacoes" element={<Navigate to="/notificacoes" replace />} />
             <Route path="/configuracoes/alterar-senha" element={<AlterarSenhaConta />} />
           </Route>
           <Route element={<RotaProtegida perfis={['ADMINISTRADOR']} />}>
@@ -155,7 +157,6 @@ export default function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
           <Route element={<RotaProtegida perfis={['ALUNO']} />}>
-            <Route path="/aluno/notificacoes" element={<PaginaNotificacoes />} />
             <Route path="/aluno/cursos" element={<PaginaCatalogo />} />
             <Route path="/aluno/cursos/:idCurso" element={<PaginaCursoAluno />} />
             <Route path="/aluno/cursos/:idCurso/aulas/:idAula" element={<PaginaAulaAluno />} />

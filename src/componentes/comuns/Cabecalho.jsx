@@ -20,7 +20,7 @@ export default function Cabecalho() {
         {ehAdministrador && <NavLink to="/administracao" end>Administração</NavLink>}
       </nav>
       <div className="cv-conta">
-        {autenticado && sessao?.perfil === 'ALUNO' && <SinoNotificacoes key={sessao?.idUsuario ?? sessao?.id} />}
+        {autenticado && <SinoNotificacoes key={sessao?.idUsuario ?? sessao?.id} />}
         {autenticado ? <><NavLink to="/configuracoes">Configurações</NavLink><button className="cv-button cv-button-primary" type="button" onClick={sair}>Sair</button></> : <><Link to="/login">Entrar</Link><Link className="cv-button cv-button-primary" to="/cadastro">Criar conta</Link></>}
       </div>
       {restricoes.length > 0 ? <div className="mensagem-erro w-full" role="status">

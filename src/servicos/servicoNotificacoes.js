@@ -4,11 +4,11 @@ export const LIMITE_CONTEUDO_COMUNICADO = 5000;
 export const EVENTO_NOTIFICACOES = 'curso-valido-notificacoes-alteradas';
 
 export function listarComunicados(pagina = 0, administrador = false) {
-  const rota = administrador ? '/administracao/comunicados' : '/aluno/notificacoes';
+  const rota = administrador ? '/administracao/comunicados' : '/notificacoes';
   return requisitar(`${rota}?page=${pagina}&size=10`);
 }
 
-export const contarNaoLidas = () => requisitar('/aluno/notificacoes/nao-lidas');
+export const contarNaoLidas = () => requisitar('/notificacoes/nao-lidas');
 
 function salvarComunicado(caminho, metodo, { titulo, conteudo }) {
   if (!titulo.trim() || !conteudo.trim()) throw new Error('Preencha o título e o conteúdo.');
@@ -24,6 +24,6 @@ export const editarComunicado = (id, dados) => salvarComunicado(`/administracao/
 export const excluirComunicado = id => requisitar(`/administracao/comunicados/${id}`, { method: 'DELETE' });
 
 export async function marcarComunicadoLido(id) {
-  await requisitar(`/aluno/notificacoes/${id}/lida`, { method: 'PUT' });
+  await requisitar(`/notificacoes/${id}/lida`, { method: 'PUT' });
   window.dispatchEvent(new Event(EVENTO_NOTIFICACOES));
 }

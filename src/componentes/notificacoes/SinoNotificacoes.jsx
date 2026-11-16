@@ -39,7 +39,7 @@ export default function SinoNotificacoes() {
   }, []);
 
   const rotulo = quantidade ? `Notificações: ${quantidade} ${quantidade === 1 ? 'não lida' : 'não lidas'}` : 'Notificações';
-  return <NavLink className="notificacoes-sino" to="/aluno/notificacoes" aria-label={rotulo} title={rotulo}>
+  return <NavLink className="notificacoes-sino" to="/notificacoes" aria-label={rotulo} title={rotulo}>
     <span className="notificacoes-sino-icone" aria-hidden="true" />
     {quantidade > 0 && <span className="notificacoes-contador" aria-hidden="true">{quantidade > 99 ? '99+' : quantidade}</span>}
   </NavLink>;
