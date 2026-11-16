@@ -61,13 +61,13 @@ async function preencher(id, valor) {
 }
 
 for (const perfil of [null, 'ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
-  test(`sino de notificações aparece somente para aluno: ${perfil ?? 'visitante'}`, async () => {
+  test(`sino de notificações aparece para contas autenticadas: ${perfil ?? 'visitante'}`, async () => {
     await renderizar(perfil, true);
-    assert.equal(Boolean(document.querySelector('.notificacoes-sino')), perfil === 'ALUNO');
-    assert.equal(chamadas.some(item => item.rota.endsWith('/nao-lidas')), perfil === 'ALUNO');
-    if (perfil === 'ALUNO') {
+    assert.equal(Boolean(document.querySelector('.notificacoes-sino')), Boolean(perfil));
+    assert.equal(chamadas.some(item => item.rota.endsWith('/nao-lidas')), Boolean(perfil));
+    if (perfil) {
       assert.match(document.querySelector('.notificacoes-sino').getAttribute('aria-label'), /1 não lida/);
-      assert.equal(document.querySelector('.notificacoes-sino').getAttribute('href'), '/aluno/notificacoes');
+      assert.equal(document.querySelector('.notificacoes-sino').getAttribute('href'), '/notificacoes');
     }
   });
 }
@@ -88,7 +88,7 @@ test('admin publica apenas título e conteúdo, bloqueia duplicidade e limpa ap�
   assert.equal(envios.length, 1);
   assert.deepEqual(JSON.parse(envios[0].opcoes.body), { titulo: 'Aviso importante', conteudo: 'a'.repeat(5000) });
   assert.equal(document.getElementById('comunicado-conteudo').value, '');
-  assert.match(document.querySelector('[role="status"]').textContent, /publicado para todos os alunos/);
+  assert.match(document.querySelector('[role="status"]').textContent, /publicado para todos os usuários/);
 });
 
 test('falha na publicação preserva os textos e permite nova tentativa', async () => {
@@ -111,7 +111,7 @@ test('leitura é salva antes de atualizar o estado e avisa o sino', async () => 
   assert.ok(document.querySelector('.notificacoes-nao-lida'));
   await act(async () => document.querySelector('article button').click());
   assert.equal(chamadas.filter(item => item.opcoes.method === 'PUT').length, 1);
-  assert.equal(chamadas.at(-1).rota, '/aluno/notificacoes/7/lida');
+  assert.equal(chamadas.at(-1).rota, '/notificacoes/7/lida');
   assert.equal(atualizacoes, 1);
   assert.equal(document.querySelector('.notificacoes-nao-lida'), null);
   assert.match(document.querySelector('[role="status"]').textContent, /em dia/);
