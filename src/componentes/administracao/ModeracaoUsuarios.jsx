@@ -9,7 +9,9 @@ const ESCOPOS = { CONTA: 'Acesso à conta', FORUM: 'Acesso ao fórum', TOPICOS: 
 
 export default function ModeracaoUsuarios({ usuarios, processando, carregando = false, onExecutar, filtroRestricao = null, onFiltrarRestricao }) {
   const ocupado = processando || carregando;
-  const [selecionado, setSelecionado] = useState(null);
+  const [idSelecionado, setSelecionado] = useState(null);
+  const selecionado = usuarios.find((usuario) => usuario.id === idSelecionado);
+  const podeAplicarRestricao = selecionado?.podeModerar && selecionado.suspensoes.length === 0;
   const [escopo, setEscopo] = useState('FORUM');
   const [motivo, setMotivo] = useState('');
   const [permanente, setPermanente] = useState(false);
@@ -19,6 +21,7 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
 
   function solicitar(evento) {
     evento.preventDefault();
+    if (ocupado || !podeAplicarRestricao) return;
     if (!motivo.trim()) { setErro('Informe o motivo da restrição.'); return; }
     let expiracao = null;
     if (!permanente) {
@@ -40,7 +43,7 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
     onExecutar(async () => {
       await excluirUsuarioAdministrativo(usuario.id);
       if (selecionado?.id === usuario.id) setSelecionado(null);
-    }, `Excluir a conta de ${usuario.nome}? O acesso será encerrado e os dados principais serão desidentificados. Publicações, aceites e registros necessários de auditoria serão preservados. Esta ação não pode ser desfeita.`, 'Conta excluída. Dados principais desidentificados e histórico preservado.');
+    }, `Excluir a conta de ${usuario.nome}? O acesso será encerrado e os dados principais serão desidentificados. Cursos, publicações, aceites e registros necessários de auditoria serão preservados. Esta ação não pode ser desfeita.`, 'Conta excluída. Dados principais desidentificados e histórico preservado.');
   }
 
   const termo = busca.trim().toLowerCase();
@@ -67,7 +70,7 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
     </div>}
     <PesquisaPagina valor={busca} onAlterar={setBusca} rotulo="Buscar usuário" placeholder="Nome, perfil ou e-mail da equipe" />
     {!termo ? <p className="texto-suave">Digite um nome, e-mail ou perfil para encontrar um usuário.</p> : null}
-    {selecionado ? <form className="formulario-publico moderacao-formulario" onSubmit={solicitar}>
+    {podeAplicarRestricao ? <form className="formulario-publico moderacao-formulario" onSubmit={solicitar}>
       <h3>Restringir {selecionado.nome}</h3>
       {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
       <fieldset disabled={ocupado}>
@@ -91,7 +94,7 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
             <div className="post-heading">
               <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">{usuario.email}</p><div className="administracao-badges"><span>{usuario.perfil}</span><span className={usuario.ativo ? 'status-ativo' : ''}>{usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</span></div></div>
               <div className="acoes-topico">
-                {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={ocupado} onClick={() => { setSelecionado(usuario); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
+                {usuario.podeModerar && usuario.suspensoes.length === 0 ? <button className="btn btn-secondary btn-small" type="button" disabled={ocupado} onClick={() => { setSelecionado(usuario.id); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
                 {usuario.podeExcluir ? <button className="btn btn-danger btn-small" type="button" disabled={ocupado} onClick={() => excluir(usuario)}>Excluir conta</button> : null}
               </div>
             </div>

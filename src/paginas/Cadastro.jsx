@@ -7,7 +7,7 @@ import { buscarPoliticaAtiva, cadastrarUsuario } from '../servicos/servicoAutent
 import { validarIdade } from './validacoesCadastro';
 
 const VALOR_PADRAO = {
-  nomeCompleto: '', email: '', senha: '', dataNascimento: '',
+  nomeCompleto: '', email: '', senha: '', confirmacaoSenha: '', dataNascimento: '',
   declarouMaiorIdade: false,
   aceitouTermosLgpd: false, versaoTermos: ''
 };
@@ -22,10 +22,9 @@ export default function Cadastro() {
   const [carregandoPolitica, setCarregandoPolitica] = useState(true);
   const [erroPolitica, setErroPolitica] = useState('');
   const [politica, setPolitica] = useState(null);
-  const [cadastroConcluido, setCadastroConcluido] = useState(false);
   const idade = validarIdade(dados.dataNascimento);
   const formularioValido = useMemo(() => CAMPOS_OBRIGATORIOS.every((campo) => String(dados[campo]).trim())
-    && senhaValida(dados.senha) && idade >= 18 && idade <= 90 && dados.declarouMaiorIdade && dados.aceitouTermosLgpd && Boolean(dados.versaoTermos) && !carregandoPolitica, [dados, idade, carregandoPolitica]);
+    && senhaValida(dados.senha) && dados.senha === dados.confirmacaoSenha && idade >= 18 && idade <= 90 && dados.declarouMaiorIdade && dados.aceitouTermosLgpd && Boolean(dados.versaoTermos) && !carregandoPolitica, [dados, idade, carregandoPolitica]);
 
   async function carregarPolitica() {
     setCarregandoPolitica(true);
@@ -64,6 +63,7 @@ export default function Cadastro() {
   async function enviar(evento) {
     evento.preventDefault();
     if (carregando) return;
+    if (dados.senha !== dados.confirmacaoSenha) { setErro('As senhas devem coincidir.'); return; }
     if (idade > 90) { setErro('A idade máxima permitida é 90 anos.'); return; }
     if (idade < 18) { setErro('A plataforma Curso Válido é destinada a pessoas com 18 anos ou mais.'); return; }
     if (!politica?.versao) { setErro('A versão atual dos documentos ainda não foi carregada.'); return; }
@@ -71,7 +71,7 @@ export default function Cadastro() {
     setCarregando(true); setErro('');
     try {
       await cadastrarUsuario(dados);
-      setCadastroConcluido(true);
+      navegar('/login', { replace: true, state: { mensagem: 'Cadastro realizado. Autentique-se para acessar a plataforma.' } });
     } catch (falha) { setErro(falha.message); } finally { setCarregando(false); }
   }
 
@@ -84,14 +84,7 @@ export default function Cadastro() {
         {localizacao.state?.mensagem && <div className="mensagem-sucesso" role="status">{localizacao.state.mensagem}</div>}
         {carregandoPolitica && <p className="texto-suave">Carregando os documentos atuais...</p>}
         {erroPolitica && <><div className="mensagem-erro" role="alert">{erroPolitica}</div><button className="btn btn-secondary" type="button" onClick={carregarPolitica} disabled={carregandoPolitica}>Buscar novamente</button></>}
-        {cadastroConcluido ? (
-          <section className="mensagem-cadastro-concluido" role="status">
-            <h2>Cadastro realizado</h2>
-            <p>Cadastro realizado. Verifique seu e-mail para confirmar a conta.</p>
-            <p>O R.A. será gerado automaticamente pelo sistema após a ativação.</p>
-            <button className="botao-destaque" type="button" onClick={() => navegar('/login')}>Ir para o login</button>
-          </section>
-        ) : <FormularioCadastro dados={dados} idade={idade} carregando={carregando} formularioValido={formularioValido} onAlterar={alterar} onEnviar={enviar} erro={erro} />}
+        <FormularioCadastro dados={dados} idade={idade} carregando={carregando} formularioValido={formularioValido} onAlterar={alterar} onEnviar={enviar} erro={erro} />
         <p className="texto-rodape-formulario">Já possui uma conta? <Link to="/login">Entrar</Link></p>
       </main><Rodape />
     </div>

@@ -93,7 +93,6 @@ function ConteudoAula({ dados }) {
       <PlayerAula videoId={aula.youtubeVideoId} posicaoInicial={dados.progresso.posicaoSegundos} onSalvar={salvar} />
       {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
       {mensagem ? <p className="mensagem-sucesso" role="status">{mensagem}</p> : null}
-      <p className="texto-suave">Última posição salva: {progresso.posicaoSegundos}s.</p>
       <h2 className="aulas-sobre-titulo">Sobre esta aula</h2>
       <p className="content-text">{aula.descricao}</p>
       <p className="texto-suave">A conclusão é manual. Você pode marcar esta aula como concluída quando desejar.</p>
