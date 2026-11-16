@@ -17,7 +17,7 @@ import { validarDocumento } from '../servicos/validacoesFormulario';
 
 export default function Administracao({ tela = 'geral' }) {
   const { sessao } = useAutenticacao();
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState(null);
   const [principal, setPrincipal] = useState(false);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
@@ -120,7 +120,7 @@ export default function Administracao({ tela = 'geral' }) {
     </nav>
     {erro ? <div className="mensagem-erro" role="alert">{erro}<div><button className="btn btn-secondary" type="button" disabled={carregando} onClick={() => { setErro(''); carregarDados(); }}>Tentar novamente</button></div></div> : null}
     {mensagem ? <div className="mensagem-sucesso" role="status">{mensagem}</div> : null}
-    {carregando ? <p className="texto-suave" role="status">Carregando administração...</p> : <>
+    {carregando && (tela !== "usuarios" || usuarios === null) ? <p className="texto-suave" role="status">Carregando administração...</p> : <>
       {tela === 'geral' ? <section className="card configuracoes-conta" aria-labelledby="perfil-administrador">
         <h2 className="titulo-detalhe" id="perfil-administrador">Meu perfil administrativo</h2>
         <p className="texto-suave">Dados do administrador conectado à plataforma.</p>
@@ -181,7 +181,7 @@ export default function Administracao({ tela = 'geral' }) {
           </section>
         </> : null}
       </> : null}
-      {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios} processando={processando} onExecutar={solicitar} /> : null}
+      {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios ?? []} processando={processando} onExecutar={solicitar} /> : null}
     </>}
     {confirmacao ? <ConfirmacaoModal titulo="Confirmar ação" processando={processando} mensagem={confirmacao.texto} onConfirmar={() => { if (!processando) acionar(confirmacao.acao, confirmacao.sucesso); }} onCancelar={() => { if (!processando) setConfirmacao(null); }} /> : null}
   </main><Rodape /></div>;

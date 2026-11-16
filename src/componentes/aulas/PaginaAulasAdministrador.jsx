@@ -3,6 +3,7 @@ import CapaCurso from './componentes/CapaCurso';
 import ConfirmacaoModal from '../forum/componentes/ConfirmacaoModal';
 import ModuloExpansivel from './componentes/ModuloExpansivel';
 import PesquisaConteudo from './componentes/PesquisaConteudo';
+import Paginacao from '../comuns/Paginacao';
 import { correspondeAoNome } from './servicos/pesquisaConteudo';
 import { useCallback, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -106,16 +107,18 @@ function ConsultaAulas({ idCurso, idAula }) {
     {carga.carregando ? null : carga.erro ? null : dados ? <>
       {dados.cursos ? <>
         {cursos.length === 0 ? <div className="card empty-list">Nenhum curso encontrado.</div> : null}
-        <div className="aulas-grade aulas-conteudo-grade">
-          {cursos.map((curso) => <article className="card aulas-cartao curso-cartao" key={curso.id}>
-            <CapaCurso curso={curso} />
-            <div className="aulas-cartao-corpo">
-              <h2 className="topic-title">{curso.titulo}</h2>
-              <p className="content-text">{curso.descricao}</p>
-            </div>
-            <footer className="aulas-cartao-acoes"><Link className="btn btn-primary" to={`/administracao/cursos/${curso.id}`}>Ver módulos e aulas</Link>{acoesCurso(curso)}</footer>
-          </article>)}
-        </div>
+        <Paginacao key={JSON.stringify([busca, tema])} itens={cursos} tamanho={9} rotulo="Páginas de cursos">
+          {(cursosDaPagina) => <div className="aulas-grade aulas-conteudo-grade aulas-cursos-grade">
+            {cursosDaPagina.map((curso) => <article className="card aulas-cartao curso-cartao" key={curso.id}>
+              <CapaCurso curso={curso} />
+              <div className="aulas-cartao-corpo">
+                <h2 className="topic-title">{curso.titulo}</h2>
+                <p className="content-text">{curso.descricao}</p>
+              </div>
+              <footer className="aulas-cartao-acoes"><Link className="btn btn-primary" to={`/administracao/cursos/${curso.id}`}>Ver módulos e aulas</Link>{acoesCurso(curso)}</footer>
+            </article>)}
+          </div>}
+        </Paginacao>
       </> : null}
       {dados.aula ? editando ? formulario(dados.aula) : <section className="card aulas-detalhe aulas-sala-player">
         <p className="aulas-etiqueta">{dados.aula.ativo === false ? 'Arquivada' : 'Disponível'}</p>{acoes(dados.aula)}

@@ -5,7 +5,7 @@ import './inicio.css';
 
 const areas = [
   { tipo: 'aulas', titulo: 'Aulas online', texto: 'Cursos organizados em módulos e videoaulas. Continue de onde parou e, quando disponíveis, responda à avaliação do curso e aos questionários dos módulos.', destino: '/cursos', link: 'Ver cursos disponíveis' },
-  { tipo: 'forum', titulo: 'Fórum de discussões', texto: 'Um espaço para tirar dúvidas, compartilhar experiências e conversar sobre tecnologia e programação em geral, incluindo assuntos das aulas. Consulte as discussões e entre na sua conta para participar.', destino: '/forum', link: 'Consultar discussões' },
+  { tipo: 'forum', titulo: 'Fórum de discussões', texto: 'Um espaço para tirar dúvidas, compartilhar experiências e conversar sobre tecnologia e programação em geral, incluindo assuntos das aulas. Entre na sua conta para consultar as discussões e participar.', destino: '/forum', link: 'Consultar discussões' },
   { tipo: 'noticias', titulo: 'Notícias', texto: 'Acompanhe publicações sobre tecnologia e programação e descubra assuntos para explorar e discutir.', destino: '/noticias', link: 'Ler últimas publicações' },
   { tipo: 'caminhos', titulo: 'Caminhos na tecnologia', texto: 'Conheça diferentes áreas da tecnologia e responda a questionários de interesses para explorar possibilidades de estudo.', destino: '/roadmap', link: 'Explorar áreas de interesse' }
 ];

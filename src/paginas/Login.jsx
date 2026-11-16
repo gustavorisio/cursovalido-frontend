@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import FormularioLogin from '../componentes/autenticacao/FormularioLogin';
 import Rodape from '../componentes/comuns/Rodape';
@@ -21,6 +21,9 @@ export default function Login() {
   const [exibirReenvio2fa, setExibirReenvio2fa] = useState(false);
   const [reenviando2fa, setReenviando2fa] = useState(false);
   const [segundosReenvio2fa, setSegundosReenvio2fa] = useState(0);
+
+  const enviando = useRef(false);
+  const solicitandoCodigo = useRef(false);
 
   useEffect(() => {
     if (segundosReenvio2fa <= 0) return undefined;
@@ -49,6 +52,8 @@ export default function Login() {
 
   async function enviar(evento) {
     evento.preventDefault();
+    if (enviando.current || solicitandoCodigo.current) return;
+    enviando.current = true;
     setErro('');
     setMensagemReenvio('');
     setContaNaoConfirmada(false);
@@ -59,7 +64,7 @@ export default function Login() {
         if (resposta?.requerCodigo2fa) {
           setSegundoFator(true);
           setExibirReenvio2fa(true);
-          setSegundosReenvio2fa(0);
+          setSegundosReenvio2fa(60);
           return;
         }
       } else {
@@ -94,12 +99,14 @@ export default function Login() {
         setErro(falha.message || 'O serviço está indisponível. Tente novamente mais tarde.');
       }
     } finally {
+      enviando.current = false;
       setCarregando(false);
     }
   }
 
   async function reenviarCodigo() {
-    if (reenviando2fa || segundosReenvio2fa > 0) return;
+    if (enviando.current || solicitandoCodigo.current || segundosReenvio2fa > 0) return;
+    solicitandoCodigo.current = true;
     setReenviando2fa(true);
     setErro('');
     setMensagemReenvio('');
@@ -112,6 +119,7 @@ export default function Login() {
     } catch (falha) {
       setErro(falha.message || 'Não foi possível reenviar o código.');
     } finally {
+      solicitandoCodigo.current = false;
       setReenviando2fa(false);
     }
   }
@@ -138,7 +146,7 @@ export default function Login() {
         <FormularioLogin dados={dados} codigo={codigo} segundoFator={segundoFator} erro={erro} carregando={carregando} mensagem={mensagemReenvio || localizacao.state?.mensagem} onAlterar={alterar} onCodigo={setCodigo} onEnviar={enviar} />
         {segundoFator ? <button className="btn btn-link" type="button" disabled={carregando} onClick={cancelarSegundoFator}>Cancelar login e usar outra conta</button> : null}
         {contaNaoConfirmada && <button className="botao-destaque" type="button" disabled={reenviando} onClick={reenviar}>{reenviando ? 'Enviando...' : 'Reenviar confirmação'}</button>}
-        {segundoFator && exibirReenvio2fa && <button className="botao-destaque botao-reenvio-2fa" type="button" disabled={reenviando2fa || segundosReenvio2fa > 0} onClick={reenviarCodigo}>{reenviando2fa ? 'Reenviando...' : segundosReenvio2fa > 0 ? `Reenviar código novamente em ${segundosReenvio2fa}s` : 'Reenviar código'}</button>}
+        {segundoFator && exibirReenvio2fa && <button className="botao-destaque botao-reenvio-2fa" type="button" disabled={carregando || reenviando2fa || segundosReenvio2fa > 0} onClick={reenviarCodigo}>{reenviando2fa ? 'Reenviando...' : segundosReenvio2fa > 0 ? `Reenviar código novamente em ${segundosReenvio2fa}s` : 'Reenviar código'}</button>}
         <p className="texto-rodape-formulario">Ainda não possui cadastro? <Link to="/cadastro">Criar conta de aluno</Link></p>
       </main>
       <Rodape />
