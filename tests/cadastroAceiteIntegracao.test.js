@@ -124,12 +124,13 @@ for (const { fluxo, perfil } of [
     if (reativacao) sessionStorage.setItem('curso-valido-token-termos', tokenRestrito);
     const Pagina = reativacao ? Reativacao : fluxo === 'cadastro por convite' ? Convite : Cadastro;
     await act(async () => raiz.render(h(MemoryRouter, { initialEntries: [fluxo === 'cadastro por convite' ? '/convites/cadastro?token=convite-teste' : '/'] },
-      reativacao ? h(Provedor, null, h(Pagina)) : h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Pagina)))));
+      reativacao ? h(Provedor, null, h(Pagina)) : h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Routes, null,
+        h(Route, { path: "*", element: h(Pagina) }), h(Route, { path: "/login", element: h(Login) }))))));
     if (fluxo === 'cadastro por convite') await act(async () => botao('Confirmar meu e-mail').click());
 
     const textoFinal = fluxo === 'cadastro por convite' ? 'Enviar cadastro' : 'Cadastrar';
     if (!reativacao) {
-      const valores = ['Aluno Teste', 'aluno@example.com', 'SenhaTeste123!', '1990-01-01'];
+      const valores = ['Aluno Teste', 'aluno@example.com', 'SenhaTeste123!', 'SenhaTeste123!', '1990-01-01'];
       const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
       for (const [indice, campo] of [...document.querySelectorAll('form input:not([type=checkbox])')].entries()) {
         await act(() => { setter.call(campo, valores[indice]); campo.dispatchEvent(new window.Event('input', { bubbles: true })); });
@@ -192,7 +193,10 @@ for (const { fluxo, perfil } of [
       assert.equal(dados.aceitouResponsabilidade, true);
       assert.equal(dados.versaoResponsabilidade, '3.0');
     } else assert.equal(dados.aceitouResponsabilidade, undefined);
-    if (!reativacao) assert.equal(dados.aceitouTermosLgpd, true);
+    if (!reativacao) {
+      assert.equal(dados.aceitouTermosLgpd, true);
+      assert.equal(dados.confirmacaoSenha, dados.senha);
+    }
     else {
       assert.equal(sessionStorage.getItem('curso-valido-token-termos'), null);
       assert.equal(controleSessao.obter()?.token, tokenSessao);
