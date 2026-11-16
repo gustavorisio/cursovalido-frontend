@@ -26,7 +26,7 @@ beforeEach(() => {
   chamadas = [];
   globalThis.fetch = async (url) => {
     chamadas.push(url);
-    return new Response(JSON.stringify(url.endsWith('/resumo') ? resumo : []), { status: 200 });
+    return new Response(JSON.stringify(url.endsWith('/resumo') ? resumo : url.includes('/atividade-diaria?') ? { data: new URL(url).searchParams.get('data'), matriculas: 3, cursosCriados: 0, aulasCriadas: 0, topicosCriados: 0, noticiasPublicadas: 0 } : []), { status: 200 });
   };
   raiz = createRoot(document.getElementById('root'));
 });
@@ -44,23 +44,23 @@ test('dashboard exibe conteúdo sem menu lateral nem botão de menu', async () =
   assert.equal(document.querySelector('.app-sidebar'), null);
   assert.equal(document.querySelector('button[aria-controls="menu-dashboard"]'), null);
   assert.ok(document.querySelector('main#conteudo-dashboard'));
-  assert.equal(document.querySelectorAll('.small-box').length, 8);
+  assert.equal(document.querySelectorAll('.small-box').length, 12);
 });
 
-test('painel consulta quatro endpoints e restringe a troca de período à série mensal', async () => {
+test('painel consulta cinco endpoints e restringe a troca de período à série mensal', async () => {
   await act(async () => { raiz.render(createElement(Dashboard)); });
-  assert.equal(chamadas.length, 4);
-  assert.equal(document.querySelectorAll('.small-box').length, 8);
+  assert.equal(chamadas.length, 5);
+  assert.equal(document.querySelectorAll('.small-box').length, 12);
   assert.equal(document.querySelectorAll('.dashboard-grafico').length, 3);
-  assert.match(document.querySelector('.small-box').textContent, /12/);
+  assert.match(document.querySelector('.dashboard-secao-titulo + .dashboard-indicadores').textContent, /12/);
   assert.match(document.body.textContent, /Nenhum registro/);
   const periodo = document.querySelector('select');
   await act(async () => {
     periodo.value = '6';
     periodo.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   });
-  assert.equal(chamadas.length, 5);
-  assert.ok(chamadas[4].endsWith('/matriculas-por-mes?meses=6'));
+  assert.equal(chamadas.length, 6);
+  assert.ok(chamadas[5].endsWith('/matriculas-por-mes?meses=6'));
 });
 
 test('falha em uma seção preserva as demais e permite tentar novamente', async () => {
@@ -72,7 +72,7 @@ test('falha em uma seção preserva as demais e permite tentar novamente', async
   globalThis.fetch = fetchSucesso;
   await act(async () => { document.querySelector('[role="alert"] button').click(); });
   assert.equal(document.querySelector('[role="alert"]'), null);
-  assert.equal(document.querySelectorAll('.small-box').length, 8);
+  assert.equal(document.querySelectorAll('.small-box').length, 12);
 });
 
 test('períodos inválidos são rejeitados sem chamar a API', () => {
@@ -98,18 +98,16 @@ test('resposta atrasada do período anterior não substitui a consulta atual', a
   assert.match(document.querySelector('.dashboard-grafico').textContent, /Nenhum registro/);
 });
 
- test("média de idade mostra valor e quantidade de alunos considerados", async () => {
-  const fetchSucesso = globalThis.fetch;
-  globalThis.fetch = (url) => url.endsWith("/resumo") ? Promise.resolve(new Response(JSON.stringify({ ...resumo, mediaIdadeAlunos: 27.5, alunosComNascimentoInformado: 10 }))) : fetchSucesso(url);
+test('consulta atividade de uma data sem alterar os totais e os gráficos', async () => {
   await act(async () => raiz.render(createElement(Dashboard)));
-  const indicador = [...document.querySelectorAll(".small-box")].find((item) => item.textContent.includes("Média de idade"));
-  assert.match(indicador.textContent, /27,5 anos/);
-  assert.match(indicador.textContent, /10 alunos ativos/);
-});
-
-test("média indisponível não aparece como idade zero", async () => {
-  await act(async () => raiz.render(createElement(Dashboard)));
-  const indicador = [...document.querySelectorAll(".small-box")].find((item) => item.textContent.includes("Média de idade"));
-  assert.equal(indicador.querySelector("h3").textContent, "—");
-  assert.match(indicador.textContent, /Sem datas de nascimento válidas/);
+  assert.doesNotMatch(document.body.textContent, /Média de idade/);
+  const campo = document.querySelector('#dashboard-data');
+  await act(async () => {
+    campo.value = '2026-01-15';
+    document.querySelector('.dashboard-filtro-data').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+  });
+  assert.equal(chamadas.length, 6);
+  assert.ok(chamadas.at(-1).endsWith('/atividade-diaria?data=2026-01-15'));
+  assert.match(document.querySelector('.dashboard-dia').textContent, /15\/01\/2026/);
+  assert.match(document.querySelector('.dashboard-dia').textContent, /Matrículas realizadas3/);
 });

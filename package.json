@@ -10,7 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "chart.js": "^4.6.1",
+    "@coreui/react": "^5.13.1",
+    "@coreui/react-chartjs": "^3.0.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3"

@@ -1,13 +1,28 @@
 import { useEffect, useState } from 'react';
-import { buscarResumoDashboard, buscarMatriculasPorMes, buscarCursosMaisProcurados, buscarUsuariosPorPerfil } from '../../servicos/servicoDashboard';
+import { CAlert, CButton, CCard, CCardBody, CCardHeader, CForm, CFormInput, CFormLabel, CFormSelect } from '@coreui/react';
+import { buscarAtividadeDia, buscarResumoDashboard, buscarMatriculasPorMes, buscarCursosMaisProcurados, buscarUsuariosPorPerfil } from '../../servicos/servicoDashboard';
 import GraficoDashboard from './GraficoDashboard';
 import './dashboard.css';
 
 const indicadores = [
-  ['alunosAtivos', 'Alunos ativos', 'primary'], ['professoresAtivos', 'Professores ativos', 'success'],
-  ['cursosAtivos', 'Cursos ativos', 'info'], ['aulasAtivas', 'Aulas ativas', 'primary'],
-  ['matriculas', 'Matrículas', 'success'], ['topicosAtivos', 'Tópicos ativos', 'warning'], ['noticiasAtivas', 'Notícias ativas', 'info'],
+  ['alunosAtivos', 'Alunos ativos'], ['professoresAtivos', 'Professores ativos'],
+  ['cursosAtivos', 'Cursos ativos'], ['aulasAtivas', 'Aulas ativas'],
+  ['matriculas', 'Matrículas'], ['topicosAtivos', 'Tópicos ativos'], ['noticiasAtivas', 'Notícias ativas'],
 ];
+const indicadoresDiarios = [
+  ['matriculas', 'Matrículas realizadas'], ['cursosCriados', 'Cursos criados'], ['aulasCriadas', 'Aulas criadas'],
+  ['topicosCriados', 'Tópicos criados'], ['noticiasPublicadas', 'Notícias publicadas'],
+];
+const formatoDia = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' });
+
+function Indicadores({ dados, campos }) {
+  return <div className="dashboard-indicadores">
+    {campos.map(([campo, nome]) => <CCard as="article" className="small-box" key={campo}>
+      <CCardBody><p>{nome}</p><strong>{dados[campo].toLocaleString('pt-BR')}</strong></CCardBody>
+    </CCard>)}
+  </div>;
+}
+
 const perfis = { ALUNO: 'Alunos', PROFESSOR: 'Professores', ADMINISTRADOR: 'Administradores' };
 
 function useConsulta(consulta, dependencia, atualizacao) {
@@ -31,42 +46,61 @@ function useConsulta(consulta, dependencia, atualizacao) {
 
 function Estado({ estado, repetir, children }) {
   if (estado.carregando) return <p role="status">Carregando indicadores...</p>;
-  if (estado.erro) return <div className="alert alert-danger" role="alert">{estado.erro} <button type="button" className="btn btn-secondary btn-small" onClick={repetir}>Tentar novamente</button></div>;
+  if (estado.erro) return <CAlert color="danger" role="alert">{estado.erro} <CButton type="button" className="btn-secondary btn-small" onClick={repetir}>Tentar novamente</CButton></CAlert>;
   return children(estado.dados);
 }
 
 function PainelGrafico({ titulo, estado, repetir, tipo, preparar, horizontal }) {
-  return <section className="card card-outline card-primary dashboard-grafico">
-    <div className="card-header"><h3 className="card-title">{titulo}</h3></div>
-    <div className="card-body"><Estado estado={estado} repetir={repetir}>{(dados) => {
+  return <CCard as="section" className="dashboard-grafico">
+    <CCardHeader><h3 className="card-title">{titulo}</h3></CCardHeader>
+    <CCardBody><Estado estado={estado} repetir={repetir}>{(dados) => {
       if (!dados?.length || dados.every((item) => (item.matriculas ?? item.quantidade) === 0)) return <p>Nenhum registro no período ou categoria consultada.</p>;
       const { rotulos, valores } = preparar(dados);
       return <GraficoDashboard tipo={tipo} rotulos={rotulos} valores={valores} titulo={titulo} horizontal={horizontal} />;
-    }}</Estado></div>
-  </section>;
+    }}</Estado></CCardBody>
+  </CCard>;
 }
 
 export default function DashboardAdministrativo() {
+  const hoje = formatoDia.format(new Date());
+  const [data, setData] = useState(hoje);
   const [meses, setMeses] = useState(12);
   const [atualizacao, setAtualizacao] = useState(0);
   const repetir = () => setAtualizacao((valor) => valor + 1);
+  const atividade = useConsulta(buscarAtividadeDia, data, atualizacao);
   const resumo = useConsulta(buscarResumoDashboard, undefined, atualizacao);
   const matriculas = useConsulta(buscarMatriculasPorMes, meses, atualizacao);
   const cursos = useConsulta(buscarCursosMaisProcurados, undefined, atualizacao);
   const usuarios = useConsulta(buscarUsuariosPorPerfil, undefined, atualizacao);
   return <section className="dashboard-administrativo" aria-labelledby="dashboard-titulo">
     <div className="dashboard-toolbar"><div><h2 id="dashboard-titulo">Indicadores da plataforma</h2><p>Panorama atual de ensino e comunidade</p></div>
-      <button type="button" className="btn btn-primary" onClick={repetir} disabled={[resumo, matriculas, cursos, usuarios].some((item) => item.carregando)}>Atualizar indicadores</button>
+      <CButton type="button" className="btn-primary" onClick={repetir} disabled={[atividade, resumo, matriculas, cursos, usuarios].some((item) => item.carregando)}>Atualizar indicadores</CButton>
     </div>
-    <Estado estado={resumo} repetir={repetir}>{(dados) => <div className="dashboard-indicadores">{indicadores.map(([campo, nome, cor]) => <article className={`small-box text-bg-${cor}`} key={campo}>
-      <div className="inner"><h3>{dados[campo].toLocaleString('pt-BR')}</h3><p>{nome}</p></div>
-    </article>)}<article className="small-box text-bg-info">
-      <div className="inner"><h3>{dados.mediaIdadeAlunos == null ? '—' : `${dados.mediaIdadeAlunos.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} anos`}</h3><p>Média de idade dos alunos</p>
-        <small>{dados.mediaIdadeAlunos == null ? 'Sem datas de nascimento válidas disponíveis.' : `Base: ${dados.alunosComNascimentoInformado.toLocaleString('pt-BR')} alunos ativos com data de nascimento válida.`}</small>
-      </div>
-    </article></div>}</Estado>
-    <p className="dashboard-nota">Contas ativas não representam usuários online. Totais e ranking consideram todo o histórico; o período abaixo se aplica apenas à série mensal.</p>
-    <label className="dashboard-periodo">Período das matrículas <select className="form-select" value={meses} onChange={(evento) => setMeses(Number(evento.target.value))}>{[1, 3, 6, 12, 24].map((valor) => <option key={valor} value={valor}>{valor} {valor === 1 ? 'mês' : 'meses'}</option>)}</select></label>
+    <CCard as="section" className="dashboard-dia" aria-labelledby="dashboard-dia-titulo">
+      <CCardHeader><h3 id="dashboard-dia-titulo" className="card-title">Atividade por data</h3></CCardHeader>
+      <CCardBody>
+        <CForm className="dashboard-filtro-data" onSubmit={(evento) => {
+          evento.preventDefault();
+          const dataEscolhida = evento.currentTarget.elements.namedItem('data').value;
+          if (dataEscolhida && dataEscolhida <= hoje) setData(dataEscolhida);
+        }}>
+          <div>
+            <CFormLabel htmlFor="dashboard-data">Data da atividade</CFormLabel>
+            <CFormInput id="dashboard-data" name="data" type="date" defaultValue={hoje} max={hoje} required />
+          </div>
+          <CButton className="btn-primary" type="submit">Consultar data</CButton>
+        </CForm>
+        <Estado estado={atividade} repetir={repetir}>{(dados) => <>
+          <p className="dashboard-data-consultada">Registros de <strong>{dados.data.split('-').reverse().join('/')}</strong></p>
+          <Indicadores dados={dados} campos={indicadoresDiarios} />
+        </>}</Estado>
+      </CCardBody>
+    </CCard>
+    <h3 className="dashboard-secao-titulo">Totais atuais da plataforma</h3>
+    <Estado estado={resumo} repetir={repetir}>{(dados) => <Indicadores dados={dados} campos={indicadores} />}</Estado>
+    <p className="dashboard-nota">Os totais atuais e o ranking de cursos abrangem todo o histórico disponível. Use o período abaixo para alterar a série mensal.</p>
+
+    <label className="dashboard-periodo">Período das matrículas <CFormSelect value={meses} onChange={(evento) => setMeses(Number(evento.target.value))}>{[1, 3, 6, 12, 24].map((valor) => <option key={valor} value={valor}>{valor} {valor === 1 ? 'mês' : 'meses'}</option>)}</CFormSelect></label>
     <div className="dashboard-graficos">
       <PainelGrafico titulo="Matrículas por mês" estado={matriculas} repetir={repetir} tipo="line" preparar={(dados) => ({ rotulos: dados.map((item) => { const [ano, mes] = item.mes.split('-'); return `${mes}/${ano}`; }), valores: dados.map((item) => item.matriculas) })} />
       <PainelGrafico titulo="Usuários ativos por perfil" estado={usuarios} repetir={repetir} tipo="doughnut" preparar={(dados) => ({ rotulos: dados.map((item) => perfis[item.perfil] ?? item.perfil), valores: dados.map((item) => item.quantidade) })} />
