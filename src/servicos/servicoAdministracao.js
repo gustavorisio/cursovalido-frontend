@@ -11,8 +11,9 @@ export async function buscarPermissoesAdministrativas() {
   }
 }
 
-export function buscarUsuariosAdministrativos() {
-  return requisitar('/administracao/usuarios');
+export function buscarUsuariosAdministrativos(restrito = null) {
+  const consulta = restrito === null ? '' : '?restrito=' + restrito;
+  return requisitar('/administracao/usuarios' + consulta);
 }
 
 export function excluirUsuarioAdministrativo(idUsuario) {

@@ -2,7 +2,7 @@ import { Buffer } from 'node:buffer';
 import test, { before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from 'vite';
+import { createServer } from './apoio/servidor.js';
 import react from '@vitejs/plugin-react';
 import { createElement as h, act, useState } from 'react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
@@ -127,7 +127,7 @@ for (const { fluxo, perfil } of [
       reativacao ? h(Provedor, null, h(Pagina)) : h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Pagina)))));
     if (fluxo === 'cadastro por convite') await act(async () => botao('Confirmar meu e-mail').click());
 
-    const textoFinal = reativacao ? 'Aceitar termos e continuar' : fluxo === 'cadastro por convite' ? 'Enviar cadastro' : 'Cadastrar';
+    const textoFinal = fluxo === 'cadastro por convite' ? 'Enviar cadastro' : 'Cadastrar';
     if (!reativacao) {
       const valores = ['Aluno Teste', 'aluno@example.com', 'SenhaTeste123!', '1990-01-01'];
       const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
@@ -138,11 +138,11 @@ for (const { fluxo, perfil } of [
     }
 
     async function verificarEnvioBloqueado() {
-      assert.equal(botao(textoFinal).disabled, true);
-      await act(async () => {
-        if (reativacao) botao(textoFinal).click();
-        else document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
-      });
+      assert.equal(botao('Aceitar termos e continuar'), undefined);
+      if (!reativacao) {
+        assert.equal(botao(textoFinal).disabled, true);
+        await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
+      }
       assert.equal(envios.length, 0);
       assert.equal(aceite().checked, false);
     }
@@ -169,33 +169,20 @@ for (const { fluxo, perfil } of [
       await act(async () => confirmarLeitura().click());
     }
     assert.equal(aceite().checked, true);
-    assert.equal(botao(textoFinal).disabled, false);
-
-    if (reativacao) {
-      // Consultar a política pelo rodapé não deve desmontar nem perder os aceites.
-      const linkPrivacidade = [...document.querySelectorAll('.site-footer a')].find(link => link.textContent === 'Política de Privacidade');
-      await act(async () => linkPrivacidade.click());
-      assert.equal(document.querySelector('.aceite-documentos').closest('[hidden]') !== null, true);
-      assert.equal(document.querySelector('.documento-conteudo .conteudo-legal').outerHTML, referencias.privacidade);
-      await act(async () => botao('Termos de Aceite').click());
-      assert.equal(document.querySelector('.aceite-documentos').closest('[hidden]'), null);
-      assert.equal(document.querySelector('.documento-conteudo'), null);
-      assert.equal(aceite().checked, true);
+    if (!reativacao) {
+      // Desmarcar o aceite exige confirmar novamente os documentos.
+      await act(() => aceite().click());
+      await verificarEnvioBloqueado();
+      await act(async () => aceite().click());
+      for (const tipo of tipos) {
+        if (tipo === 'responsabilidade') assert.equal(leitor().textContent, responsabilidade.conteudo);
+        else assert.equal(leitor().querySelector('.conteudo-legal').outerHTML, referencias[tipo]);
+        assert.equal(confirmarLeitura().disabled, false);
+        await act(async () => confirmarLeitura().click());
+      }
       assert.equal(botao(textoFinal).disabled, false);
+      await act(async () => botao(textoFinal).click());
     }
-
-    // Desmarcar o aceite exige confirmar novamente os documentos.
-    await act(() => aceite().click());
-    await verificarEnvioBloqueado();
-    await act(async () => aceite().click());
-    for (const tipo of tipos) {
-      if (tipo === 'responsabilidade') assert.equal(leitor().textContent, responsabilidade.conteudo);
-      else assert.equal(leitor().querySelector('.conteudo-legal').outerHTML, referencias[tipo]);
-      assert.equal(confirmarLeitura().disabled, false);
-      await act(async () => confirmarLeitura().click());
-    }
-    assert.equal(botao(textoFinal).disabled, false);
-    await act(async () => botao(textoFinal).click());
     assert.equal(envios.length, 1);
     const envio = envios[0];
     assert.ok(envio.url.endsWith(reativacao ? '/autenticacao/aceitar-termos-novamente' : fluxo === 'cadastro por convite' ? '/convites/completar-cadastro' : '/autenticacao/cadastro'));
@@ -234,7 +221,7 @@ test('primeiro acesso sem perfil identificável não libera envio', async () => 
   await act(async () => raiz.render(h(MemoryRouter, null,
     h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Reativacao)))));
   assert.match(document.querySelector('[role=alert]').textContent, /identificar seu perfil/);
-  assert.equal(botao('Aceitar termos e continuar').disabled, true);
+  assert.equal(aceite().disabled, true);
 });
 
 test('recarregar documentos após rejeição invalida todos os aceites mesmo com a mesma versão', async () => {
@@ -252,17 +239,16 @@ test('recarregar documentos após rejeição invalida todos os aceites mesmo com
   for (let indice = 0; indice < 3; indice++) {
     await act(async () => confirmarLeitura().click());
   }
-  await act(async () => botao('Aceitar termos e continuar').click());
   assert.match(document.querySelector('[role=alert]').textContent, /Busque novamente/);
   await act(async () => botao('Buscar novamente').click());
   assert.equal(aceite().checked, false);
-  assert.equal(botao('Aceitar termos e continuar').disabled, true);
+  assert.equal(aceite().checked, false);
   assert.equal(botao('Política de Privacidade - Aceito'), undefined);
   assert.equal(botao('Termo de Responsabilidade - Aceito'), undefined);
   await act(async () => aceite().click());
   assert.equal(confirmarLeitura().disabled, false);
   await act(async () => confirmarLeitura().click());
-  assert.equal(botao('Aceitar termos e continuar').disabled, true);
+  assert.equal(aceite().checked, false);
   assert.equal(document.querySelector('.leitura-documento h3').textContent, 'Política de Privacidade');
 });
 
@@ -299,7 +285,7 @@ for (const { atualizacao, aceitou } of [
     }, h(Provedor, null, h(Routes, null,
       h(Route, { path: '/termos-aceite', element: h(Reativacao) }),
       h(Route, { path: '/login', element: h(Login) }))))));
-    await act(async () => botao(aceitou ? 'Aceitar' : 'Recusar').click());
+    await act(async () => botao(aceitou ? 'Entrar novamente' : 'Recusar').click());
     assert.deepEqual(chamadas, ['/api/politicas/ativas', '/api/autenticacao/decidir-termos']);
     assert.equal(controleSessao.obter(), null);
     assert.equal(sessionStorage.getItem('curso-valido-token-termos'), null);
@@ -320,7 +306,7 @@ for (const { atualizacao, aceitou } of [
     assert.ok(botao('Validar código'));
     await enviarFormulario(['123456']);
     assert.ok(botao('Recusar'));
-    assert.equal(botao('Aceitar termos e continuar').disabled, true);
+    assert.equal(aceite().checked, false);
     assert.equal(controleSessao.obter(), null);
     assert.equal(sessionStorage.getItem('curso-valido-token-termos'), tokenRestrito);
   });
@@ -358,3 +344,37 @@ for (const perfil of ['ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
     assert.match(document.querySelector('[role=status]').textContent, /Os termos foram revogados/);
   });
 }
+
+test('falha ao concluir o aceite permite consultar o rodapé e tentar novamente', async () => {
+  const tokenRestrito = tokenDe('ALUNO', 'termos');
+  const tokenSessao = tokenDe('ALUNO', 'sessao');
+  sessionStorage.setItem('curso-valido-token-termos', tokenRestrito);
+  let tentativas = 0;
+  globalThis.fetch = async (url, opcoes = {}) => {
+    if (String(url).endsWith('/politicas/ativas')) return Response.json([documentos.termos]);
+    if (String(url).endsWith('/politicas/privacidade/ativa')) return Response.json(documentos.privacidade);
+    assert.equal(opcoes.method, 'POST');
+    if (++tentativas === 1) return Response.json({}, { status: 503 });
+    return Response.json({ token: tokenSessao, idUsuario: 1, nome: 'Aluno', perfil: 'ALUNO' });
+  };
+  await act(async () => raiz.render(h(MemoryRouter, null, h(Provedor, null, h(Reativacao)))));
+
+  await act(async () => aceite().click());
+  await act(async () => confirmarLeitura().click());
+  await act(async () => confirmarLeitura().click());
+  assert.equal(tentativas, 1);
+  assert.ok(document.querySelector('[role="alert"]'));
+  assert.equal(aceite().checked, false);
+
+  const link = [...document.querySelectorAll('.site-footer a')].find(item => item.textContent === 'Política de Privacidade');
+  await act(async () => link.click());
+  assert.ok(document.querySelector('.aceite-documentos').closest('[hidden]'));
+  await act(async () => botao('Termos de Aceite').click());
+  assert.equal(document.querySelector('.aceite-documentos').closest('[hidden]'), null);
+
+  await act(async () => aceite().click());
+  await act(async () => confirmarLeitura().click());
+  await act(async () => confirmarLeitura().click());
+  assert.equal(tentativas, 2);
+  assert.equal(controleSessao.obter()?.token, tokenSessao);
+});

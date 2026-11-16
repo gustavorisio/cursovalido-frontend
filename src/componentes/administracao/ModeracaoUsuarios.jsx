@@ -3,9 +3,12 @@ import Paginacao from '../comuns/Paginacao';
 import PesquisaPagina from '../comuns/PesquisaPagina';
 import { aplicarSuspensao, revogarSuspensao, excluirUsuarioAdministrativo } from '../../servicos/servicoAdministracao';
 
+const FILTROS = [[null, 'Todos os usuários'], [true, 'Com restrição'], [false, 'Sem restrição']];
+
 const ESCOPOS = { CONTA: 'Acesso à conta', FORUM: 'Acesso ao fórum', TOPICOS: 'Acesso a tópicos e comentários', COMENTARIOS: 'Acesso a tópicos e comentários' };
 
-export default function ModeracaoUsuarios({ usuarios, processando, onExecutar }) {
+export default function ModeracaoUsuarios({ usuarios, processando, carregando = false, onExecutar, filtroRestricao = null, onFiltrarRestricao }) {
+  const ocupado = processando || carregando;
   const [selecionado, setSelecionado] = useState(null);
   const [escopo, setEscopo] = useState('FORUM');
   const [motivo, setMotivo] = useState('');
@@ -54,12 +57,20 @@ export default function ModeracaoUsuarios({ usuarios, processando, onExecutar })
     <p className="texto-suave">Restrinja a conta inteira ou apenas ações do fórum. Restrições temporárias expiram automaticamente; permanentes podem ser revogadas.</p>
     <div className="administracao-resumo"><span><strong>{usuarios.length}</strong> contas</span><span><strong>{equipe.length}</strong> membros da equipe</span><span><strong>{usuarios.filter((usuario) => usuario.suspensoes.length > 0).length}</strong> com restrições</span></div>
     <p className="texto-suave">E-mails de alunos são exibidos parcialmente. Busque alunos pelo nome ou perfil; os e-mails completos da equipe ficam disponíveis à administração.</p>
+    {onFiltrarRestricao && <div className="acoes-topico" role="group" aria-label="Filtrar usuários por restrição">
+      {FILTROS.map(([valor, rotulo]) => <button key={rotulo} className={filtroRestricao === valor ? 'btn btn-primary' : 'btn btn-secondary'} type="button"
+        aria-pressed={filtroRestricao === valor} disabled={ocupado} onClick={() => {
+          if (filtroRestricao === valor) return;
+          setSelecionado(null);
+          onFiltrarRestricao(valor);
+        }}>{rotulo}</button>)}
+    </div>}
     <PesquisaPagina valor={busca} onAlterar={setBusca} rotulo="Buscar usuário" placeholder="Nome, perfil ou e-mail da equipe" />
     {!termo ? <p className="texto-suave">Digite um nome, e-mail ou perfil para encontrar um usuário.</p> : null}
     {selecionado ? <form className="formulario-publico moderacao-formulario" onSubmit={solicitar}>
       <h3>Restringir {selecionado.nome}</h3>
       {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
-      <fieldset disabled={processando}>
+      <fieldset disabled={ocupado}>
         <label>Restrição<select value={escopo} onChange={(evento) => setEscopo(evento.target.value)}>{Object.entries(ESCOPOS).filter(([valor]) => valor !== 'COMENTARIOS').map(([valor, texto]) => <option key={valor} value={valor}>{texto}</option>)}</select></label>
         <label>Motivo<textarea className="input-field" required maxLength={1000} value={motivo} onChange={(evento) => setMotivo(evento.target.value)} /></label>
         <label className="checkbox"><input type="checkbox" checked={permanente} onChange={(evento) => setPermanente(evento.target.checked)} />Permanente, até revogação</label>
@@ -70,24 +81,25 @@ export default function ModeracaoUsuarios({ usuarios, processando, onExecutar })
         </div>
       </fieldset>
     </form> : null}
-    {grupos.map(({ titulo, lista, vazio }) => <section key={titulo} aria-label={titulo}>
+    {carregando && <p role="status">Carregando usuários...</p>}
+    {(!carregando || usuarios.length > 0) && grupos.map(({ titulo, lista, vazio }) => <section key={titulo} aria-label={titulo}>
       <h3 className="titulo-respostas">{titulo} <span className="administracao-contagem">{lista.length}</span></h3>
-      <Paginacao key={termo} itens={lista} tamanho={10} rotulo={"Páginas de " + titulo.toLowerCase()} desabilitada={processando}>
+      <Paginacao key={String(filtroRestricao) + termo} itens={lista} tamanho={10} rotulo={"Páginas de " + titulo.toLowerCase()} desabilitada={ocupado}>
         {(usuariosDaPagina) => <div className="moderacao-lista">
           {lista.length === 0 ? <p className="texto-suave">{vazio}</p> : null}
           {usuariosDaPagina.map((usuario) => <article key={usuario.id} className="moderacao-usuario">
             <div className="post-heading">
               <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">{usuario.email}</p><div className="administracao-badges"><span>{usuario.perfil}</span><span className={usuario.ativo ? 'status-ativo' : ''}>{usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</span></div></div>
               <div className="acoes-topico">
-                {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => { setSelecionado(usuario); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
-                {usuario.podeExcluir ? <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => excluir(usuario)}>Excluir conta</button> : null}
+                {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={ocupado} onClick={() => { setSelecionado(usuario); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
+                {usuario.podeExcluir ? <button className="btn btn-danger btn-small" type="button" disabled={ocupado} onClick={() => excluir(usuario)}>Excluir conta</button> : null}
               </div>
             </div>
             {usuario.suspensoes.length === 0 ? <p className="texto-suave">Sem restrições vigentes.</p> : null}
             {usuario.suspensoes.map((item) => <div className="moderacao-restricao" key={item.id}>
               <p className="content-text"><strong>{ESCOPOS[item.escopo]}</strong> · {item.expiraEm ? `Até ${new Date(item.expiraEm).toLocaleString('pt-BR')}` : 'Permanente'}</p>
               <p className="content-text">Motivo: {item.motivo}</p>
-              {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => onExecutar(() => revogarSuspensao(usuario.id, item.id), `Revogar esta restrição de ${usuario.nome}?`, 'Restrição revogada.')}>Revogar restrição</button> : null}
+              {usuario.podeModerar ? <button className="btn btn-secondary btn-small" type="button" disabled={ocupado} onClick={() => onExecutar(() => revogarSuspensao(usuario.id, item.id), `Revogar esta restrição de ${usuario.nome}?`, 'Restrição revogada.')}>Revogar restrição</button> : null}
             </div>)}
           </article>)}
         </div>}

@@ -61,7 +61,7 @@ function LeituraDocumento({ tipo, perfil, versaoTermos, desabilitado, onAceitar,
   </dialog>;
 }
 
-export default function AceiteDocumentos({ versaoTermos, aceito, onAlterar, desabilitado = false, perfil, onResponsabilidade }) {
+export default function AceiteDocumentos({ versaoTermos, aceito, onAlterar, desabilitado = false, perfil, onResponsabilidade, onConcluir }) {
   const [aceitos, setAceitos] = useState({ termos: false, privacidade: false });
   const [aberto, setAberto] = useState(null);
   const documentos = useRef(new Map());
@@ -78,8 +78,6 @@ export default function AceiteDocumentos({ versaoTermos, aceito, onAlterar, desa
     }
     return documentos.current.get(chave);
   }, [perfil, versaoTermos]);
-  const id = useId();
-
   const exigeResponsabilidade = ['PROFESSOR', 'ADMINISTRADOR'].includes(perfil);
   const tipos = exigeResponsabilidade ? ['termos', 'privacidade', 'responsabilidade'] : ['termos', 'privacidade'];
 
@@ -87,9 +85,13 @@ export default function AceiteDocumentos({ versaoTermos, aceito, onAlterar, desa
     const proximos = { ...aceitos, [aberto]: true };
     setAceitos(proximos);
     const completo = tipos.every((tipo) => proximos[tipo]);
-    if (aberto === 'responsabilidade') onResponsabilidade?.({ aceitouResponsabilidade: true, versaoResponsabilidade: documento.versao });
+    const responsabilidade = exigeResponsabilidade && completo
+      ? { aceitouResponsabilidade: true, versaoResponsabilidade: documento.versao }
+      : undefined;
+    if (responsabilidade) onResponsabilidade?.(responsabilidade);
     onAlterar(completo);
     setAberto(tipos.find((tipo) => !proximos[tipo]) ?? null);
+    if (completo) onConcluir?.(responsabilidade);
   }
 
   return <div className="aceite-documentos">
@@ -98,9 +100,6 @@ export default function AceiteDocumentos({ versaoTermos, aceito, onAlterar, desa
       else setAberto(tipos.find((tipo) => !aceitos[tipo]) ?? 'termos');
     }} />Li e aceito os Termos de Aceite, a Política de Privacidade{exigeResponsabilidade ? ' e o Termo de Responsabilidade do meu perfil' : ''}.</label>
     <p className="texto-suave">Leia e aceite {exigeResponsabilidade ? 'os três' : 'os dois'} documentos para continuar.</p>
-    <div className="leitura-documento-acoes">
-      {tipos.map((tipo) => <button key={tipo} type="button" className="btn btn-secondary" disabled={desabilitado || !versaoTermos} aria-expanded={aberto === tipo} aria-controls={id} onClick={() => setAberto(tipo)}>{TITULOS[tipo]}{aceitos[tipo] ? ' - Aceito' : ' - Ler e aceitar'}</button>)}
-    </div>
-    <div id={id}>{aberto && <LeituraDocumento carregarDocumento={carregarDocumento} key={aberto} tipo={aberto} perfil={perfil} versaoTermos={versaoTermos} desabilitado={desabilitado} onAceitar={aceitarDocumento} onFechar={() => setAberto(null)} />}</div>
+    {aberto && <LeituraDocumento carregarDocumento={carregarDocumento} key={aberto} tipo={aberto} perfil={perfil} versaoTermos={versaoTermos} desabilitado={desabilitado} onAceitar={aceitarDocumento} onFechar={() => setAberto(null)} />}
   </div>;
 }

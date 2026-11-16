@@ -1,7 +1,7 @@
 import test, { before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from 'vite';
+import { createServer } from './apoio/servidor.js';
 import react from '@vitejs/plugin-react';
 import { createElement, act } from 'react';
 import { createRoot } from 'react-dom/client';

@@ -2,7 +2,7 @@ import test, { before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { JSDOM } from 'jsdom';
-import { createServer } from 'vite';
+import { createServer } from './apoio/servidor.js';
 
 let servidor, api, sessao, dom;
 const fetchOriginal = globalThis.fetch;

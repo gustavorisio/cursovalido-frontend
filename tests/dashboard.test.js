@@ -1,19 +1,21 @@
 import test, { before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'vite';
+import { createServer } from './apoio/servidor.js';
 import react from '@vitejs/plugin-react';
 import { JSDOM } from 'jsdom';
 import { createElement, act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 
-let servidor, Dashboard, LayoutDashboard, servico, dom, raiz, chamadas;
+let servidor, Dashboard, GraficoDashboard, LayoutDashboard, servico, dom, raiz, chamadas;
 const fetchOriginal = globalThis.fetch;
 const resumo = { alunosAtivos: 12, professoresAtivos: 2, cursosAtivos: 3, aulasAtivas: 8, matriculas: 15, topicosAtivos: 0, noticiasAtivas: 0 };
 
 before(async () => {
   servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
   Dashboard = (await servidor.ssrLoadModule('/src/componentes/administracao/DashboardAdministrativo.jsx')).default;
+  GraficoDashboard = (await servidor.ssrLoadModule('/src/componentes/administracao/GraficoDashboard.jsx')).default;
   LayoutDashboard = (await servidor.ssrLoadModule('/src/paginas/Dashboard.jsx')).default;
   servico = await servidor.ssrLoadModule('/src/servicos/servicoDashboard.js');
 });
@@ -110,4 +112,20 @@ test('consulta atividade de uma data sem alterar os totais e os gráficos', asyn
   assert.ok(chamadas.at(-1).endsWith('/atividade-diaria?data=2026-01-15'));
   assert.match(document.querySelector('.dashboard-dia').textContent, /15\/01\/2026/);
   assert.match(document.querySelector('.dashboard-dia').textContent, /Matrículas realizadas3/);
+});
+
+test('gráfico disponibiliza as categorias e quantidades também em uma tabela', () => {
+  const html = renderToStaticMarkup(createElement(GraficoDashboard, {
+    tipo: 'bar', horizontal: true, rotulos: ['Web', 'Dados'], valores: [42, 17], titulo: 'Matrículas por tema',
+  }));
+  const pagina = new JSDOM(html);
+  try {
+    const tabela = pagina.window.document.querySelector('table');
+    assert.equal(tabela.caption.textContent, 'Matrículas por tema');
+    assert.deepEqual([...tabela.tBodies[0].rows].map((linha) => [...linha.cells].map((celula) => celula.textContent)), [
+      ['Web', '42'], ['Dados', '17'],
+    ]);
+  } finally {
+    pagina.window.close();
+  }
 });
