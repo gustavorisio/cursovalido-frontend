@@ -1,12 +1,17 @@
 import { dadosDoToken } from '../servicos/sessaoNavegador';
 import AceiteDocumentos from '../componentes/comuns/AceiteDocumentos';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import DocumentoLegal from '../componentes/comuns/DocumentoLegal';
-import { aceitarTermosNovamente, buscarPoliticaAtiva } from '../servicos/servicoAutenticacao';
+import { buscarPoliticaAtiva } from '../servicos/servicoAutenticacao';
 import { useAutenticacao } from '../contextos/useAutenticacao';
 
 export default function TermosDeUso() {
+  const { search } = useLocation();
+  return <TelaTermos key={search} />;
+}
+
+function TelaTermos() {
   const [versao, setVersao] = useState('');
   const [conteudo, setConteudo] = useState('');
   const [dataPublicacao, setDataPublicacao] = useState('');
@@ -16,15 +21,17 @@ export default function TermosDeUso() {
   const [responsabilidade, setResponsabilidade] = useState({});
   const [aceito, setAceito] = useState(false);
   const [erro, setErro] = useState('');
-  const [mensagem, setMensagem] = useState('');
+  const enviando = useRef(false);
   const [carregando, setCarregando] = useState(false);
   const [carregandoMetadados, setCarregandoMetadados] = useState(true);
   const [revisaoDocumentos, setRevisaoDocumentos] = useState(0);
   const navegar = useNavigate();
   const localizacao = useLocation();
-  const { autenticado, sair } = useAutenticacao();
+  const { autenticado, sessao, sair, confirmarAceiteTermos, encerrarPorDecisaoTermos } = useAutenticacao();
+  const atualizacao = autenticado && new URLSearchParams(localizacao.search).get('atualizacao') === 'true';
 
   function voltar() {
+    if (enviando.current) return;
     const retorno = localizacao.state?.retornoDocumentos;
     navegar(retorno?.startsWith('/') && !retorno.startsWith('//') && !/termos|politica-privacidade/.test(retorno) ? retorno : autenticado ? '/cursos' : '/', { replace: true });
   }
@@ -73,37 +80,65 @@ export default function TermosDeUso() {
     return () => { ativo = false; };
   }, [navegar]);
 
-  async function aceitar() {
-    if (!aceito || !aceitePendente || !versao || !perfilValido) return;
-    if (perfil !== 'ALUNO' && !responsabilidade.aceitouResponsabilidade) return;
-    setCarregando(true); setErro('');
+  async function decidir(confirmou) {
+    const token = atualizacao ? sessao?.token : aceitePendente;
+    if (enviando.current || !token) return;
+    if (confirmou && (!versao || carregandoMetadados)) return;
+    if (confirmou && !atualizacao && (!aceito || !perfilValido ||
+        (perfil !== 'ALUNO' && !responsabilidade.aceitouResponsabilidade))) return;
+
+    enviando.current = true;
+    setCarregando(true);
+    setErro('');
     try {
-      await aceitarTermosNovamente(aceitePendente, versao, responsabilidade);
-      sessionStorage.removeItem('curso-valido-token-termos');
+      if (!atualizacao && confirmou) {
+        await confirmarAceiteTermos(token, versao, responsabilidade);
+        navegar('/cursos', { replace: true });
+        return;
+      }
+
+      await encerrarPorDecisaoTermos(token, confirmou);
       setAceitePendente('');
-      sair();
-      setMensagem('Termos aceitos novamente. Faça login para continuar.');
-      window.setTimeout(() => navegar('/login', {
+      navegar('/login', {
         replace: true,
-        state: { mensagem: 'Termos aceitos novamente. Faça login para continuar.' }
-      }), 1200);
+        state: { mensagem: confirmou ? 'Entre novamente para confirmar o aceite dos novos termos.' :
+          'Você recusou os termos. Entre novamente para revisar sua decisão.' }
+      });
     } catch (falha) {
-      if (falha.status === 400) {
+      if (falha.status === 400 && !atualizacao && confirmou) {
         setErro('A versão atual dos documentos não está disponível. Busque novamente os documentos.');
       } else if (falha.status === 401 || falha.status === 403) {
-        sessionStorage.removeItem('curso-valido-token-termos');
         sair();
-        navegar('/login', { replace: true, state: { mensagem: 'Não foi possível validar o aceite. Faça login novamente.' } });
-      } else if (falha.status >= 500) {
-        setErro('O serviço está indisponível. Tente novamente mais tarde.');
+        setAceitePendente('');
+        navegar('/login', { replace: true, state: { mensagem: 'Não foi possível validar a decisão. Faça login novamente.' } });
       } else {
-        setErro(falha.message);
+        setErro(falha.message || 'Não foi possível enviar sua decisão. Tente novamente.');
       }
-    } finally { setCarregando(false); }
+    } finally {
+      enviando.current = false;
+      setCarregando(false);
+    }
   }
 
-  return <DocumentoLegal tipo="termos" versao={versao} dataPublicacao={dataPublicacao} conteudo={conteudo} exibirConteudo={!aceitePendente} carregando={carregandoMetadados} erro={erro} onVoltar={voltar} onRecarregar={carregarDocumento}>
-    {mensagem && <div className="mensagem-sucesso" role="status">{mensagem}</div>}
-    {aceitePendente && versao && <section className="mensagem-cadastro-concluido"><h2>Aceite necessário</h2>{!perfilValido && <p role="alert">Não foi possível identificar seu perfil. Faça login novamente.</p>}<p>É necessário aceitar os documentos atuais para acessar a conta.</p><AceiteDocumentos key={versao + perfil + revisaoDocumentos} perfil={perfil} onResponsabilidade={setResponsabilidade} versaoTermos={versao} aceito={aceito} onAlterar={setAceito} desabilitado={carregando || carregandoMetadados} /><button className="botao-destaque" type="button" disabled={!aceito || !perfilValido || carregando || carregandoMetadados} onClick={aceitar}>{carregando ? 'Enviando...' : 'Aceitar termos e voltar ao login'}</button></section>}
+  return <DocumentoLegal tipo="termos" versao={versao} dataPublicacao={dataPublicacao} conteudo={conteudo}
+    exibirConteudo={!aceitePendente || atualizacao} carregando={carregandoMetadados} erro={erro}
+    onVoltar={voltar} onRecarregar={carregarDocumento}>
+    {atualizacao && <section className="mensagem-cadastro-concluido">
+      <h2>Novos termos de uso</h2>
+      <p>Leia a versão atual. Sua decisão encerra a sessão. Você poderá confirmar o aceite depois de entrar novamente.</p>
+      <button className="botao-destaque" type="button" disabled={!versao || carregando || carregandoMetadados} onClick={() => decidir(true)}>Aceitar</button>
+      <button className="btn btn-secondary" type="button" disabled={carregando} onClick={() => decidir(false)}>Recusar</button>
+    </section>}
+    {!atualizacao && aceitePendente && <section className="mensagem-cadastro-concluido">
+      <h2>Aceite necessário</h2>
+      {!perfilValido && <p role="alert">Não foi possível identificar seu perfil. Faça login novamente.</p>}
+      <p>É necessário aceitar os documentos atuais para acessar a conta.</p>
+      {versao && <AceiteDocumentos key={versao + perfil + revisaoDocumentos} perfil={perfil}
+        onResponsabilidade={setResponsabilidade} versaoTermos={versao} aceito={aceito}
+        onAlterar={setAceito} desabilitado={carregando || carregandoMetadados} />}
+      <button className="botao-destaque" type="button" disabled={!versao || !aceito || !perfilValido || carregando || carregandoMetadados}
+        onClick={() => decidir(true)}>{carregando ? 'Enviando...' : 'Aceitar termos e continuar'}</button>
+      <button className="btn btn-secondary" type="button" disabled={carregando} onClick={() => decidir(false)}>Recusar</button>
+    </section>}
   </DocumentoLegal>;
 }

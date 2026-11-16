@@ -40,6 +40,7 @@ function mensagemDeErro(status, dados) {
     CREDENCIAIS_INVALIDAS: 'E-mail ou senha incorretos. Confira os dados e tente novamente.',
     EMAIL_NAO_CONFIRMADO: 'Confirme seu e-mail para entrar. Abra a mensagem de confirmação ou peça um novo envio.',
     TERMOS_NAO_ACEITOS: 'Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.',
+    TERMOS_REAUTENTICACAO: 'Revise os novos termos e entre novamente para continuar.',
     TERMOS_ATUALIZADOS: 'Os termos foram atualizados. Recarregue a página e aceite os documentos novamente.',
     PENDENTE_APROVACAO: 'Seu cadastro está aguardando aprovação. Aguarde a liberação do administrador.',
     ACESSO_REJEITADO: 'Seu cadastro não foi aprovado. Entre em contato pelo Suporte para pedir uma revisão.',
@@ -118,10 +119,9 @@ export async function requisitar(caminho, opcoes = {}) {
       globalThis.dispatchEvent?.(new CustomEvent('curso-valido-restricoes-alteradas'));
       throw new ErroApi(resposta.status, formatarMensagem(dados) ?? 'Há uma restrição ativa na sua conta.', dados);
     }
-    if (resposta.status === 403 && !semAutenticacao && dados?.codigo === 'TERMOS_NAO_ACEITOS') {
-      globalThis.dispatchEvent?.(new CustomEvent('curso-valido-termos-pendentes', {
-        detail: { token: dados?.token ?? dados?.jwt ?? dados?.accessToken, tokenOrigem: token }
-      }));
+    if (resposta.status === 403 && !semAutenticacao && token && tokenAutenticacao === undefined
+        && dados?.codigo === 'TERMOS_REAUTENTICACAO' && obterTokenSessao() === token) {
+      globalThis.dispatchEvent?.(new CustomEvent('curso-valido-termos-atualizados'));
     }
     if (resposta.status === 401 && !semAutenticacao) {
       globalThis.dispatchEvent?.(new CustomEvent('curso-valido-sessao-expirada', { detail: { token: token } }));

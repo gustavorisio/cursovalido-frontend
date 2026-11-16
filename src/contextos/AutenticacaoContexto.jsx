@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { requisitar } from '../servicos/api';
-import { confirmarCodigo2fa } from '../servicos/servicoAutenticacao';
+import { aceitarTermosNovamente, confirmarCodigo2fa, decidirTermos } from '../servicos/servicoAutenticacao';
 import { CHAVE_SESSAO, controleSessao, dadosDoToken, tokenValido } from '../servicos/sessaoNavegador';
 import { AutenticacaoContexto } from './contextoBaseAutenticacao';
 
@@ -45,15 +45,17 @@ export function AutenticacaoProvedor({ children }) {
   const geracao = useRef(0);
   const emailPendente = useRef('');
 
-  const sair = useCallback(() => {
+  const encerrarSessaoLocal = useCallback(() => {
     geracao.current += 1;
     emailPendente.current = '';
     const anterior = controleSessao.encerrar();
     setSessao(null);
     sessionStorage.removeItem(CHAVE_TOKEN_TERMOS);
     const legado = limparArmazenamentoLegado();
-    return revogarToken(anterior?.token ?? legado);
+    return anterior?.token ?? legado;
   }, []);
+
+  const sair = useCallback(() => revogarToken(encerrarSessaoLocal()), [encerrarSessaoLocal]);
 
   useEffect(() => {
     const legado = limparArmazenamentoLegado();
@@ -62,12 +64,6 @@ export function AutenticacaoProvedor({ children }) {
     function encerrarSessao(evento) {
       if (evento.detail?.token !== controleSessao.obter()?.token) return;
       sair();
-    }
-
-    function guardarTokenDeTermos(evento) {
-      if (evento.detail?.tokenOrigem !== controleSessao.obter()?.token) return;
-      sair();
-      if (evento.detail?.token) sessionStorage.setItem(CHAVE_TOKEN_TERMOS, evento.detail.token);
     }
 
     function sincronizarAbas(evento) {
@@ -83,7 +79,6 @@ export function AutenticacaoProvedor({ children }) {
     }
 
     globalThis.addEventListener('curso-valido-sessao-expirada', encerrarSessao);
-    globalThis.addEventListener('curso-valido-termos-pendentes', guardarTokenDeTermos);
     window.addEventListener('storage', sincronizarAbas);
     window.addEventListener('pageshow', conferirAoVoltar);
     document.addEventListener('visibilitychange', conferirAoVoltar);
@@ -91,7 +86,6 @@ export function AutenticacaoProvedor({ children }) {
       geracao.current += 1;
       emailPendente.current = '';
       globalThis.removeEventListener('curso-valido-sessao-expirada', encerrarSessao);
-      globalThis.removeEventListener('curso-valido-termos-pendentes', guardarTokenDeTermos);
       window.removeEventListener('storage', sincronizarAbas);
       window.removeEventListener('pageshow', conferirAoVoltar);
       document.removeEventListener('visibilitychange', conferirAoVoltar);
@@ -145,13 +139,31 @@ export function AutenticacaoProvedor({ children }) {
     return guardarResposta(resposta, tentativa);
   }, [guardarResposta]);
 
+  const confirmarAceiteTermos = useCallback(async (token, versao, responsabilidade) => {
+    const tentativa = geracao.current;
+    const resposta = await aceitarTermosNovamente(token, versao, responsabilidade);
+    return guardarResposta(resposta, tentativa);
+  }, [guardarResposta]);
+
+  const encerrarPorDecisaoTermos = useCallback(async (token, aceitou) => {
+    const tentativa = geracao.current;
+    await decidirTermos(token, aceitou);
+    const tokenAtual = controleSessao.obter()?.token ?? sessionStorage.getItem(CHAVE_TOKEN_TERMOS);
+    if (geracao.current !== tentativa || (tokenAtual && tokenAtual !== token)) {
+      throw new Error('A sessão mudou. Abra a tela de termos novamente.');
+    }
+    encerrarSessaoLocal();
+  }, [encerrarSessaoLocal]);
+
   const valor = useMemo(() => ({
     sessao,
     autenticado: sessao ? controleSessao.obter()?.token === sessao.token : false,
     autenticarUsuario,
     validarCodigo2fa,
+    confirmarAceiteTermos,
+    encerrarPorDecisaoTermos,
     sair,
-  }), [autenticarUsuario, sair, sessao, validarCodigo2fa]);
+  }), [autenticarUsuario, confirmarAceiteTermos, encerrarPorDecisaoTermos, sair, sessao, validarCodigo2fa]);
 
   return <AutenticacaoContexto.Provider value={valor}>{children}</AutenticacaoContexto.Provider>;
 }

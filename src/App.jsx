@@ -93,16 +93,18 @@ function TituloPagina() {
   return null;
 }
 
-function RedirecionarTermosPendentes() {
+function RedirecionarTermosAtualizados() {
   const navegar = useNavigate();
+  const { pathname, search } = useLocation();
 
   useEffect(() => {
     function redirecionar() {
-      navegar('/termos-aceite?reativacao=true', { replace: true });
+      if (pathname === '/termos-aceite' && search === '?atualizacao=true') return;
+      navegar('/termos-aceite?atualizacao=true', { replace: true });
     }
-    globalThis.addEventListener?.('curso-valido-termos-pendentes', redirecionar);
-    return () => globalThis.removeEventListener?.('curso-valido-termos-pendentes', redirecionar);
-  }, [navegar]);
+    globalThis.addEventListener?.('curso-valido-termos-atualizados', redirecionar);
+    return () => globalThis.removeEventListener?.('curso-valido-termos-atualizados', redirecionar);
+  }, [navegar, pathname, search]);
 
   return null;
 }
@@ -112,7 +114,7 @@ export default function App() {
     <BrowserRouter>
       <TituloPagina />
       <div className="min-h-screen bg-page">
-        <AutenticacaoProvedor><Cabecalho /><RedirecionarTermosPendentes /><Suspense fallback={<p role="status" className="main-content">Carregando página...</p>}><Routes>
+        <AutenticacaoProvedor><RedirecionarTermosAtualizados /><Cabecalho /><Suspense fallback={<p role="status" className="main-content">Carregando página...</p>}><Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />

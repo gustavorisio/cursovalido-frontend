@@ -106,6 +106,14 @@ export function revogarTermos() {
   return requisitar('/autenticacao/revogar-termos', { method: 'POST' });
 }
 
+export function decidirTermos(token, aceitou) {
+  return requisitar('/autenticacao/decidir-termos', {
+    method: 'POST',
+    tokenAutenticacao: token,
+    body: JSON.stringify({ aceitou })
+  });
+}
+
 export function aceitarTermosNovamente(token, versaoTermos, responsabilidade = {}) {
   return requisitar('/autenticacao/aceitar-termos-novamente', {
     method: 'POST',
