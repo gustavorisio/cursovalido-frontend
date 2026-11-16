@@ -86,7 +86,7 @@
 }
 
 .pagina-aulas .aulas-cartao {
-  @apply m-0 flex flex-col gap-5 rounded-none border border-line bg-surface shadow-panel transition-[border-color, box-shadow];
+  @apply m-0 flex flex-col gap-5 rounded-none border border-line bg-surface shadow-panel transition-[border-color,box-shadow];
 }
 
 .pagina-aulas .aulas-cartao:hover {
