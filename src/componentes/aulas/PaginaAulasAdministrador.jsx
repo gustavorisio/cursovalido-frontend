@@ -79,7 +79,7 @@ function ConsultaAulas({ idCurso, idAula }) {
 
   function acoesCurso(curso) {
     return <div className="acoes-topico">
-      <Link className="btn btn-secondary" to={`/administracao/cursos/${curso.id}/diagnostico`}>Diagnóstico inicial</Link>
+      <Link className="btn btn-secondary" to={`/administracao/cursos/${curso.id}/diagnostico`}>Avaliação do curso</Link>
       <button className="btn btn-secondary" type="button" disabled={processando} onClick={() => setCursoEditando(curso)}>Editar curso</button>
       <button className="btn btn-danger" type="button" disabled={processando} onClick={() => setCursoExcluindo(curso)}>Excluir curso</button>
     </div>;

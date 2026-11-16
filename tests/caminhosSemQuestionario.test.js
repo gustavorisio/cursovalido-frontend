@@ -67,6 +67,7 @@ function montarApi(interceptar = () => undefined) {
     if (resposta !== undefined) return resposta;
     if (caminho === '/catalogo/roadmap' || caminho === '/administracao/caminhos') return Response.json({ questionarios: [resumo], secoes });
     if (caminho === '/catalogo/roadmap/questionarios/7') return Response.json({ ...questionario, resultados: [] });
+    if (caminho === '/administracao/caminhos/secoes' && chamada.metodo === 'GET') return Response.json(secoes);
     if (caminho === '/administracao/caminhos/questionarios/7') return Response.json(questionario);
     if (caminho === '/aluno/roadmap/questionarios/7/resultado' && chamada.metodo === 'GET') return Response.json(null);
     throw new Error('Chamada inesperada: ' + chamada.metodo + ' ' + caminho);
@@ -116,6 +117,8 @@ test('gestao preserva secoes e formulario de edicao junto com a aba de questiona
   assert.equal(document.getElementById('secao-titulo').value, 'Backend');
   assert.equal(document.getElementById('secao-conteudo').value, 'Conheça servidores.');
   assert.equal(document.getElementById('secao-ordem').value, '1');
+  assert.equal(document.getElementById('secao-titulo').maxLength, 80);
+  assert.equal(document.getElementById('secao-conteudo').maxLength, 2500);
 });
 
 test('visitante corrige ramificacao e calcula resultado sem enviar autenticacao ou respostas descartadas', async () => {
@@ -202,4 +205,93 @@ test('administrador edita questionario com versao e pode abrir nova criacao sem 
   assert.ok(botao('Adicionar pergunta'));
   assert.ok(botao('Adicionar resultado'));
   assert.equal(chamadas.some(item => item.metodo === 'DELETE'), false);
+});
+
+test('editor limita os textos do questionário e impede salvar conteúdo legado acima do limite', async () => {
+  const chamadas = montarApi(({ caminho }) => {
+    if (caminho === '/administracao/caminhos/questionarios/7') {
+      return Response.json({ ...questionario, titulo: 'X'.repeat(81) });
+    }
+  });
+  await renderizar(Gestao, 'ADMINISTRADOR');
+  await clicar('Editar');
+
+  const limites = {
+    'caminhos-titulo': 80,
+    'caminhos-descricao': 2500,
+    'enunciado-p1': 2500,
+    'opcao-p1-0': 1500,
+    'resultado-titulo-backend': 80,
+    'resultado-texto-backend': 1500,
+    'resultado-temas-backend': 2264,
+  };
+  for (const [id, limite] of Object.entries(limites)) {
+    assert.equal(document.getElementById(id).maxLength, limite, id);
+  }
+
+  let focouTitulo = false;
+  document.getElementById('caminhos-titulo').focus = () => { focouTitulo = true; };
+  await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
+  assert.equal(focouTitulo, true);
+  assert.match(document.querySelector('[role="alert"]').textContent, /até 80 caracteres/);
+  assert.equal(document.getElementById('caminhos-titulo').value.length, 81);
+  assert.equal(chamadas.some((item) => item.metodo === 'PUT'), false);
+});
+
+test('administração lista, atualiza e exclui uma seção com confirmação', async () => {
+  const base = '/administracao/caminhos/secoes';
+  let atuais = [...secoes];
+  const chamadas = montarApi(({ caminho, metodo, opcoes }) => {
+    if (caminho === base && metodo === 'GET') return Response.json(atuais);
+    if (caminho === base + '/1' && metodo === 'PUT') {
+      atuais = [{ id: 1, ...JSON.parse(opcoes.body) }];
+      return Response.json(atuais[0]);
+    }
+    if (caminho === base + '/1' && metodo === 'DELETE') {
+      atuais = [];
+      return new Response(null, { status: 204 });
+    }
+  });
+  await renderizar(Gestao, 'ADMINISTRADOR');
+  await clicar('Seções explicativas');
+  assert.match(document.querySelector('.caminhos-admin-lista article').textContent, /Backend/);
+  await clicar('Editar');
+
+  await act(async () => document.querySelector('form input[type="checkbox"]').click());
+  await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
+  const edicao = chamadas.find(({ metodo }) => metodo === 'PUT');
+  assert.equal(edicao.caminho, base + '/1');
+  assert.equal(JSON.parse(edicao.opcoes.body).publicado, false);
+  assert.match(document.querySelector('.caminhos-admin-lista article').textContent, /Rascunho/);
+
+  await clicar('Excluir');
+  assert.ok(document.querySelector('[role="dialog"]'));
+  assert.equal(chamadas.some(({ metodo }) => metodo === 'DELETE'), false);
+  await clicar('Confirmar');
+  assert.ok(chamadas.some(({ caminho, metodo }) => caminho === base + '/1' && metodo === 'DELETE'));
+  assert.equal(document.querySelector('.caminhos-admin-lista article'), null);
+  assert.match(document.querySelector('.caminhos-admin-lista').textContent, /Nenhum conteúdo cadastrado/);
+});
+
+test('diagrama abre em tela cheia e oferece apenas fechar', async () => {
+  montarApi();
+  await renderizar(Roadmap);
+  const abrir = document.querySelector('.caminhos-imagem-abrir');
+  abrir.focus();
+  await act(() => abrir.click());
+
+  const dialogo = document.querySelector('[role="dialog"]');
+  const botoes = [...dialogo.querySelectorAll('button')];
+  assert.deepEqual(botoes.map((botao) => botao.textContent), ['Fechar']);
+  assert.ok(dialogo.querySelector('img'));
+  assert.equal(document.activeElement, botoes[0]);
+
+  await act(() => botoes[0].click());
+  assert.equal(document.querySelector('[role="dialog"]'), null);
+  assert.equal(document.activeElement, abrir);
+
+  await act(() => abrir.click());
+  await act(() => document.activeElement.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+  assert.equal(document.querySelector('[role="dialog"]'), null);
+  assert.equal(document.activeElement, abrir);
 });

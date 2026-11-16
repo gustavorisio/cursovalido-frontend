@@ -1,6 +1,6 @@
 .layout-dashboard { color: var(--color-brand-950); background: var(--color-page); }
 .layout-dashboard .app-wrapper { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr auto; grid-template-areas: 'painel-main' 'painel-footer'; min-height: 100dvh; }
-.layout-dashboard .app-main { grid-area: painel-main; min-width: 0; }
+.layout-dashboard .app-main { grid-area: painel-main; min-width: 0; width: 100%; max-width: none; padding-inline: clamp(16px, 3vw, 48px); }
 .layout-dashboard .container-fluid { width: 100%; min-width: 0; }
 .layout-dashboard .dashboard-retorno { padding: 0; margin-bottom: 16px; }
 .layout-dashboard .administracao-retorno { margin-bottom: 0; }

@@ -12,16 +12,15 @@ export default function Cabecalho() {
 
   return (
     <header className="cv-header cv-home">
-      <Link className="cv-logo" to="/" aria-label="CursoVálido — início"><img src="/favicon.svg" width="44" height="44" alt="" /><span>Curso<span>Válido</span></span></Link>
       <nav className="cv-nav" aria-label="Navegação principal">
-        {!autenticado && <NavLink to="/" end>Início</NavLink>}
+        <NavLink to="/" end>Início</NavLink>
         <NavLink to={!autenticado ? '/cursos' : ehAdministrador ? '/administracao/cursos' : sessao?.perfil === 'PROFESSOR' ? '/professor/cursos' : '/aluno/cursos'}>Aulas online</NavLink>
         <NavLink to="/forum">Fórum</NavLink><NavLink to="/noticias">Notícias</NavLink>
         <NavLink to="/roadmap">Caminhos na tecnologia</NavLink>
         {ehAdministrador && <NavLink to="/administracao" end>Administração</NavLink>}
       </nav>
       <div className="cv-conta">
-        {autenticado && sessao?.perfil === 'ALUNO' && <SinoNotificacoes key={sessao?.idUsuario ?? sessao?.id} />}
+        {autenticado && <SinoNotificacoes key={sessao?.idUsuario ?? sessao?.id} />}
         {autenticado ? <><NavLink to="/configuracoes">Configurações</NavLink><button className="cv-button cv-button-primary" type="button" onClick={sair}>Sair</button></> : <><Link to="/login">Entrar</Link><Link className="cv-button cv-button-primary" to="/cadastro">Criar conta</Link></>}
       </div>
       {restricoes.length > 0 ? <div className="mensagem-erro w-full" role="status">

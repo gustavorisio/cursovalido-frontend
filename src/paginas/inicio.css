@@ -33,34 +33,12 @@
   background: var(--color-surface);
 }
 
-.cv-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  white-space: nowrap;
-  font-size: 23px;
-  font-weight: 750;
-  letter-spacing: -.7px;
-}
-
-.cv-logo>span>span {
-  color: var(--color-success);
-}
-
-.cv-header .cv-logo { color: var(--color-brand-950); }
-
-.cv-logo img {
-  display: block;
-  flex-shrink: 0;
-  object-fit: contain;
-}
 
 .cv-nav {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 24px;
-  margin-left: auto;
+  margin-right: auto;
 }
 
 .cv-nav a {
@@ -394,15 +372,6 @@
     padding: 16px 5% 8px;
   }
 
-  .cv-logo {
-    font-size: 20px;
-  }
-
-  .cv-logo img {
-    width: 40px;
-    height: 40px;
-  }
-
   .cv-conta {
     gap: 14px;
   }
@@ -512,7 +481,7 @@
   grid-template-columns: minmax(0, 1fr);
   gap: clamp(40px, 6vw, 88px);
   padding-block: clamp(64px, 7vw, 108px);
-  background: radial-gradient(ellipse at 15% 10%, rgb(63 185 80 / .07), transparent 60%), var(--color-surface);
+  background: #000;
   border-bottom: 1px solid var(--color-line);
 }
 .pagina-inicio .cv-hero-copy { min-width: 0; width: 100%; }

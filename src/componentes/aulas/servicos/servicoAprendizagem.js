@@ -28,6 +28,10 @@ export function excluirQuestionarioCaminhos(id) {
   return requisitar(`/administracao/caminhos/questionarios/${id}`, { method: 'DELETE' });
 }
 
+export function listarSecoesCaminhos() {
+  return requisitar('/administracao/caminhos/secoes');
+}
+
 export function salvarSecaoCaminhos(id, dados) {
   return requisitar(id ? `/administracao/caminhos/secoes/${id}` : '/administracao/caminhos/secoes', { method: id ? 'PUT' : 'POST', body: JSON.stringify(dados) });
 }

@@ -51,24 +51,24 @@ const titulosPaginas = [
   ['/configuracoes/alterar-senha', 'Alterar senha'],
   ['/administracao', 'Administração'],
   ['/administracao/dashboard', 'Dashboard'],
-  ['/administracao/comunicados', 'Comunicados aos alunos'],
-  ['/aluno/notificacoes', 'Notificações'],
+  ['/administracao/comunicados', 'Comunicados'],
+  ['/notificacoes', 'Notificações'],
   ['/administracao/termos', 'Administrar termos'],
   ['/administracao/privacidade', 'Administrar privacidade'],
   ['/administracao/usuarios', 'Usuários'],
   ['/administracao/convites', 'Convites'],
   ['/administracao/caminhos', 'Administrar caminhos na tecnologia'],
   ['/administracao/cursos/:idCurso/aulas/:idAula', 'Administrar aula'],
-  ['/administracao/cursos/:idCurso/diagnostico', 'Editar diagnóstico'],
+  ['/administracao/cursos/:idCurso/diagnostico', 'Editar avaliação'],
   ['/administracao/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
   ['/administracao/cursos/*', 'Administrar cursos'],
   ['/professor/cursos/:idCurso/modulos/:idModulo/aulas', 'Gerenciar aulas'],
-  ['/professor/cursos/:idCurso/diagnostico', 'Editar diagnóstico'],
+  ['/professor/cursos/:idCurso/diagnostico', 'Editar avaliação'],
   ['/professor/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
   ['/professor/cursos/:idCurso/modulos', 'Gerenciar módulos'],
   ['/professor/cursos', 'Gerenciar cursos'],
   ['/aluno/cursos/:idCurso/aulas/:idAula', 'Aula'],
-  ['/aluno/cursos/:idCurso/diagnostico', 'Diagnóstico inicial'],
+  ['/aluno/cursos/:idCurso/diagnostico', 'Avaliação do curso'],
   ['/aluno/cursos/:idCurso/modulos/:idModulo/questionario', 'Questionário do módulo'],
   ['/aluno/cursos/:idCurso', 'Curso'],
   ['/aluno/cursos', 'Catálogo de cursos'],
@@ -127,6 +127,8 @@ export default function App() {
           <Route path="/politica-privacidade.html" element={<PoliticaDePrivacidade />} />
           <Route element={<RotaProtegida />}>
             <Route path="/configuracoes" element={<Configuracoes />} />
+            <Route path="/notificacoes" element={<PaginaNotificacoes />} />
+            <Route path="/aluno/notificacoes" element={<Navigate to="/notificacoes" replace />} />
             <Route path="/configuracoes/alterar-senha" element={<AlterarSenhaConta />} />
           </Route>
           <Route element={<RotaProtegida perfis={['ADMINISTRADOR']} />}>
@@ -155,7 +157,6 @@ export default function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
           <Route element={<RotaProtegida perfis={['ALUNO']} />}>
-            <Route path="/aluno/notificacoes" element={<PaginaNotificacoes />} />
             <Route path="/aluno/cursos" element={<PaginaCatalogo />} />
             <Route path="/aluno/cursos/:idCurso" element={<PaginaCursoAluno />} />
             <Route path="/aluno/cursos/:idCurso/aulas/:idAula" element={<PaginaAulaAluno />} />

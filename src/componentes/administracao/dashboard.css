@@ -27,30 +27,30 @@
 
 .dashboard-administrativo .dashboard-indicadores {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
   gap: 16px;
 }
 
 .dashboard-administrativo .small-box {
-  padding: 20px;
+  padding: 0;
   border-radius: 0;
   margin-bottom: 0;
-  background: var(--color-surface) !important;
-  color: var(--color-brand-950) !important;
+  background: var(--color-surface);
+  color: var(--color-brand-950);
   border: 1px solid var(--color-line);
 
 }
 
-.dashboard-administrativo .small-box h3 { margin: 0 0 8px; font-size: 32px; font-weight: 700; }
-.dashboard-administrativo .card-header { padding-bottom: 16px;  }
-.dashboard-administrativo .card-body { padding-top: 16px; }
+.dashboard-administrativo .small-box strong { display: block; font-size: 1.75rem; font-weight: 700; }
+.dashboard-administrativo .card-header { padding: 16px 20px; border-bottom: 1px solid var(--color-line); }
+.dashboard-administrativo .card-body { padding: 20px; }
 .dashboard-administrativo .form-select { padding: 8px 32px 8px 12px; border: 1px solid var(--color-line); border-radius: 0; background: var(--color-surface); color: inherit; }
 .dashboard-administrativo .alert { padding: 16px; border: 1px solid var(--color-danger); border-radius: 0; }
 .dashboard-administrativo table { width: 100%; border-collapse: collapse; text-align: left; }
 .dashboard-administrativo th, .dashboard-administrativo td { padding: 12px;   border-bottom: 1px solid var(--color-line); }
 
 
-.dashboard-administrativo .small-box .inner p {
+.dashboard-administrativo .small-box p {
   color: var(--color-muted);
 }
 
@@ -130,3 +130,28 @@
 .dashboard-administrativo td { @apply text-sm; }
 .dashboard-administrativo tbody tr:hover { @apply bg-brand-50; }
 .dashboard-administrativo .dashboard-nota { @apply rounded-none border border-line bg-surface p-4 leading-relaxed; }
+
+.dashboard-administrativo .dashboard-dia {
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  border-radius: 0;
+  margin: 0 0 28px;
+}
+
+.dashboard-administrativo .dashboard-secao-titulo {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.dashboard-administrativo .dashboard-filtro-data {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dashboard-filtro-data .form-label { display: block; margin-bottom: 6px; }
+.dashboard-filtro-data .form-control { @apply min-h-11 border border-line bg-page px-3 text-brand-950; color-scheme: dark; }
+.dashboard-data-consultada { margin: 0 0 12px; color: var(--color-muted); }
