@@ -60,6 +60,7 @@ test('permite revogar restrição e encaminha a exclusão para confirmação', a
   const onExecutar = t.mock.fn();
   const suspensoes = [{ id: 10, escopo: 'FORUM', expiraEm: null, motivo: 'Publicações repetidas' }];
   await renderizar(ModeracaoUsuarios, { props: { usuarios: [{ ...aluno, suspensoes }], onExecutar } });
+  assert.equal(botao('Aplicar restrição'), undefined);
   await clicar('Revogar restrição');
   await clicar('Excluir conta');
   assert.equal(chamadas.length, 0);
@@ -118,4 +119,5 @@ test('administrador comum restringe professor e encontra a conta pelo filtro', a
   await clicar('Todos os usuários');
   assert.equal(chamadas.at(-1).busca.has('restrito'), false);
   assert.match(document.querySelector('.moderacao-usuario').textContent, /Beatriz Souza/);
+  assert.ok(botao('Aplicar restrição'));
 });

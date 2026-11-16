@@ -94,7 +94,7 @@ test('aula retoma o vídeo, salva a posição e permite marcar a conclusão', as
   assert.deepEqual(chamadas.filter(({ metodo }) => metodo === 'PUT').map(({ dados }) => dados), [
     { posicaoSegundos: 42 }, { posicaoSegundos: 42 },
   ]);
-  assert.match(document.body.textContent, /Última posição salva: 42s/);
+  assert.doesNotMatch(document.body.textContent, /Última posição salva/);
 
   await clicar('Marcar como concluída');
   assert.equal(chamadas.at(-1).rota, '/aluno/aulas/3/conclusao');

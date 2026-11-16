@@ -94,7 +94,6 @@ function ForumAutenticado() {
           <h2 id="forum-regras-titulo">Regras básicas</h2>
           <ul>
             <li>Publique apenas tópicos relacionados à tecnologia: dúvidas, aulas, programação, ferramentas e discussões técnicas.</li>
-            <li>Assuntos sem relação com tecnologia ou com o conteúdo das aulas estão fora do escopo do fórum.</li>
             <li>Respeite as pessoas. Não publique ofensas ou discriminação.</li>
             <li>Busque antes de criar um tópico e use um título claro.</li>
             <li>Ao pedir ajuda, explique o contexto, as tentativas realizadas e as mensagens de erro. Formate trechos de código para facilitar a leitura.</li>

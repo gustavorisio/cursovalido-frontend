@@ -38,10 +38,10 @@ afterEach(async () => {
 });
 
 test('cadastro comum solicita somente os dados necessarios e mantem maioridade', async () => {
-  const props = { dados: { nomeCompleto: '', email: '', senha: '', dataNascimento: '', declarouMaiorIdade: false, aceitouTermosLgpd: false }, idade: 0, carregando: false, formularioValido: false, onAlterar: () => { }, onEnviar: () => { } };
+  const props = { dados: { nomeCompleto: '', email: '', senha: '', confirmacaoSenha: '', dataNascimento: '', declarouMaiorIdade: false, aceitouTermosLgpd: false }, idade: 0, carregando: false, formularioValido: false, onAlterar: () => { }, onEnviar: () => { } };
   await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Formulario, props))));
   assert.doesNotMatch(document.body.textContent, /telefone/i);
-  assert.deepEqual([...document.querySelectorAll('input')].map(input => input.type), ['text', 'email', 'password', 'date', 'checkbox', 'checkbox']);
+  assert.deepEqual([...document.querySelectorAll('input')].map(input => input.type), ['text', 'email', 'password', 'password', 'date', 'checkbox', 'checkbox']);
   assert.match(document.body.textContent, /18 anos ou mais/);
   assert.equal(document.querySelector('button[type=submit], button:not([type])').disabled, true);
 });
@@ -53,19 +53,19 @@ test('cadastro por convite nao solicita telefone e mantem maioridade', async () 
   assert.ok(document.querySelector('form'));
   assert.doesNotMatch(document.querySelector('form').textContent, /telefone/i);
   assert.match(document.querySelector('form').textContent, /18 anos ou mais/);
-  assert.deepEqual([...document.querySelectorAll('form input')].map(input => input.type), ['text', 'email', 'password', 'date', 'checkbox', 'checkbox']);
+  assert.deepEqual([...document.querySelectorAll('form input')].map(input => input.type), ['text', 'email', 'password', 'password', 'date', 'checkbox', 'checkbox']);
   assert.equal(document.querySelector('form button:not([type])').disabled, true);
 });
 
 test('contratos dos dois cadastros nao enviam telefone mesmo em dados legados', async () => {
   const enviados = [];
   globalThis.fetch = async (_url, options) => { enviados.push(JSON.parse(options.body)); return new Response(null, { status: 204 }); };
-  const dados = { nomeCompleto: 'Aluno', email: 'aluno@example.com', senha: 'SenhaTeste123!', dataNascimento: '1990-01-01', telefone: '11999999999', declarouMaiorIdade: true, aceitouTermosLgpd: true, versaoTermos: '1.0' };
+  const dados = { nomeCompleto: 'Aluno', email: 'aluno@example.com', senha: 'SenhaTeste123!', confirmacaoSenha: 'SenhaTeste123!', dataNascimento: '1990-01-01', telefone: '11999999999', declarouMaiorIdade: true, aceitouTermosLgpd: true, versaoTermos: '1.0' };
   await servico.cadastrarUsuario(dados);
   await servico.completarCadastroConvite('teste', dados);
   for (const envio of [enviados[0], enviados[1].cadastro]) {
     assert.equal(Object.hasOwn(envio, 'telefone'), false);
-    assert.deepEqual(envio, { nomeCompleto: dados.nomeCompleto, email: dados.email, senha: dados.senha, dataNascimento: dados.dataNascimento, declarouMaiorIdade: true, aceitouTermosLgpd: true, versaoTermos: dados.versaoTermos });
+    assert.deepEqual(envio, { nomeCompleto: dados.nomeCompleto, email: dados.email, senha: dados.senha, confirmacaoSenha: dados.confirmacaoSenha, dataNascimento: dados.dataNascimento, declarouMaiorIdade: true, aceitouTermosLgpd: true, versaoTermos: dados.versaoTermos });
   }
 });
 
