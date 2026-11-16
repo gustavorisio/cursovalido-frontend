@@ -2,6 +2,7 @@ import { requisitar } from './api';
 
 const base = '/administracao/dashboard';
 
+export const buscarAtividadeDia = (data) => requisitar(base + "/atividade-diaria?" + new URLSearchParams({ data }));
 export const buscarResumoDashboard = () => requisitar(`${base}/resumo`);
 export const buscarCursosMaisProcurados = () => requisitar(`${base}/cursos-mais-procurados`);
 export const buscarUsuariosPorPerfil = () => requisitar(`${base}/usuarios-por-perfil`);
