@@ -36,23 +36,19 @@ function Caminhos({ aluno, administrador, catalogo }) {
 }
 
 function DiagramaCaminhos() {
-  const [ampliado, setAmpliado] = useState(false);
+  const [aberto, setAberto] = useState(false);
   return <figure className="card caminhos-imagem" aria-labelledby="caminhos-imagem-titulo">
       <h2 id="caminhos-imagem-titulo">Uma ideia de caminhos possíveis</h2>
       <p className="texto-suave">Explore como interfaces, servidores, bancos de dados, infraestrutura e inteligência artificial se conectam. Use o mapa para conhecer possibilidades e escolher o que aprofundar, um assunto por vez.</p>
-      <button type="button" className="caminhos-imagem-abrir" onClick={() => setAmpliado(true)} aria-haspopup="dialog" aria-label="Abrir diagrama em tela cheia">
+      <button type="button" className="caminhos-imagem-abrir" onClick={() => setAberto(true)} aria-haspopup="dialog" aria-label="Abrir diagrama em tela cheia">
         <img src="/imagens/roadmap-fullstack.png" alt="Mapa de caminhos para desenvolvimento fullstack, com interfaces, desenvolvimento no servidor, bancos de dados, arquitetura, DevOps, estruturas de dados, inteligência artificial e carreira." width="4070" height="3002" loading="lazy" decoding="async" />
       </button>
-      <figcaption>Clique na imagem para ampliar e explorar os caminhos possíveis.</figcaption>
-      {ampliado && <VisualizadorDiagrama onFechar={() => setAmpliado(false)} />}
+      <figcaption>Selecione a imagem para abrir o diagrama em tela cheia.</figcaption>
+      {aberto && <VisualizadorDiagrama onFechar={() => setAberto(false)} />}
     </figure>;
 }
 
 function VisualizadorDiagrama({ onFechar }) {
-  const [zoom, setZoom] = useState(100);
-  const [arrastando, setArrastando] = useState(false);
-  const arraste = useRef(null);
-  const painel = useRef(null);
   const fechar = useRef(null);
 
   useEffect(() => {
@@ -66,66 +62,20 @@ function VisualizadorDiagrama({ onFechar }) {
     };
   }, []);
 
-  function iniciarArraste(evento) {
-    if (evento.button !== 0 || evento.isPrimary === false || arraste.current) return;
-    const area = evento.currentTarget;
-    if (area.scrollWidth <= area.clientWidth && area.scrollHeight <= area.clientHeight) return;
-    evento.preventDefault();
-    area.focus({ preventScroll: true });
-    arraste.current = { id: evento.pointerId, x: evento.clientX, y: evento.clientY, esquerda: area.scrollLeft, topo: area.scrollTop };
-    area.setPointerCapture?.(evento.pointerId);
-    setArrastando(true);
-  }
-
-  function moverArraste(evento) {
-    const inicio = arraste.current;
-    if (!inicio || inicio.id !== evento.pointerId) return;
-    const area = evento.currentTarget;
-    area.scrollLeft = Math.max(0, Math.min(area.scrollWidth - area.clientWidth, inicio.esquerda + inicio.x - evento.clientX));
-    area.scrollTop = Math.max(0, Math.min(area.scrollHeight - area.clientHeight, inicio.topo + inicio.y - evento.clientY));
-  }
-
-  function encerrarArraste(evento) {
-    if (arraste.current?.id !== evento.pointerId) return;
-    arraste.current = null;
-    setArrastando(false);
-    if (evento.currentTarget.hasPointerCapture?.(evento.pointerId)) evento.currentTarget.releasePointerCapture(evento.pointerId);
-  }
-
   function teclado(evento) {
+    if (evento.key === 'Tab') evento.preventDefault();
     if (evento.key === 'Escape') {
       evento.preventDefault();
       onFechar();
     }
-    if (evento.key !== 'Tab') return;
-    const controles = painel.current.querySelectorAll('button:not(:disabled), [tabindex="0"]');
-    const primeiro = controles[0];
-    const ultimo = controles[controles.length - 1];
-    if (evento.shiftKey && document.activeElement === primeiro) {
-      evento.preventDefault();
-      ultimo.focus();
-    } else if (!evento.shiftKey && document.activeElement === ultimo) {
-      evento.preventDefault();
-      primeiro.focus();
-    }
   }
 
-  return createPortal(<div ref={painel} className="caminhos-visualizador" role="dialog" aria-modal="true" aria-labelledby="caminhos-visualizador-titulo" onKeyDown={teclado}>
+  return createPortal(<div className="caminhos-visualizador" role="dialog" aria-modal="true" aria-labelledby="caminhos-visualizador-titulo" onKeyDown={teclado}>
     <div className="caminhos-visualizador-barra">
       <h2 id="caminhos-visualizador-titulo">Caminhos possíveis</h2>
-      <div className="caminhos-visualizador-acoes">
-        <button type="button" onClick={() => setZoom((valor) => Math.max(100, valor - 50))} disabled={zoom === 100} aria-label="Diminuir zoom do diagrama">Reduzir</button>
-        <span aria-live="polite">{zoom}%</span>
-        <button type="button" onClick={() => setZoom((valor) => Math.min(400, valor + 50))} disabled={zoom === 400} aria-label="Aumentar zoom do diagrama">Ampliar</button>
-        <button type="button" onClick={() => setZoom(100)}>Ajustar à tela</button>
-        <button ref={fechar} type="button" onClick={onFechar}>Fechar</button>
-      </div>
+      <button ref={fechar} className="btn btn-secondary" type="button" onClick={onFechar}>Fechar</button>
     </div>
-    <div className={`caminhos-visualizador-area${zoom > 100 ? ' caminhos-visualizador-movivel' : ''}${arrastando ? ' caminhos-visualizador-arrastando' : ''}`} tabIndex={0} role="region" aria-label="Mapa ampliado; arraste ou use a rolagem para explorar os detalhes" onPointerDown={iniciarArraste} onPointerMove={moverArraste} onPointerUp={encerrarArraste} onPointerCancel={encerrarArraste} onLostPointerCapture={encerrarArraste}>
-      <div className="caminhos-visualizador-tela" style={{ width: `${zoom}%`, height: `${zoom}%` }}>
-        <img src="/imagens/roadmap-fullstack.png" alt="Diagrama ampliado dos caminhos possíveis para desenvolvimento fullstack." width="4070" height="3002" decoding="async" draggable={false} />
-      </div>
-    </div>
+    <img className="caminhos-visualizador-imagem" src="/imagens/roadmap-fullstack.png" alt="Diagrama dos caminhos possíveis para desenvolvimento fullstack." width="4070" height="3002" decoding="async" draggable={false} />
   </div>, document.body);
 }
 
