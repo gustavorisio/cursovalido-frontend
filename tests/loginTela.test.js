@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test, vi } from 'vitest';
 import assert from 'node:assert/strict';
 import { createElement as h } from 'react';
 import { Route } from 'react-router-dom';
@@ -15,40 +15,40 @@ async function informarCredenciais() {
   await enviar();
 }
 
-test('login pede o código de segundo fator antes de levar aos cursos', async (t) => {
-  const autenticarUsuario = t.mock.fn(async () => ({ requerCodigo2fa: true }));
-  const validarCodigo2fa = t.mock.fn();
+test('login pede o código de segundo fator antes de levar aos cursos', async () => {
+  const autenticarUsuario = vi.fn(async () => ({ requerCodigo2fa: true }));
+  const validarCodigo2fa = vi.fn();
   await renderizar(Login, {
     url: '/login', autenticacao: { autenticarUsuario, validarCodigo2fa },
     extra: [h(Route, { key: 'cursos', path: '/cursos', element: h('h1', null, 'Meus cursos') })],
   });
 
   await informarCredenciais();
-  assert.deepEqual(autenticarUsuario.mock.calls[0].arguments, ['ana@example.com', 'SenhaIncorreta!']);
-  assert.equal(validarCodigo2fa.mock.callCount(), 0);
+  assert.deepEqual(autenticarUsuario.mock.calls[0], ['ana@example.com', 'SenhaIncorreta!']);
+  assert.equal(validarCodigo2fa.mock.calls.length, 0);
   assert.equal(document.querySelector('.botao-reenvio-2fa').disabled, true);
   await preencher('input[inputmode="numeric"]', '012345');
   await enviar();
 
-  assert.deepEqual(validarCodigo2fa.mock.calls[0].arguments, ['ana@example.com', '012345']);
+  assert.deepEqual(validarCodigo2fa.mock.calls[0], ['ana@example.com', '012345']);
   assert.equal(document.querySelector('h1').textContent, 'Meus cursos');
 });
 
-test('cancelar o segundo fator limpa as credenciais para outro login', async (t) => {
+test('cancelar o segundo fator limpa as credenciais para outro login', async () => {
   const autenticarUsuario = async () => ({ requerCodigo2fa: true });
-  const sair = t.mock.fn();
+  const sair = vi.fn();
   await renderizar(Login, { autenticacao: { autenticarUsuario, sair } });
   await informarCredenciais();
   await clicar('Cancelar login e usar outra conta');
 
-  assert.equal(sair.mock.callCount(), 1);
+  assert.equal(sair.mock.calls.length, 1);
   assert.equal(document.querySelector('input[type="email"]').value, '');
   assert.equal(document.querySelector('input[type="password"]').value, '');
 });
 
-test('login envia as credenciais preenchidas pelo navegador sem evento de alteração', async (t) => {
-  const autenticarUsuario = t.mock.fn(async () => ({ requerCodigo2fa: true }));
-  const validarCodigo2fa = t.mock.fn();
+test('login envia as credenciais preenchidas pelo navegador sem evento de alteração', async () => {
+  const autenticarUsuario = vi.fn(async () => ({ requerCodigo2fa: true }));
+  const validarCodigo2fa = vi.fn();
   await renderizar(Login, { autenticacao: { autenticarUsuario, validarCodigo2fa } });
 
   await preencher('input[type="email"]', 'outra-conta@example.com');
@@ -57,10 +57,10 @@ test('login envia as credenciais preenchidas pelo navegador sem evento de altera
   document.querySelector('input[type="password"]').value = 'SenhaNova123!';
   await enviar();
 
-  assert.deepEqual(autenticarUsuario.mock.calls[0].arguments, ['aluno@example.com', 'SenhaNova123!']);
+  assert.deepEqual(autenticarUsuario.mock.calls[0], ['aluno@example.com', 'SenhaNova123!']);
   await preencher('input[inputmode="numeric"]', '012345');
   await enviar();
-  assert.deepEqual(validarCodigo2fa.mock.calls[0].arguments, ['aluno@example.com', '012345']);
+  assert.deepEqual(validarCodigo2fa.mock.calls[0], ['aluno@example.com', '012345']);
 });
 
 for (const [codigo, mensagem] of [
@@ -76,8 +76,8 @@ for (const [codigo, mensagem] of [
   });
 }
 
-test('conta não confirmada pode pedir novo link pelo login', async (t) => {
-  const chamadas = simularApi(t, () => new Response(null, { status: 204 }));
+test('conta não confirmada pode pedir novo link pelo login', async () => {
+  const chamadas = simularApi(() => new Response(null, { status: 204 }));
   const autenticarUsuario = async () => { throw Object.assign(new Error('E-mail pendente'), { codigo: 'EMAIL_NAO_CONFIRMADO' }); };
   await renderizar(Login, { autenticacao: { autenticarUsuario } });
   await informarCredenciais();

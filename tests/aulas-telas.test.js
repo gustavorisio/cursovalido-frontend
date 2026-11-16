@@ -1,13 +1,11 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { JSDOM } from 'jsdom';
 import { createElement as h, act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-let servidor, contexto, telas, dom, raiz;
+let contexto, telas, dom, raiz;
 const fetchOriginal = globalThis.fetch;
 const cursos = [
   { id: 1, titulo: 'React para web', descricao: 'Interfaces com React.', idTema: 8, nomeTema: 'Desenvolvimento', idArea: 8 },
@@ -22,16 +20,16 @@ const aulas = [
 const avaliacaoAluno = { id: 1, titulo: 'Avaliação do curso', versao: 1, perguntas: [{ enunciado: 'Qual alternativa?', alternativas: ['Correta', 'Incorreta'] }], resultado: null };
 const avaliacaoGestor = { ...avaliacaoAluno, publicado: true, perguntas: [{ ...avaliacaoAluno.perguntas[0], alternativaCorreta: 0, explicacao: 'Entenda o conceito.', idAulaRevisao: 4 }] };
 
-before(async () => {
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+beforeAll(async () => {
+  contexto = (await import('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
   telas = {};
+  const modulos = import.meta.glob('/src/componentes/aulas/*.jsx');
   for (const nome of ['PaginaCatalogo', 'PaginaGestaoCursos', 'PaginaAulasAdministrador', 'PaginaCursoAluno', 'PaginaAulaAluno', 'PaginaQuestionarioAluno', 'PaginaEditorQuestionario']) {
-    telas[nome] = (await servidor.ssrLoadModule(`/src/componentes/aulas/${nome}.jsx`)).default;
+    telas[nome] = (await modulos[`/src/componentes/aulas/${nome}.jsx`]()).default;
   }
-  telas.QuestionarioCaminhos = (await servidor.ssrLoadModule('/src/componentes/aulas/componentes/QuestionarioCaminhos.jsx')).default;
+  telas.QuestionarioCaminhos = (await import('/src/componentes/aulas/componentes/QuestionarioCaminhos.jsx')).default;
 });
-after(async () => { await servidor?.close(); });
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000' });
   globalThis.window = dom.window;

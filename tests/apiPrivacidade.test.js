@@ -1,17 +1,15 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { JSDOM } from 'jsdom';
-import { createServer } from './apoio/servidor.js';
 
-let servidor, api, sessao, dom;
+let api, sessao, dom;
 const fetchOriginal = globalThis.fetch;
-before(async () => {
-  servidor = await createServer({ configFile: false, server: { middlewareMode: true }, logLevel: 'silent' });
-  api = await servidor.ssrLoadModule('/src/servicos/api.js');
-  sessao = await servidor.ssrLoadModule('/src/servicos/sessaoNavegador.js');
+beforeAll(async () => {
+  api = await import('/src/servicos/api.js');
+  sessao = await import('/src/servicos/sessaoNavegador.js');
 });
-after(async () => { await servidor?.close(); });
+
 beforeEach(() => {
   dom = new JSDOM('', { url: 'https://cursovalido.dev' });
   globalThis.localStorage = dom.window.localStorage;

@@ -1,28 +1,25 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { JSDOM } from 'jsdom';
 import { createElement as h, act } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
-let servidor, Contexto, Pagina, Cabecalho, dom, raiz, chamadas, createRoot;
+let Contexto, Pagina, Cabecalho, dom, raiz, chamadas, createRoot;
 const fetchOriginal = globalThis.fetch;
 const eventoOriginal = globalThis.Event;
 const comunicado = { id: 7, titulo: 'Manutenção programada', conteudo: 'Conteúdo do comunicado.\nSegunda linha.', criadoEm: '2026-11-15T12:00:00', lida: false };
 const pagina = { itens: [comunicado], pagina: 0, totalPaginas: 1, totalElementos: 1, naoLidas: 1 };
 
-before(async () => {
+beforeAll(async () => {
   const inicial = new JSDOM('<div></div>');
   globalThis.window = inicial.window; globalThis.document = inicial.window.document;
   ({ createRoot } = await import('react-dom/client'));
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  Contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
-  Pagina = (await servidor.ssrLoadModule('/src/componentes/notificacoes/PaginaNotificacoes.jsx')).default;
-  Cabecalho = (await servidor.ssrLoadModule('/src/componentes/comuns/Cabecalho.jsx')).default;
+  Contexto = (await import('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+  Pagina = (await import('/src/componentes/notificacoes/PaginaNotificacoes.jsx')).default;
+  Cabecalho = (await import('/src/componentes/comuns/Cabecalho.jsx')).default;
   inicial.window.close();
 });
-after(async () => { await servidor.close(); });
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000' });
   Object.assign(globalThis, { window: dom.window, document: dom.window.document, Event: dom.window.Event, IS_REACT_ACT_ENVIRONMENT: true });

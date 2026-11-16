@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test, vi } from 'vitest';
 import assert from 'node:assert/strict';
 import { createElement as h } from 'react';
 import { Route, useLocation } from 'react-router-dom';
@@ -31,8 +31,8 @@ for (const [perfil, destino] of [
   });
 }
 
-test('professor valida, cadastra, edita e exclui uma aula', async (t) => {
-  const chamadas = simularApi(t, ({ rota, metodo, dados }) => {
+test('professor valida, cadastra, edita e exclui uma aula', async () => {
+  const chamadas = simularApi(({ rota, metodo, dados }) => {
     if (rota === '/cursos/1') return Response.json({ id: 1, titulo: 'Web' });
     if (rota === '/modulos/2') return Response.json({ id: 2, idCurso: 1, titulo: 'Introdução' });
     if (rota === '/modulos/2/aulas') {
@@ -81,8 +81,8 @@ test('professor valida, cadastra, edita e exclui uma aula', async (t) => {
   assert.match(document.querySelector('.empty-list').textContent, /Nenhum conteúdo cadastrado/);
 });
 
-test('editor de caminhos limpa destinos removidos e normaliza os assuntos', async (t) => {
-  const onSalvar = t.mock.fn();
+test('editor de caminhos limpa destinos removidos e normaliza os assuntos', async () => {
+  const onSalvar = vi.fn();
   const dados = { titulo: 'Seu caminho', descricao: '', publicado: false, perguntas: [], resultados: [] };
   await renderizar(EditorCaminhos, { props: { dados, onSalvar } });
   await clicar('Adicionar pergunta');
@@ -106,14 +106,14 @@ test('editor de caminhos limpa destinos removidos e normaliza os assuntos', asyn
   await preencher('#destino-pergunta-1-0', 'resultado:resultado-1');
   await enviar();
 
-  const salvo = onSalvar.mock.calls[0].arguments[0];
+  const salvo = onSalvar.mock.calls[0][0];
   assert.equal(salvo.perguntaInicial, 'pergunta-1');
   assert.deepEqual(salvo.perguntas[0].opcoes[0], { texto: 'Interfaces', proximaPergunta: null, resultado: 'resultado-1' });
   assert.deepEqual(salvo.resultados[0].temasPesquisa, ['HTML', 'CSS']);
 });
 
-test('editor de caminhos não salva resultado com mais de 15 assuntos', async (t) => {
-  const onSalvar = t.mock.fn();
+test('editor de caminhos não salva resultado com mais de 15 assuntos', async () => {
+  const onSalvar = vi.fn();
   const dados = { titulo: 'Seu caminho', descricao: '', publicado: false, perguntas: [], resultados: [] };
   await renderizar(EditorCaminhos, { props: { dados, onSalvar } });
   await clicar('Adicionar resultado');
@@ -121,12 +121,12 @@ test('editor de caminhos não salva resultado com mais de 15 assuntos', async (t
   await enviar();
 
   assert.match(document.querySelector('[role="alert"]').textContent, /até 15 assuntos/);
-  assert.equal(onSalvar.mock.callCount(), 0);
+  assert.equal(onSalvar.mock.calls.length, 0);
 });
 
-test('edição de curso mantém a área e permite remover a capa', async (t) => {
-  simularApi(t, () => Response.json([{ id: 4, nome: 'Web' }]));
-  const onSalvar = t.mock.fn();
+test('edição de curso mantém a área e permite remover a capa', async () => {
+  simularApi(() => Response.json([{ id: 4, nome: 'Web' }]));
+  const onSalvar = vi.fn();
   const item = { titulo: 'Curso de React', descricao: 'Introdução', idTema: 4, idArea: 2, capaJpeg: 'capa-existente' };
   await renderizar(FormularioConteudo, { props: { tipo: 'curso', item, onSalvar } });
 
@@ -134,7 +134,7 @@ test('edição de curso mantém a área e permite remover a capa', async (t) => 
   await clicar('Remover capa');
   await enviar();
 
-  assert.deepEqual(onSalvar.mock.calls[0].arguments[0], {
+  assert.deepEqual(onSalvar.mock.calls[0][0], {
     titulo: 'Curso de React', descricao: 'Introdução', idTema: 4, idArea: 2, capaJpeg: null,
   });
 });

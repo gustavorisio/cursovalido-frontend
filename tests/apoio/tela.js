@@ -1,17 +1,16 @@
-import { before, after, beforeEach, afterEach } from 'node:test';
+import { beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import assert from 'node:assert/strict';
 import { act, createElement as h } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { JSDOM } from 'jsdom';
-import react from '@vitejs/plugin-react';
-import { createServer } from './servidor.js';
 
 export function prepararTela(configurar) {
-  let servidor, Contexto, createRoot, dom, raiz;
+  let Contexto, createRoot, dom, raiz;
   const descritores = new Map();
-  const carregar = (arquivo) => servidor.ssrLoadModule('/src/' + arquivo);
+  const modulos = import.meta.glob('/src/**/*.{js,jsx}');
+  const carregar = (arquivo) => modulos['/src/' + arquivo]();
 
-  before(async () => {
+  beforeAll(async () => {
     const inicial = new JSDOM();
     globalThis.window = inicial.window;
     globalThis.document = inicial.window.document;
@@ -22,7 +21,6 @@ export function prepararTela(configurar) {
       delete globalThis.window;
       delete globalThis.document;
     }
-    servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
     Contexto = (await carregar('contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
     await configurar?.(carregar);
   });
@@ -57,7 +55,6 @@ export function prepararTela(configurar) {
     descritores.clear();
   });
 
-  after(async () => { await servidor?.close(); });
 
   async function renderizar(Pagina, { url = '/', rota = url.split('?')[0], sessao = null, autenticacao = {}, props = {}, extra = [], navegador = false } = {}) {
     if (navegador) {
@@ -97,9 +94,9 @@ export async function enviar(seletor = 'form') {
   await act(async () => document.querySelector(seletor).dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
 }
 
-export function simularApi(t, responder) {
+export function simularApi(responder) {
   const chamadas = [];
-  t.mock.method(globalThis, 'fetch', async (endereco, opcoes) => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (endereco, opcoes) => {
     const url = new URL(endereco);
     const chamada = {
       rota: url.pathname.replace(/^\/api/, ''),

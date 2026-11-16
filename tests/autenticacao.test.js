@@ -1,13 +1,10 @@
-import test, { before, beforeEach, after, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { JSDOM } from 'jsdom';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { createElement, StrictMode, act } from 'react';
 import { createRoot } from 'react-dom/client';
 
-let servidor;
 let Provedor;
 let useAutenticacao;
 let sessaoModulo;
@@ -21,14 +18,12 @@ function token(email) {
   return `cabecalho.${Buffer.from(JSON.stringify({ sub: email, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.assinatura`;
 }
 
-before(async () => {
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  Provedor = (await servidor.ssrLoadModule('/src/contextos/AutenticacaoContexto.jsx')).AutenticacaoProvedor;
-  useAutenticacao = (await servidor.ssrLoadModule('/src/contextos/useAutenticacao.js')).useAutenticacao;
-  sessaoModulo = await servidor.ssrLoadModule('/src/servicos/sessaoNavegador.js');
+beforeAll(async () => {
+  Provedor = (await import('/src/contextos/AutenticacaoContexto.jsx')).AutenticacaoProvedor;
+  useAutenticacao = (await import('/src/contextos/useAutenticacao.js')).useAutenticacao;
+  sessaoModulo = await import('/src/servicos/sessaoNavegador.js');
 });
 
-after(async () => { await servidor?.close(); });
 
 beforeEach(() => {
   ambiente = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000', pretendToBeVisual: true });
@@ -182,7 +177,7 @@ test('requisicao antiga da aula nao usa a conta que acabou de entrar', async () 
     }
     return fetchNormal(url, opcoes);
   };
-  const servico = await servidor.ssrLoadModule('/src/componentes/aulas/servicos/servicoAluno.js');
+  const servico = await import('/src/componentes/aulas/servicos/servicoAluno.js');
   await act(async () => {
     await assert.rejects(servico.salvarPosicao(1, 30, { tokenAutenticacao: anterior }));
   });
@@ -213,7 +208,7 @@ test('resposta de uma requisicao da conta antiga e descartada apos troca de usua
   let liberar;
   const espera = new Promise((resolve) => { liberar = resolve; });
   globalThis.fetch = (url, opcoes) => url.endsWith('/teste-antigo') ? espera : fetchNormal(url, opcoes);
-  const api = await servidor.ssrLoadModule('/src/servicos/api.js');
+  const api = await import('/src/servicos/api.js');
   const resultado = api.requisitar('/teste-antigo').then(() => null, (erro) => erro);
   await entrar('bruno@example.com');
   await act(async () => {

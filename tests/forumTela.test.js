@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { act } from 'react';
 import { prepararTela, botao, clicar, preencher, simularApi } from './apoio/tela.js';
@@ -11,10 +11,10 @@ const { renderizar } = prepararTela(async (carregar) => {
 const sessao = { perfil: 'ADMINISTRADOR', idUsuario: 5 };
 const topico = { id: 12, idAutor: 5, titulo: 'Dúvida sobre React', descricao: 'Como uso o estado?', criadoEm: '2026-04-10' };
 
-function prepararApi(t, lista = [topico]) {
+function prepararApi(lista = [topico]) {
   let topicos = lista;
   let comentarios = [];
-  return simularApi(t, ({ rota, metodo, dados }) => {
+  return simularApi(({ rota, metodo, dados }) => {
     if (rota === '/autenticacao/restricoes') return Response.json([]);
     if (rota === '/forum/users') return Response.json([{ id: 5, nome: 'Ana', perfil: { nome: 'ADMINISTRADOR' } }]);
     if (rota === '/forum/topicos' && metodo === 'GET') return Response.json(topicos);
@@ -43,8 +43,8 @@ function prepararApi(t, lista = [topico]) {
   });
 }
 
-test('publica e edita um tópico a partir da listagem do fórum', async (t) => {
-  const chamadas = prepararApi(t, []);
+test('publica e edita um tópico a partir da listagem do fórum', async () => {
+  const chamadas = prepararApi([]);
   await renderizar(Forum, { sessao });
 
   await clicar('Novo tópico');
@@ -70,8 +70,8 @@ test('publica e edita um tópico a partir da listagem do fórum', async (t) => {
   assert.match(document.querySelector('.topic-list-item').textContent, /Dúvida resolvida/);
 });
 
-test('publica, edita e apaga uma resposta do próprio usuário', async (t) => {
-  const chamadas = prepararApi(t);
+test('publica, edita e apaga uma resposta do próprio usuário', async () => {
+  const chamadas = prepararApi();
   await renderizar(Forum, { sessao });
   await act(async () => document.querySelector('.topic-list-item').click());
 
@@ -98,8 +98,8 @@ test('publica, edita e apaga uma resposta do próprio usuário', async (t) => {
   assert.equal(botao('Editar'), undefined);
 });
 
-test('fecha o tópico e retira o formulário de respostas', async (t) => {
-  const chamadas = prepararApi(t);
+test('fecha o tópico e retira o formulário de respostas', async () => {
+  const chamadas = prepararApi();
   await renderizar(Forum, { sessao });
   await act(async () => document.querySelector('.topic-list-item').click());
 
@@ -110,8 +110,8 @@ test('fecha o tópico e retira o formulário de respostas', async (t) => {
   assert.equal(botao('Responder'), undefined);
 });
 
-test('arquivamento é a única opção para retirar o tópico da lista', async (t) => {
-  const chamadas = prepararApi(t);
+test('arquivamento é a única opção para retirar o tópico da lista', async () => {
+  const chamadas = prepararApi();
   await renderizar(Forum, { sessao });
   await act(async () => document.querySelector('.topic-list-item').click());
 
@@ -124,9 +124,9 @@ test('arquivamento é a única opção para retirar o tópico da lista', async (
   assert.match(document.querySelector('.empty-list').textContent, /Nenhum tópico encontrado/);
 });
 
-test('restrição expirada libera o fórum até uma nova suspensão', async (t) => {
+test('restrição expirada libera o fórum até uma nova suspensão', async () => {
   let restricoes = [{ escopo: 'CONTA', expiraEm: '2020-01-01T00:00:00Z' }];
-  simularApi(t, ({ rota }) => {
+  simularApi(({ rota }) => {
     if (rota === '/autenticacao/restricoes') return Response.json(restricoes);
     if (rota === '/forum/users' || rota === '/forum/topicos') return Response.json([]);
     throw new Error('Rota inesperada: ' + rota);

@@ -1,24 +1,21 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { createElement, act, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-let servidor, Formulario, Convite, AceiteDocumentos, DocumentoLegal, servico, Suporte, suporteServico, dom, raiz, anteriorFetch;
-before(async () => {
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  Formulario = (await servidor.ssrLoadModule('/src/componentes/autenticacao/FormularioCadastro.jsx')).default;
-  Convite = (await servidor.ssrLoadModule('/src/paginas/CadastroConvite.jsx')).default;
-  AceiteDocumentos = (await servidor.ssrLoadModule('/src/componentes/comuns/AceiteDocumentos.jsx')).default;
-  DocumentoLegal = (await servidor.ssrLoadModule('/src/componentes/comuns/DocumentoLegal.jsx')).default;
-  servico = await servidor.ssrLoadModule('/src/servicos/servicoAutenticacao.js');
-  Suporte = (await servidor.ssrLoadModule('/src/componentes/suporte/PaginaSuporte.jsx')).default;
-  suporteServico = await servidor.ssrLoadModule('/src/componentes/suporte/servicoSuporte.js');
+let Formulario, Convite, AceiteDocumentos, DocumentoLegal, servico, Suporte, suporteServico, dom, raiz, anteriorFetch;
+beforeAll(async () => {
+  Formulario = (await import('/src/componentes/autenticacao/FormularioCadastro.jsx')).default;
+  Convite = (await import('/src/paginas/CadastroConvite.jsx')).default;
+  AceiteDocumentos = (await import('/src/componentes/comuns/AceiteDocumentos.jsx')).default;
+  DocumentoLegal = (await import('/src/componentes/comuns/DocumentoLegal.jsx')).default;
+  servico = await import('/src/servicos/servicoAutenticacao.js');
+  Suporte = (await import('/src/componentes/suporte/PaginaSuporte.jsx')).default;
+  suporteServico = await import('/src/componentes/suporte/servicoSuporte.js');
 });
-after(async () => { await servidor?.close(); });
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000' });
   dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
