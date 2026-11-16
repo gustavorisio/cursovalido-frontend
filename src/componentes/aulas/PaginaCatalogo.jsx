@@ -71,35 +71,35 @@ export default function PaginaCatalogo() {
           <button type="button" aria-pressed={somenteMatriculados} onClick={() => setSomenteMatriculados(true)}>Minhas matrículas</button>
         </div>}
       </div>
-    {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
-    {mensagem ? <p className="mensagem-sucesso" role="status">{mensagem}</p> : null}
-    <FiltroTema valor={temaSelecionado} onAlterar={setTemaSelecionado} />
-    <Link className="btn btn-link" to="/roadmap">Ainda está escolhendo uma área? Explore o mapa de tecnologia</Link>
-    {!carga.carregando && !carga.erro && <p className="catalogo-contagem" role="status">{cursos.length} {cursos.length === 1 ? 'curso encontrado' : 'cursos encontrados'}{temaSelecionado && <> neste tema · <button type="button" onClick={() => setTemaSelecionado('')}>Limpar tema</button></>}</p>}
-    <EstadoCarregamento carga={carga} />
-    {carga.carregando ? null : carga.erro ? null : <>
-      {cursos.length === 0 ? <div className="card empty-list">{busca.trim() ? 'Nenhum curso encontrado para esta pesquisa.' : somenteMatriculados ? 'Você ainda não possui matrículas com estes filtros.' : temaSelecionado ? 'Ainda não há cursos disponíveis com estes filtros.' : 'Nenhum curso disponível no momento.'}{(temaSelecionado || busca || somenteMatriculados) && <button className="btn btn-link catalogo-limpar" type="button" onClick={mostrarTodos}>Ver todos os cursos</button>}</div> : null}
-      <Paginacao key={JSON.stringify([busca, temaSelecionado, somenteMatriculados])} itens={cursos} tamanho={9} rotulo="Páginas de cursos">
-        {(cursosDaPagina) => <div className="aulas-grade catalogo-cursos-grade aulas-cursos-grade">
-          {cursosDaPagina.map((curso) => {
-            const matriculado = matriculas.some((item) => item.idCurso === curso.id);
-            return <article className="card aulas-cartao curso-cartao" key={curso.id}>
-              <CapaCurso curso={curso} />
-              <div className="aulas-cartao-corpo">
-                <div className="curso-cartao-meta"><span>{curso.nomeTema || 'Tecnologia'}</span>{matriculado && <span className="curso-matriculado">Matriculado</span>}</div>
-                <h2 className="topic-title">{curso.titulo}</h2>
-                <p className="content-text">{curso.descricao}</p>
-              </div>
-              <footer className="aulas-cartao-acoes">
-                <div className="acoes-topico">
-                  {!autenticado ? <Link className="btn btn-primary" to="/login">Entrar para acessar</Link> : !aluno ? <Link className="btn btn-primary" to="/cursos">Ir para meus cursos</Link> : matriculado ? <Link className="btn btn-primary" to={`/aluno/cursos/${curso.id}`}>Acessar curso</Link> : <button className="btn btn-primary" type="button" disabled={processando !== null} onClick={() => matricular(curso)}>{processando === curso.id ? 'Matriculando...' : 'Matricular-se gratuitamente'}</button>}
+      {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
+      {mensagem ? <p className="mensagem-sucesso" role="status">{mensagem}</p> : null}
+      <FiltroTema valor={temaSelecionado} onAlterar={setTemaSelecionado} />
+      <Link className="btn btn-link" to="/roadmap">Ainda está escolhendo uma área? Explore o mapa de tecnologia</Link>
+      {!carga.carregando && !carga.erro && <p className="catalogo-contagem" role="status">{cursos.length} {cursos.length === 1 ? 'curso encontrado' : 'cursos encontrados'}{temaSelecionado && <> neste tema · <button type="button" onClick={() => setTemaSelecionado('')}>Limpar tema</button></>}</p>}
+      <EstadoCarregamento carga={carga} />
+      {carga.carregando ? null : carga.erro ? null : <>
+        {cursos.length === 0 ? <div className="card empty-list">{busca.trim() ? 'Nenhum curso encontrado para esta pesquisa.' : somenteMatriculados ? 'Você ainda não possui matrículas com estes filtros.' : temaSelecionado ? 'Ainda não há cursos disponíveis com estes filtros.' : 'Nenhum curso disponível no momento.'}{(temaSelecionado || busca || somenteMatriculados) && <button className="btn btn-link catalogo-limpar" type="button" onClick={mostrarTodos}>Ver todos os cursos</button>}</div> : null}
+        <Paginacao key={JSON.stringify([busca, temaSelecionado, somenteMatriculados])} itens={cursos} tamanho={9} rotulo="Páginas de cursos">
+          {(cursosDaPagina) => <div className="aulas-grade catalogo-cursos-grade aulas-cursos-grade">
+            {cursosDaPagina.map((curso) => {
+              const matriculado = matriculas.some((item) => item.idCurso === curso.id);
+              return <article className="card aulas-cartao curso-cartao" key={curso.id}>
+                <CapaCurso curso={curso} />
+                <div className="aulas-cartao-corpo">
+                  <div className="curso-cartao-meta"><span>{curso.nomeTema || 'Tecnologia'}</span>{matriculado && <span className="curso-matriculado">Matriculado</span>}</div>
+                  <h2 className="topic-title">{curso.titulo}</h2>
+                  <p className="content-text">{curso.descricao}</p>
                 </div>
-              </footer>
-            </article>;
-          })}
-        </div>}
-      </Paginacao>
-    </>}
+                <footer className="aulas-cartao-acoes">
+                  <div className="acoes-topico">
+                    {!autenticado ? <Link className="btn btn-primary" to="/login">Entrar para acessar</Link> : !aluno ? <Link className="btn btn-primary" to="/cursos">Ir para meus cursos</Link> : matriculado ? <Link className="btn btn-primary" to={`/aluno/cursos/${curso.id}`}>Acessar curso</Link> : <button className="btn btn-primary" type="button" disabled={processando !== null} onClick={() => matricular(curso)}>{processando === curso.id ? 'Matriculando...' : 'Matricular-se gratuitamente'}</button>}
+                  </div>
+                </footer>
+              </article>;
+            })}
+          </div>}
+        </Paginacao>
+      </>}
     </section>
   </LayoutAulas>;
 }

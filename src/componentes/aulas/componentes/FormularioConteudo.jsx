@@ -72,11 +72,11 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
         {tipo === 'curso' && <>
           <FiltroTema valor={idTema} onAlterar={setIdTema} cadastro gerenciar />
           <div className="curso-capa-editor">
-              <label htmlFor="conteudo-capa">Capa do curso (JPEG)</label>
-              <input ref={arquivoCapa} id="conteudo-capa" type="file" accept="image/jpeg,.jpg,.jpeg" aria-describedby="curso-capa-ajuda" disabled={preparandoCapa} onChange={selecionarCapa} />
-              <p id="curso-capa-ajuda" className="texto-suave">JPEG de até 2 MB e no máximo 550 × 250 px. Imagens menores se ajustam automaticamente, sem recorte.</p>
-              {preparandoCapa && <p role="status">Processando imagem...</p>}
-              {capaJpeg && <button className="btn btn-link" type="button" disabled={preparandoCapa} onClick={() => { setCapaJpeg(null); arquivoCapa.current.value = ''; }}>Remover capa</button>}
+            <label htmlFor="conteudo-capa">Capa do curso (JPEG)</label>
+            <input ref={arquivoCapa} id="conteudo-capa" type="file" accept="image/jpeg,.jpg,.jpeg" aria-describedby="curso-capa-ajuda" disabled={preparandoCapa} onChange={selecionarCapa} />
+            <p id="curso-capa-ajuda" className="texto-suave">JPEG de até 2 MB e no máximo 550 × 250 px. Imagens menores se ajustam automaticamente, sem recorte.</p>
+            {preparandoCapa && <p role="status">Processando imagem...</p>}
+            {capaJpeg && <button className="btn btn-link" type="button" disabled={preparandoCapa} onClick={() => { setCapaJpeg(null); arquivoCapa.current.value = ''; }}>Remover capa</button>}
           </div>
         </>}
         {tipo !== 'curso' ? <>

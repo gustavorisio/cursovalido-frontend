@@ -14,14 +14,18 @@ const questionario = {
   id: 7, titulo: 'Descubra sua area', descricao: 'Explore as possibilidades', publicado: true,
   versao: 2, perguntaInicial: 'p1',
   perguntas: [
-    { chave: 'p1', enunciado: 'Qual caminho prefere?', opcoes: [
-      { texto: 'Explorar interfaces', proximaPergunta: 'p2', resultado: null },
-      { texto: 'Explorar servidores', proximaPergunta: null, resultado: 'backend' },
-    ] },
-    { chave: 'p2', enunciado: 'Qual interface prefere?', opcoes: [
-      { texto: 'Navegadores', proximaPergunta: null, resultado: 'frontend' },
-      { texto: 'APIs', proximaPergunta: null, resultado: 'backend' },
-    ] },
+    {
+      chave: 'p1', enunciado: 'Qual caminho prefere?', opcoes: [
+        { texto: 'Explorar interfaces', proximaPergunta: 'p2', resultado: null },
+        { texto: 'Explorar servidores', proximaPergunta: null, resultado: 'backend' },
+      ]
+    },
+    {
+      chave: 'p2', enunciado: 'Qual interface prefere?', opcoes: [
+        { texto: 'Navegadores', proximaPergunta: null, resultado: 'frontend' },
+        { texto: 'APIs', proximaPergunta: null, resultado: 'backend' },
+      ]
+    },
   ],
   resultados: [
     { chave: 'backend', titulo: 'Desenvolvimento backend', orientacao: 'Explore APIs e dados.', temasPesquisa: ['Java', 'SQL'] },

@@ -31,7 +31,7 @@ export default function FormularioAlterarSenha({ desabilitado, aoConcluir }) {
       {['senhaAtual', 'novaSenha', 'confirmacaoSenha'].map((campo, indice) => <CampoSenha key={campo}
         rotulo={['Senha atual', 'Nova senha', 'Confirmar nova senha'][indice]} required
         autoComplete={indice === 0 ? 'current-password' : 'new-password'} validarPolitica={indice !== 0}
-         value={dados[campo]} disabled={desabilitado || salvando}
+        value={dados[campo]} disabled={desabilitado || salvando}
         onChange={(evento) => setDados((atuais) => ({ ...atuais, [campo]: evento.target.value }))} />)}
       <button className="botao-destaque" disabled={desabilitado || salvando}>{salvando ? 'Salvando...' : 'Alterar senha'}</button>
     </form>

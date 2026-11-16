@@ -100,48 +100,48 @@ function ConsultaAulas({ idCurso, idAula }) {
     </CabecalhoAulas>
     {cursoEditando && <FormularioConteudo key={cursoEditando.id} tipo="curso" item={cursoEditando} processando={processando} onCancelar={() => setCursoEditando(null)} onSalvar={(valores) => executar(() => servico.editarCurso(cursoEditando.id, valores), 'Curso atualizado.')} />}
     {!cursoEditando && <section className="catalogo-resultados" id="catalogo-cursos" aria-label={idAula ? 'Conteúdo da aula' : idCurso ? 'Módulos e aulas' : 'Cursos disponíveis'}>
-    <div className="catalogo-secao-cabecalho"><div><span className="aulas-etiqueta">Gestão de conteúdo</span><h2>{idAula ? 'Conteúdo da aula' : idCurso ? 'Módulos e aulas' : 'Cursos disponíveis'}</h2></div></div>
-    {!idAula && <PesquisaConteudo valor={busca} onAlterar={setBusca} label={idCurso ? 'Pesquisar aula por nome' : 'Pesquisar curso por nome'} />}
-    {!idCurso && <FiltroTema valor={tema} onAlterar={setTema} gerenciar onAtualizar={carga.tentarNovamente} />}
-    <EstadoCarregamento carga={carga} />
-    {carga.carregando ? null : carga.erro ? null : dados ? <>
-      {dados.cursos ? <>
-        {cursos.length === 0 ? <div className="card empty-list">Nenhum curso encontrado.</div> : null}
-        <Paginacao key={JSON.stringify([busca, tema])} itens={cursos} tamanho={9} rotulo="Páginas de cursos">
-          {(cursosDaPagina) => <div className="aulas-grade aulas-conteudo-grade aulas-cursos-grade">
-            {cursosDaPagina.map((curso) => <article className="card aulas-cartao curso-cartao" key={curso.id}>
-              <CapaCurso curso={curso} />
-              <div className="aulas-cartao-corpo">
-                <h2 className="topic-title">{curso.titulo}</h2>
-                <p className="content-text">{curso.descricao}</p>
-              </div>
-              <footer className="aulas-cartao-acoes"><Link className="btn btn-primary" to={`/administracao/cursos/${curso.id}`}>Ver módulos e aulas</Link>{acoesCurso(curso)}</footer>
-            </article>)}
-          </div>}
-        </Paginacao>
-      </> : null}
-      {dados.aula ? editando ? formulario(dados.aula) : <section className="card aulas-detalhe aulas-sala-player">
-        <p className="aulas-etiqueta">{dados.aula.ativo === false ? 'Arquivada' : 'Disponível'}</p>{acoes(dados.aula)}
-      <PlayerAula videoId={dados.aula.youtubeVideoId} />
-        <p className="content-text">{dados.aula.descricao}</p>
-      </section> : dados.curso ? <>
-        <p className="card content-text">{dados.curso.descricao}</p>
-        {modulos.length === 0 ? <div className="card empty-list">Nenhum módulo disponível.</div> : null}
-        {modulos.map((modulo) => <ModuloExpansivel key={modulo.id} modulo={modulo} expandido={Boolean(busca.trim())}>
-
-          <p className="content-text">{modulo.descricao}</p>
-          <Link className="btn btn-secondary" to={`/administracao/cursos/${idCurso}/modulos/${modulo.id}/questionario`}>Editar questionário do módulo</Link>
-          {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível.</p> : null}
-          {modulo.aulas.map((aula) => <div key={aula.id}>
-            {editando?.id === aula.id ? formulario(aula) : <div className="aulas-linha">
-
-              <div><span className="aulas-etiqueta">Aula {aula.ordem}{aula.ativo === false ? ' · Arquivada' : ''}</span><h3>{aula.titulo}</h3></div>
-              <Link className="btn btn-secondary" to={`/administracao/cursos/${idCurso}/aulas/${aula.id}`}>Visualizar aula</Link>{acoes(aula)}
+      <div className="catalogo-secao-cabecalho"><div><span className="aulas-etiqueta">Gestão de conteúdo</span><h2>{idAula ? 'Conteúdo da aula' : idCurso ? 'Módulos e aulas' : 'Cursos disponíveis'}</h2></div></div>
+      {!idAula && <PesquisaConteudo valor={busca} onAlterar={setBusca} label={idCurso ? 'Pesquisar aula por nome' : 'Pesquisar curso por nome'} />}
+      {!idCurso && <FiltroTema valor={tema} onAlterar={setTema} gerenciar onAtualizar={carga.tentarNovamente} />}
+      <EstadoCarregamento carga={carga} />
+      {carga.carregando ? null : carga.erro ? null : dados ? <>
+        {dados.cursos ? <>
+          {cursos.length === 0 ? <div className="card empty-list">Nenhum curso encontrado.</div> : null}
+          <Paginacao key={JSON.stringify([busca, tema])} itens={cursos} tamanho={9} rotulo="Páginas de cursos">
+            {(cursosDaPagina) => <div className="aulas-grade aulas-conteudo-grade aulas-cursos-grade">
+              {cursosDaPagina.map((curso) => <article className="card aulas-cartao curso-cartao" key={curso.id}>
+                <CapaCurso curso={curso} />
+                <div className="aulas-cartao-corpo">
+                  <h2 className="topic-title">{curso.titulo}</h2>
+                  <p className="content-text">{curso.descricao}</p>
+                </div>
+                <footer className="aulas-cartao-acoes"><Link className="btn btn-primary" to={`/administracao/cursos/${curso.id}`}>Ver módulos e aulas</Link>{acoesCurso(curso)}</footer>
+              </article>)}
             </div>}
-          </div>)}
-        </ModuloExpansivel>)}
+          </Paginacao>
+        </> : null}
+        {dados.aula ? editando ? formulario(dados.aula) : <section className="card aulas-detalhe aulas-sala-player">
+          <p className="aulas-etiqueta">{dados.aula.ativo === false ? 'Arquivada' : 'Disponível'}</p>{acoes(dados.aula)}
+          <PlayerAula videoId={dados.aula.youtubeVideoId} />
+          <p className="content-text">{dados.aula.descricao}</p>
+        </section> : dados.curso ? <>
+          <p className="card content-text">{dados.curso.descricao}</p>
+          {modulos.length === 0 ? <div className="card empty-list">Nenhum módulo disponível.</div> : null}
+          {modulos.map((modulo) => <ModuloExpansivel key={modulo.id} modulo={modulo} expandido={Boolean(busca.trim())}>
+
+            <p className="content-text">{modulo.descricao}</p>
+            <Link className="btn btn-secondary" to={`/administracao/cursos/${idCurso}/modulos/${modulo.id}/questionario`}>Editar questionário do módulo</Link>
+            {modulo.aulas.length === 0 ? <p className="texto-suave">Nenhuma aula disponível.</p> : null}
+            {modulo.aulas.map((aula) => <div key={aula.id}>
+              {editando?.id === aula.id ? formulario(aula) : <div className="aulas-linha">
+
+                <div><span className="aulas-etiqueta">Aula {aula.ordem}{aula.ativo === false ? ' · Arquivada' : ''}</span><h3>{aula.titulo}</h3></div>
+                <Link className="btn btn-secondary" to={`/administracao/cursos/${idCurso}/aulas/${aula.id}`}>Visualizar aula</Link>{acoes(aula)}
+              </div>}
+            </div>)}
+          </ModuloExpansivel>)}
+        </> : null}
       </> : null}
-    </> : null}
     </section>}
   </LayoutAulas>;
 }

@@ -24,9 +24,11 @@ export default function EditorCaminhos({ dados, processando, onSalvar, onCancela
   }
   function adicionarPergunta() {
     const chave = gerarChave('pergunta', perguntas);
-    setFormulario((f) => ({ ...f, perguntaInicial: f.perguntaInicial ?? chave, perguntas: [...f.perguntas, {
-      chave, enunciado: '', opcoes: [{ texto: '', proximaPergunta: null, resultado: null }, { texto: '', proximaPergunta: null, resultado: null }],
-    }] }));
+    setFormulario((f) => ({
+      ...f, perguntaInicial: f.perguntaInicial ?? chave, perguntas: [...f.perguntas, {
+        chave, enunciado: '', opcoes: [{ texto: '', proximaPergunta: null, resultado: null }, { texto: '', proximaPergunta: null, resultado: null }],
+      }]
+    }));
   }
   function removerPergunta(chave) {
     const restantes = perguntas.filter((p) => p.chave !== chave).map((p) => ({ ...p, opcoes: p.opcoes.map((o) => o.proximaPergunta === chave ? { ...o, proximaPergunta: null } : o) }));
@@ -59,7 +61,8 @@ export default function EditorCaminhos({ dados, processando, onSalvar, onCancela
       return;
     }
     setErroLimite('');
-    onSalvar({ titulo: formulario.titulo, descricao: formulario.descricao, publicado: formulario.publicado,
+    onSalvar({
+      titulo: formulario.titulo, descricao: formulario.descricao, publicado: formulario.publicado,
       versao: formulario.versao, perguntaInicial: formulario.perguntaInicial, perguntas,
       resultados: resultadosNormalizados,
     });

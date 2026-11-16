@@ -49,10 +49,31 @@
         width: 100%;
     }
 }
-.pagina-suporte .page-header p { @apply mt-3 max-w-[720px] text-base; }
-.suporte-formulario { @apply p-5 sm:p-8; }
-.suporte-formulario > p { @apply mb-6 mt-2 text-sm; }
-.suporte-formulario .input-field { @apply mb-2; }
-.suporte-formulario :is(#contato-ajuda, #descricao-ajuda) { @apply mb-5 text-sm; }
-.suporte-envio { @apply rounded-none bg-brand-50 p-5; }
-.suporte-envio > p { @apply text-sm leading-relaxed; }
+
+.pagina-suporte .page-header p {
+    @apply mt-3 max-w-[720px] text-base;
+}
+
+.suporte-formulario {
+    @apply p-5 sm:p-8;
+}
+
+.suporte-formulario>p {
+    @apply mb-6 mt-2 text-sm;
+}
+
+.suporte-formulario .input-field {
+    @apply mb-2;
+}
+
+.suporte-formulario :is(#contato-ajuda, #descricao-ajuda) {
+    @apply mb-5 text-sm;
+}
+
+.suporte-envio {
+    @apply rounded-none bg-brand-50 p-5;
+}
+
+.suporte-envio>p {
+    @apply text-sm leading-relaxed;
+}

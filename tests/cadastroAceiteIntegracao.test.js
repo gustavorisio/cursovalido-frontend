@@ -67,7 +67,7 @@ for (const perfil of [null, 'ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
     globalThis.fetch = async url => Response.json(String(url).endsWith('/politicas/ativas') ? [documentos.termos] : documentos.privacidade);
     for (const [Pagina, tipo] of [[Reativacao, 'termos'], [Privacidade, 'privacidade']]) {
       await act(async () => raiz.render(h(MemoryRouter, null,
-        h(Contexto.Provider, { value: { autenticado: Boolean(perfil), sessao: perfil ? { perfil } : null, sair() {} } }, h(Pagina)))));
+        h(Contexto.Provider, { value: { autenticado: Boolean(perfil), sessao: perfil ? { perfil } : null, sair() { } } }, h(Pagina)))));
       assert.equal(document.querySelectorAll('.site-footer').length, 1);
       assert.equal(document.querySelectorAll('.documento-conteudo').length, 1);
       assert.equal(document.querySelectorAll('.conteudo-legal').length, 1);
@@ -124,7 +124,7 @@ for (const { fluxo, perfil } of [
     if (reativacao) sessionStorage.setItem('curso-valido-token-termos', tokenRestrito);
     const Pagina = reativacao ? Reativacao : fluxo === 'cadastro por convite' ? Convite : Cadastro;
     await act(async () => raiz.render(h(MemoryRouter, { initialEntries: [fluxo === 'cadastro por convite' ? '/convites/cadastro?token=convite-teste' : '/'] },
-      reativacao ? h(Provedor, null, h(Pagina)) : h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Routes, null,
+      reativacao ? h(Provedor, null, h(Pagina)) : h(Contexto.Provider, { value: { autenticado: false, sair() { } } }, h(Routes, null,
         h(Route, { path: "*", element: h(Pagina) }), h(Route, { path: "/login", element: h(Login) }))))));
     if (fluxo === 'cadastro por convite') await act(async () => botao('Confirmar meu e-mail').click());
 
@@ -223,7 +223,7 @@ test('primeiro acesso sem perfil identificável não libera envio', async () => 
   sessionStorage.setItem('curso-valido-token-termos', 'token-invalido');
   globalThis.fetch = async () => Response.json([documentos.termos]);
   await act(async () => raiz.render(h(MemoryRouter, null,
-    h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Reativacao)))));
+    h(Contexto.Provider, { value: { autenticado: false, sair() { } } }, h(Reativacao)))));
   assert.match(document.querySelector('[role=alert]').textContent, /identificar seu perfil/);
   assert.equal(aceite().disabled, true);
 });
