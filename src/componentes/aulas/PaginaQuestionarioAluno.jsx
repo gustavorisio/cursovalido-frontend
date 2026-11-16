@@ -19,7 +19,7 @@ function Questionario({ idCurso, idModulo }) {
   const carga = useCarregamento(carregar);
   return <LayoutAulas>
     <Link className="btn btn-link" to={`/aluno/cursos/${idCurso}`}>Voltar ao curso</Link>
-    <CabecalhoAulas etiqueta={idModulo ? 'Confira seu entendimento' : 'Seu ponto de partida'} titulo={carga.dados?.titulo ?? (idModulo ? 'Questionário do módulo' : 'Diagnóstico inicial')} descricao="Responda com o que você sabe hoje. Suas respostas ajudam a organizar as próximas revisões." />
+    <CabecalhoAulas etiqueta={idModulo ? 'Confira seu entendimento' : 'Avaliação do curso'} titulo={carga.dados?.titulo ?? (idModulo ? 'Questionário do módulo' : 'Avaliação do curso')} descricao="Responda às perguntas e confira sua pontuação." />
     <EstadoCarregamento carga={carga} />
     {!carga.carregando && !carga.erro && (carga.dados ? <ResponderQuestionario dados={carga.dados} idCurso={idCurso} idModulo={idModulo} onRecarregar={carga.tentarNovamente} /> : <p className="card empty-list">Esta avaliação ainda não está disponível. Continue explorando as aulas do curso.</p>)}
   </LayoutAulas>;
@@ -45,9 +45,7 @@ function ResponderQuestionario({ dados, idCurso, idModulo, onRecarregar }) {
     <span className="aulas-etiqueta">Resultado da avaliação</span><h2 id="resultado-titulo">{resultado.acertos} de {resultado.total} respostas corretas</h2>
     <p className="avaliacao-percentual">{resultado.percentual}%</p>
     <h3>Entenda suas respostas</h3>
-    <ol className="avaliacao-correcoes">{resultado.correcoes.map((item) => <li key={item.pergunta}><strong>{dados.perguntas[item.pergunta].enunciado}</strong><span className={item.acertou ? 'avaliacao-acerto' : 'avaliacao-revisar'}>{item.acertou ? 'Resposta correta' : 'Vale revisar'}</span><p>Resposta: {dados.perguntas[item.pergunta].alternativas[item.alternativaCorreta]}</p><p className="texto-suave">{item.explicacao}</p></li>)}</ol>
-    <h3>Aulas indicadas para revisar</h3>
-    {resultado.revisoes.length ? <ul className="plano-revisoes">{resultado.revisoes.map((aula) => <li key={aula.idAula}><Link to={`/aluno/cursos/${idCurso}/aulas/${aula.idAula}`}>{aula.titulo}</Link></li>)}</ul> : <p className="texto-suave">Você acertou todas as perguntas desta avaliação. Continue para as próximas aulas.</p>}
+    <ol className="avaliacao-correcoes">{resultado.correcoes.map((item) => <li key={item.pergunta}><strong>{dados.perguntas[item.pergunta].enunciado}</strong><span className={item.acertou ? 'avaliacao-acerto' : 'avaliacao-revisar'}>{item.acertou ? 'Resposta correta' : 'Resposta incorreta'}</span><p>Resposta: {dados.perguntas[item.pergunta].alternativas[item.alternativaCorreta]}</p><p className="texto-suave">{item.explicacao}</p></li>)}</ol>
     <div className="acoes-topico"><Link className="btn btn-primary" to={`/aluno/cursos/${idCurso}`}>Ver meu plano de estudos</Link><button className="btn btn-secondary" type="button" onClick={() => { setResultado(null); setRespostas(dados.perguntas.map(() => null)); }}>Refazer avaliação</button></div>
   </section>;
 

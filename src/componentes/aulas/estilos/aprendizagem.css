@@ -33,12 +33,6 @@
 .plano-avaliacao-resultado { @apply m-0 mt-5 mb-5 border-t border-line pt-4 text-sm text-muted; }
 .plano-avaliacao-resultado strong { @apply text-lg font-semibold text-brand-800; }
 .plano-avaliacoes .btn { @apply mt-auto w-full self-start sm:w-auto; }
-.plano-revisoes-painel { @apply mt-4 min-w-0 border border-line bg-surface p-5 sm:p-6; }
-.plano-revisoes-titulo { @apply m-0 text-lg font-semibold text-brand-950; }
-.plano-revisoes { @apply m-0 mt-5 grid list-none gap-3 p-0; }
-.plano-revisoes a { @apply flex min-w-0 flex-wrap items-center justify-between gap-x-5 gap-y-2 border border-line bg-page px-4 py-3 text-sm text-brand-950 no-underline transition-colors hover:border-accent hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent; }
-.plano-revisoes a > span:first-child { @apply min-w-0 break-words; }
-.plano-revisao-acao { @apply shrink-0 font-semibold text-brand-800; }
 .plano-vazio { @apply m-0 border border-dashed border-line bg-surface p-5 text-sm leading-relaxed text-muted sm:p-6; }
 .editor-questionario h2 { font-size: 24px; font-weight: 600; margin-bottom: 14px; }
 .editor-questionario label { display: block; margin: 14px 0 8px; font-size: 13px; font-weight: 500; }
@@ -62,28 +56,30 @@
 .caminhos-resultado a { text-decoration: none; }
 .caminhos-imagem { margin: 0; }
 .caminhos-imagem > p { margin-bottom: 20px; line-height: 1.7; font-size: 14px; }
-.caminhos-imagem-abrir { display: block; width: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; cursor: zoom-in; }
+.caminhos-imagem-abrir { display: block; width: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; cursor: pointer; }
 .caminhos-imagem-abrir:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
 .caminhos-imagem img { display: block; width: 100%; height: auto; border: 1px solid var(--color-line); border-radius: 0; }
 .caminhos-imagem figcaption { margin-top: 12px; color: var(--color-muted); font-size: 12px; line-height: 1.7; }
 .caminhos-visualizador { position: fixed; inset: 0; z-index: 10000; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--color-page); color: var(--color-brand-950); }
 .caminhos-visualizador-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px;  background: var(--color-surface); }
 .caminhos-visualizador-barra h2 { margin: 0; font-size: 18px; color: var(--color-brand-950); }
-.caminhos-visualizador-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.caminhos-visualizador-acoes button { padding: 9px 13px; border: 1px solid var(--color-line); border-radius: 0; background: var(--color-surface); color: var(--color-brand-950); font: inherit; cursor: pointer; }
-.caminhos-visualizador-acoes button:disabled { opacity: .4; cursor: default; }
-.caminhos-visualizador-acoes button:focus-visible, .caminhos-visualizador-area:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-.caminhos-visualizador-acoes span { min-width: 46px; text-align: center; font-size: 14px; }
-.caminhos-visualizador-area { min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: none; user-select: none; }
-.caminhos-visualizador-movivel { cursor: grab; }
-.caminhos-visualizador-arrastando { cursor: grabbing; }
-.caminhos-visualizador-tela { display: grid; place-items: center; }
-.caminhos-visualizador-tela img { display: block; width: 100%; height: 100%; max-width: none; min-width: 0; min-height: 0; object-fit: contain; }
+.caminhos-visualizador-imagem { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: contain; }
 .caminhos-conteudo { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.85; }
 .caminhos-secoes h2, .caminhos-etapas h2, .caminhos-admin-lista h2, .editor-caminhos h2 { margin-bottom: 16px; font-size: 25px; font-weight: 600; }
 .caminhos-secoes > p, .caminhos-etapas > p { margin-bottom: 22px; font-size: 14px; line-height: 1.75; }
-.caminhos-secao {  }
-.caminhos-secao:last-child {  }
+.caminhos-secoes,
+.caminhos-questionarios,
+.caminhos-admin-lista,
+.editor-caminhos {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.editor-caminhos .input-field,
+.caminhos-questionarios .input-field {
+  min-width: 0;
+  max-width: 100%;
+}
 .caminhos-secao summary { padding: 20px 8px; color: var(--color-brand-950); cursor: pointer; font-size: 16px; font-weight: 550; }
 .caminhos-secao summary::marker { color: var(--color-accent); }
 .caminhos-secao[open] summary { color: var(--color-accent); }
@@ -144,29 +140,29 @@
 .caminhos-etapas, .caminhos-resultado { @apply bg-surface; }
 
 .caminhos-questionarios { display: grid; gap: 20px; min-width: 0; }
-.pagina-aulas .caminhos-etapas, .pagina-aulas .caminhos-resultado { width: 100%; max-width: 860px; margin-inline: auto; padding: clamp(20px, 4vw, 40px); border: 1px solid var(--color-line); border-radius: 16px; }
+.pagina-aulas .caminhos-etapas, .pagina-aulas .caminhos-resultado { width: 100%; max-width: 860px; margin-inline: auto; padding: clamp(20px, 4vw, 40px); border: 1px solid var(--color-line); border-radius: 0; }
 .caminhos-etapas > .aulas-etiqueta, .caminhos-resultado > .aulas-etiqueta { color: var(--color-accent); margin-bottom: 12px; }
 .caminhos-contexto { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-top: 22px; margin-bottom: 16px; border-top: 1px solid var(--color-line); font-size: 13px; }
 .caminhos-contexto > span { color: var(--color-muted); }
 .caminhos-passos { gap: 8px; padding-bottom: 22px; margin: 0; }
-.caminhos-passos button, .caminhos-passos span { border-radius: 10px; font-weight: 600; }
+.caminhos-passos button, .caminhos-passos span { border-radius: 0; font-weight: 600; }
 .caminhos-passos button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
 .caminhos-passos button:disabled { cursor: default; opacity: .5; }
 .caminhos-etapas .avaliacao-pergunta { margin: 0 0 16px; }
 .caminhos-etapas .avaliacao-pergunta legend { margin-bottom: 8px; font-size: 17px; line-height: 1.45; overflow-wrap: anywhere; }
-.caminhos-etapas .avaliacao-opcao { align-items: center; gap: 10px; margin-top: 6px; border-radius: 6px; padding: 9px 12px; min-height: 44px; font-size: 14px; line-height: 1.45; transition: border-color .15s, background-color .15s; }
+.caminhos-etapas .avaliacao-opcao { align-items: center; gap: 10px; margin-top: 6px; border-radius: 0; padding: 9px 12px; min-height: 44px; font-size: 14px; line-height: 1.45; transition: border-color .15s, background-color .15s; }
 .caminhos-etapas .avaliacao-opcao:hover { border-color: var(--color-accent); background: var(--color-brand-50); }
 .caminhos-etapas .avaliacao-opcao:focus-within { outline: 2px solid var(--color-accent); outline-offset: 3px; }
 .caminhos-etapas .avaliacao-opcao input { width: 16px; height: 16px; margin: 0; }
 .caminhos-etapas .avaliacao-opcao > span:first-of-type { flex: 1; overflow-wrap: anywhere; }
-.caminhos-etapas .avaliacao-opcao .caminhos-opcao-marca { display: grid; place-items: center; flex-shrink: 0; width: 22px; height: 22px; border: 1px solid var(--color-line); border-radius: 4px; font-size: 11px; color: var(--color-muted); }
+.caminhos-etapas .avaliacao-opcao .caminhos-opcao-marca { display: grid; place-items: center; flex-shrink: 0; width: 22px; height: 22px; border: 1px solid var(--color-line); border-radius: 0; font-size: 11px; color: var(--color-muted); }
 .avaliacao-opcao:has(input:checked) .caminhos-opcao-marca { background: var(--color-accent); color: var(--color-surface); border-color: var(--color-accent); }
 .caminhos-etapa > .acoes-topico { display: flex; justify-content: flex-end; gap: 12px; padding-top: 20px; border-top: 1px solid var(--color-line); }
-.caminhos-etapa .btn { min-height: 44px; border-radius: 8px; }
+.caminhos-etapa .btn { min-height: 44px; border-radius: 0; }
 .caminhos-revisao { display: grid; gap: 12px; counter-reset: resposta; }
-.caminhos-revisao li { padding: 18px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-page); }
+.caminhos-revisao li { padding: 18px; border: 1px solid var(--color-line); border-radius: 0; background: var(--color-page); }
 .caminhos-revisao li strong { line-height: 1.6; }
-.editor-caminhos-opcao { padding: 0 18px 18px; border: 1px solid var(--color-line); border-radius: 10px; background: var(--color-page); }
-.editor-caminhos .editor-pergunta { border-radius: 12px; }
+.editor-caminhos-opcao { padding: 0 18px 18px; border: 1px solid var(--color-line); border-radius: 0; background: var(--color-page); }
+.editor-caminhos .editor-pergunta { border-radius: 0; }
 .caminhos-admin-item + .caminhos-admin-item { border-top: 1px solid var(--color-line); }
 @media (max-width: 640px) { .caminhos-etapa > .acoes-topico { flex-wrap: wrap; } .caminhos-etapa > .acoes-topico .btn { flex: 1; } }
