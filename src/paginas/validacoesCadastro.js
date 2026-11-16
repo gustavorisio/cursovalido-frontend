@@ -8,3 +8,7 @@ export function validarIdade(dataNascimento) {
   if (aniversarioAindaNaoChegou) idade -= 1;
   return idade;
 }
+
+export function limparNomeCompleto(nome) {
+  return nome.normalize('NFC').replace(/[^\p{L}\p{M} ]/gu, '').replace(/ +/g, ' ').trimStart();
+}

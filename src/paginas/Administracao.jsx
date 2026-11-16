@@ -17,7 +17,7 @@ import { validarDocumento } from '../servicos/validacoesFormulario';
 
 export default function Administracao({ tela = 'geral' }) {
   const { sessao } = useAutenticacao();
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState(null);
   const [principal, setPrincipal] = useState(false);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
@@ -105,7 +105,7 @@ export default function Administracao({ tela = 'geral' }) {
       await publicarDocumento(nomePolitica.trim(), conteudoPolitica.trim());
 
       setConteudoPolitica('');
-    }, 'Publicar esta versão arquivará a atual e exigirá novo aceite na próxima autenticação. As sessões abertas continuarão funcionando. Deseja continuar?', 'Nova versão publicada. O novo aceite será solicitado na próxima autenticação.');
+    }, 'Publicar esta versão arquivará a atual. Os usuários precisarão revisar os documentos e confirmar o aceite após se autenticar. Deseja continuar?', 'Nova versão publicada.');
   }
 
   return <div className="app-container"><main className="main-content administracao">
@@ -120,7 +120,7 @@ export default function Administracao({ tela = 'geral' }) {
     </nav>
     {erro ? <div className="mensagem-erro" role="alert">{erro}<div><button className="btn btn-secondary" type="button" disabled={carregando} onClick={() => { setErro(''); carregarDados(); }}>Tentar novamente</button></div></div> : null}
     {mensagem ? <div className="mensagem-sucesso" role="status">{mensagem}</div> : null}
-    {carregando ? <p className="texto-suave" role="status">Carregando administração...</p> : <>
+    {carregando && (tela !== "usuarios" || usuarios === null) ? <p className="texto-suave" role="status">Carregando administração...</p> : <>
       {tela === 'geral' ? <section className="card configuracoes-conta" aria-labelledby="perfil-administrador">
         <h2 className="titulo-detalhe" id="perfil-administrador">Meu perfil administrativo</h2>
         <p className="texto-suave">Dados do administrador conectado à plataforma.</p>
@@ -149,7 +149,7 @@ export default function Administracao({ tela = 'geral' }) {
           <p className="texto-suave">Versão vigente: {politica?.versao ?? 'Nenhuma versão publicada'}</p>
           <form className="formulario-publico" onSubmit={publicar}>
             <label>Nome do documento<input required maxLength={255} value={nomePolitica} onChange={(evento) => setNomePolitica(evento.target.value)} /></label>
-            <p className="texto-suave">A versão será incrementada automaticamente pelo sistema ao publicar.</p>
+            <p className="texto-suave">A versão será incrementada automaticamente ao publicar{tela === 'termos' ? ' (v1.2, v1.4, v1.6, v1.8, v2.0...)' : ''}.</p>
             <p className="texto-suave">O conteúdo pode ser escrito em texto simples ou HTML básico (títulos, parágrafos e listas).</p>
             <label>Conteúdo<textarea className="input-field" required maxLength={10000} rows={12} value={conteudoPolitica} onChange={(evento) => setConteudoPolitica(evento.target.value)} /></label>
             <button className="btn btn-primary" disabled={processando}>Publicar nova versão</button>
@@ -181,7 +181,7 @@ export default function Administracao({ tela = 'geral' }) {
           </section>
         </> : null}
       </> : null}
-      {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios} processando={processando} onExecutar={solicitar} /> : null}
+      {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios ?? []} processando={processando} onExecutar={solicitar} /> : null}
     </>}
     {confirmacao ? <ConfirmacaoModal titulo="Confirmar ação" processando={processando} mensagem={confirmacao.texto} onConfirmar={() => { if (!processando) acionar(confirmacao.acao, confirmacao.sucesso); }} onCancelar={() => { if (!processando) setConfirmacao(null); }} /> : null}
   </main><Rodape /></div>;

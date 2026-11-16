@@ -1,6 +1,4 @@
-export const CHAVE_SESSAO_ABA = 'curso-valido-sessao-aba';
-
-export const CHAVE_CONTROLE_SESSAO = 'curso-valido-controle-sessao';
+export const CHAVE_SESSAO = 'curso-valido-sessao-persistente';
 
 export function dadosDoToken(token) {
   if (typeof token !== 'string') return null;
@@ -19,54 +17,36 @@ export function tokenValido(token) {
   return dados.exp * 1000 > Date.now();
 }
 
-// A sessao persiste somente na aba; o armazenamento compartilhado recebe
-// apenas o identificador usado para invalidar a conta anterior em outras abas.
-export function criarControleSessao(armazenamento, armazenamentoAba = null) {
-  let sessao = null;
-
+export function criarControleSessao(armazenamento) {
   function obter() {
-    if (!sessao && armazenamentoAba) {
-      try { sessao = JSON.parse(armazenamentoAba.getItem(CHAVE_SESSAO_ABA)); } catch { sessao = null; }
-    }
-    if (!sessao) return null;
-    if (!tokenValido(sessao.token)) return null;
-    if (armazenamento.getItem(CHAVE_CONTROLE_SESSAO) !== sessao.controle) return null;
-    return sessao;
-  }
-
-  function encerrar() {
-    obter();
-    const anterior = sessao;
-    sessao = null;
-    armazenamentoAba?.removeItem(CHAVE_SESSAO_ABA);
-    if (anterior) {
-      if (armazenamento.getItem(CHAVE_CONTROLE_SESSAO) === anterior.controle) {
-        armazenamento.removeItem(CHAVE_CONTROLE_SESSAO);
-      }
-    }
-    return anterior;
+    const registro = armazenamento.getItem(CHAVE_SESSAO);
+    if (!registro) return null;
+    let sessao;
+    try { sessao = JSON.parse(registro); } catch { sessao = null; }
+    if (tokenValido(sessao?.token)) return sessao;
+    if (armazenamento.getItem(CHAVE_SESSAO) === registro) armazenamento.removeItem(CHAVE_SESSAO);
+    return null;
   }
 
   function iniciar(dados) {
     if (!tokenValido(dados?.token)) throw new Error('A resposta de autenticação não contém uma sessão válida.');
-    const nova = { ...dados, controle: crypto.randomUUID() };
-    armazenamento.setItem(CHAVE_CONTROLE_SESSAO, nova.controle);
-    armazenamentoAba?.setItem(CHAVE_SESSAO_ABA, JSON.stringify(nova));
-    sessao = nova;
-    return nova;
+    armazenamento.setItem(CHAVE_SESSAO, JSON.stringify(dados));
+    return dados;
   }
 
-  return { obter, iniciar, encerrar, possuiSessao: () => obter() !== null };
+  function encerrar() {
+    const anterior = obter();
+    if (anterior) armazenamento.removeItem(CHAVE_SESSAO);
+    return anterior;
+  }
+
+  return { obter, iniciar, encerrar };
 }
 
 export const controleSessao = criarControleSessao({
-  getItem: (chave) => localStorage.getItem(chave),
+  getItem: (chave) => (globalThis.window?.localStorage ?? globalThis.localStorage)?.getItem(chave) ?? null,
   setItem: (chave, valor) => localStorage.setItem(chave, valor),
   removeItem: (chave) => localStorage.removeItem(chave),
-}, {
-  getItem: (chave) => sessionStorage.getItem(chave),
-  setItem: (chave, valor) => sessionStorage.setItem(chave, valor),
-  removeItem: (chave) => sessionStorage.removeItem(chave),
 });
 
 export function obterTokenSessao() {

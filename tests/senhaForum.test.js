@@ -228,3 +228,12 @@ test('tela confirma publicação, bloqueia envio repetido e mantém formulário 
   assert.equal(document.querySelector('textarea').value, 'Descrição que não deve ser perdida');
   assert.equal(botao('Publicar').disabled, false);
 });
+
+test('visitante recebe somente a negativa no fórum e não consulta tópicos', async () => {
+  const chamadas = [];
+  globalThis.fetch = async url => { chamadas.push(url); return Response.json([]); };
+  await act(() => raiz.render(h(contexto.Provider, { value: { autenticado: false, sessao: null } },
+    h(MemoryRouter, null, h(PaginaForum)))));
+  assert.equal(document.querySelector('main').textContent.trim(), 'Você não tem permissão.');
+  assert.deepEqual(chamadas, []);
+});

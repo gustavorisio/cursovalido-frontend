@@ -33,13 +33,14 @@ afterEach(async () => {
 
 for (const tela of ['termos', 'privacidade']) {
   test(`publica ${tela} sem versao manual e mostra a versao devolvida pelo backend`, async () => {
-    let atual = { nome: 'Documento', versao: '7.0', conteudo: 'Texto vigente' };
+    const [anterior, proxima] = tela === 'termos' ? ['v1.8', 'v2.0'] : ['7.0', '8.0'];
+    let atual = { nome: 'Documento', versao: anterior, conteudo: 'Texto vigente' };
     const enviados = [];
     globalThis.fetch = async (url, opcoes = {}) => {
       if (String(url).endsWith('/administracao/permissoes')) return Response.json({ principal: true });
       if (opcoes.method === 'POST') {
         enviados.push(JSON.parse(opcoes.body));
-        atual = { ...enviados.at(-1), versao: '8.0' };
+        atual = { ...enviados.at(-1), versao: proxima };
         return Response.json(atual, { status: 201 });
       }
       return Response.json(String(url).endsWith('/politicas/ativas') ? [atual] : atual);
@@ -47,12 +48,12 @@ for (const tela of ['termos', 'privacidade']) {
     await act(async () => raiz.render(createElement(MemoryRouter, null,
       createElement(Contexto.Provider, { value: { sessao: { nome: 'Principal', idUsuario: 1 } } },
         createElement(Administracao, { tela })))));
-    assert.match(document.body.textContent, /Versão vigente: 7.0/);
+    assert.ok(document.body.textContent.includes(`Versão vigente: ${anterior}`));
     assert.equal(document.querySelectorAll('form input').length, 1);
     assert.match(document.body.textContent, /incrementada automaticamente/);
     await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
     await act(async () => document.querySelector('[role="dialog"] .btn-danger').click());
     assert.deepEqual(enviados, [{ nome: 'Documento', conteudo: 'Texto vigente' }]);
-    assert.match(document.body.textContent, /Versão vigente: 8.0/);
+    assert.ok(document.body.textContent.includes(`Versão vigente: ${proxima}`));
   });
 }

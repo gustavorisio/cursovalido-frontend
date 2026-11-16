@@ -69,7 +69,7 @@ afterEach(async () => {
 async function renderizar(tela, perfil, caminho, rota = caminho) {
   await act(async () => {
     raiz.render(h(contexto.Provider, { value: { autenticado: Boolean(perfil), sessao: { perfil } } },
-      h(MemoryRouter, { initialEntries: [caminho] }, h(Routes, null, h(Route, { path: rota, element: h(telas[tela]) })))));
+      h(MemoryRouter, { key: caminho, initialEntries: [caminho] }, h(Routes, null, h(Route, { path: rota, element: h(telas[tela]) })))));
   });
   assert.ok(document.querySelector('.page-header .page-title'));
   assert.equal(document.querySelector('[role="alert"]'), null);
@@ -340,4 +340,26 @@ test('editor da avaliação do curso permite adicionar no máximo dez perguntas'
   for (let indice = 1; indice <= 10; indice++) await act(() => adicionar.click());
   assert.equal(document.querySelectorAll('.editor-pergunta').length, 10);
   assert.equal(adicionar.disabled, true);
+});
+
+test('catálogo e meus cursos mostram no máximo nove cursos por página', async () => {
+  const anteriores = globalThis.fetch;
+  const muitos = Array.from({ length: 12 }, (_, i) => ({ ...cursos[0], id: i + 1, titulo: 'Curso ' + (i + 1) }));
+  globalThis.fetch = (url, opcoes) => new URL(url).pathname.endsWith('/cursos')
+    ? Promise.resolve(Response.json(muitos)) : anteriores(url, opcoes);
+  for (const [tela, perfil, caminho] of [
+    ['PaginaCatalogo', null, '/cursos'],
+    ['PaginaCatalogo', 'ALUNO', '/aluno/cursos'],
+    ['PaginaGestaoCursos', 'PROFESSOR', '/professor/cursos'],
+    ['PaginaAulasAdministrador', 'ADMINISTRADOR', '/administracao/cursos'],
+  ]) {
+    await renderizar(tela, perfil, caminho);
+    const lista = () => document.querySelector('.aulas-cursos-grade');
+    assert.equal(lista().children.length, 9);
+    const proxima = () => [...document.querySelectorAll('.paginacao-lista button')].find(b => b.textContent === 'Próxima');
+    await act(() => proxima().click());
+    assert.equal(lista().children.length, 3);
+    assert.match(lista().firstElementChild.textContent, /Curso 10/);
+    assert.equal(proxima().disabled, true);
+  }
 });

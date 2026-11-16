@@ -94,3 +94,25 @@ test('falha ao excluir mantem o usuario na lista e informa o erro', async () => 
   assert.ok(artigo('Professor'));
   assert.match(document.querySelector('[role="alert"]').textContent, /indisponível/);
 });
+
+test('paginação administrativa volta à última página disponível ao excluir um usuário', async () => {
+  let usuarios = Array.from({ length: 11 }, (_, i) => ({
+    ...dados()[1], id: i + 1, nome: 'Professor ' + (i + 1),
+  }));
+  globalThis.fetch = async (url, opcoes = {}) => {
+    if (String(url).endsWith('/permissoes')) return Response.json({ principal: true });
+    if (opcoes.method === 'DELETE') {
+      usuarios = usuarios.filter(u => u.id !== 11);
+      return new Response(null, { status: 204 });
+    }
+    return Response.json(usuarios);
+  };
+  await renderizar();
+  assert.equal(document.querySelectorAll('.moderacao-usuario').length, 10);
+  await act(() => botao(document.querySelector('.paginacao-lista'), 'Próxima').click());
+  assert.equal(document.querySelectorAll('.moderacao-usuario').length, 1);
+  await act(() => botao(artigo('Professor 11'), 'Excluir conta').click());
+  await act(() => botao(document.querySelector('[role="dialog"]'), 'Confirmar').click());
+  assert.equal(document.querySelectorAll('.moderacao-usuario').length, 10);
+  assert.equal(document.querySelector('.paginacao-lista'), null);
+});

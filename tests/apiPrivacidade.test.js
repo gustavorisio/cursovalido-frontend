@@ -60,3 +60,8 @@ test('validacoes de formulario preservam o contrato utilizado pelas telas', asyn
     return true;
   });
 });
+test('limite de cadastro informa o motivo devolvido pela API em vez de pedir para tentar novamente', async () => {
+  const erro = 'Limite de dois cadastros por endereço IP atingido. Se precisar de ajuda, procure o Suporte.';
+  globalThis.fetch = async () => Response.json({ erro, codigo: 'OPERACAO_RECUSADA' }, { status: 429 });
+  await assert.rejects(() => api.requisitar('/autenticacao/cadastro', { semAutenticacao: true }), { message: erro });
+});

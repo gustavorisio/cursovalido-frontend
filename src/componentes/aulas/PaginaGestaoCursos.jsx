@@ -1,6 +1,7 @@
 import ModuloExpansivel from './componentes/ModuloExpansivel';
 import CapaCurso from './componentes/CapaCurso';
 import PesquisaConteudo from './componentes/PesquisaConteudo';
+import Paginacao from '../comuns/Paginacao';
 import { correspondeAoNome } from './servicos/pesquisaConteudo';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -146,28 +147,30 @@ function GestaoConteudo({ idCurso, idModulo }) {
         {carregando ? <div className="card empty-list" role="status">Carregando...</div> : falhaCarga ? <div className="card empty-list"><button className="btn btn-secondary" type="button" onClick={() => { setCarregando(true); setErro(''); setTentativa(tentativa + 1); }}>Tentar novamente</button></div> : <>
           {itens.length === 0 ? <div className="card empty-list">Nenhum conteúdo cadastrado. Cadastre o primeiro {nome}.</div> : null}
           {itens.length > 0 && itensFiltrados.length === 0 && <p className="card empty-list" role="status">Nenhum conteúdo encontrado com estes filtros.</p>}
-          <div className={`aulas-grade aulas-conteudo-grade${tipo === 'modulo' ? ' aulas-modulos-lista' : ''}`}>
-            {itensFiltrados.map((item) => <CartaoConteudo key={item.id} tipo={tipo} item={item} expandido={Boolean(busca.trim())}>
+          <Paginacao key={JSON.stringify([tipo, idCurso, idModulo, busca, tema])} itens={itensFiltrados} tamanho={tipo === "curso" ? 9 : Math.max(1, itensFiltrados.length)} rotulo="Páginas dos meus cursos">
+            {(itensDaPagina) => <div className={`aulas-grade aulas-conteudo-grade${tipo === 'modulo' ? ' aulas-modulos-lista' : tipo === 'curso' ? ' aulas-cursos-grade' : ''}`}>
+              {itensDaPagina.map((item) => <CartaoConteudo key={item.id} tipo={tipo} item={item} expandido={Boolean(busca.trim())}>
 
-              {tipo === 'curso' && <CapaCurso curso={item} />}
-              {tipo === 'aula' && <span className="aulas-etiqueta">{nome} {item.ordem}</span>}
-              <div className="aulas-cartao-corpo">
-                {tipo !== 'modulo' && <h2 className="topic-title">{item.titulo}</h2>}
-                <p className="content-text">{item.descricao}</p>
-                {tipo === 'aula' ? <p className="texto-suave">Vídeo: <a href={`https://www.youtube.com/watch?v=${item.youtubeVideoId}`} target="_blank" rel="noreferrer">Abrir no YouTube</a></p> : null}
-              </div>
-              <footer className="aulas-cartao-acoes">
-                <div className="acoes-topico">
-                  {tipo === 'curso' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${item.id}/modulos`}>Ver módulos</Link> : null}
-                  {tipo === 'curso' && <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${item.id}/diagnostico`}>Avaliação do curso</Link>}
-                  {tipo === 'modulo' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${idCurso}/modulos/${item.id}/aulas`}>Ver aulas</Link> : null}
-                  {tipo === 'modulo' && <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${idCurso}/modulos/${item.id}/questionario`}>Questionário do módulo</Link>}
-                  <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => abrirFormulario(item)}>Editar</button>
-                  <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => setExcluindo(item)}>Excluir</button>
+                {tipo === 'curso' && <CapaCurso curso={item} />}
+                {tipo === 'aula' && <span className="aulas-etiqueta">{nome} {item.ordem}</span>}
+                <div className="aulas-cartao-corpo">
+                  {tipo !== 'modulo' && <h2 className="topic-title">{item.titulo}</h2>}
+                  <p className="content-text">{item.descricao}</p>
+                  {tipo === 'aula' ? <p className="texto-suave">Vídeo: <a href={`https://www.youtube.com/watch?v=${item.youtubeVideoId}`} target="_blank" rel="noreferrer">Abrir no YouTube</a></p> : null}
                 </div>
-              </footer>
-            </CartaoConteudo>)}
-          </div>
+                <footer className="aulas-cartao-acoes">
+                  <div className="acoes-topico">
+                    {tipo === 'curso' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${item.id}/modulos`}>Ver módulos</Link> : null}
+                    {tipo === 'curso' && <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${item.id}/diagnostico`}>Avaliação do curso</Link>}
+                    {tipo === 'modulo' ? <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${idCurso}/modulos/${item.id}/aulas`}>Ver aulas</Link> : null}
+                    {tipo === 'modulo' && <Link className="btn btn-secondary btn-small" to={`/professor/cursos/${idCurso}/modulos/${item.id}/questionario`}>Questionário do módulo</Link>}
+                    <button className="btn btn-secondary btn-small" type="button" disabled={processando} onClick={() => abrirFormulario(item)}>Editar</button>
+                    <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => setExcluindo(item)}>Excluir</button>
+                  </div>
+                </footer>
+              </CartaoConteudo>)}
+            </div>}
+          </Paginacao>
         </>}
         </section>
       </>}

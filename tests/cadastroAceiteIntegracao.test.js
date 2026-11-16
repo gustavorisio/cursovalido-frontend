@@ -7,8 +7,9 @@ import react from '@vitejs/plugin-react';
 import { createElement as h, act, useState } from 'react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-let servidor, createRoot, Cadastro, Convite, Reativacao, Privacidade, Documento, Configuracoes, RotaProtegida, Login, Contexto, dom, raiz;
+let servidor, createRoot, Cadastro, Convite, Reativacao, Privacidade, Documento, Configuracoes, RotaProtegida, Login, Contexto, Provedor, controleSessao, dom, raiz;
 const fetchOriginal = globalThis.fetch;
+const customEventOriginal = globalThis.CustomEvent;
 const documentos = {
   termos: { versao: '1.0', conteudo: '<h1>Termos de Aceite</h1><p>Condições <strong>obrigatórias</strong>.</p><ol><li>Primeira condição</li></ol>' },
   privacidade: { versao: '2.0', conteudo: '<h1>Política de Privacidade</h1><p>Tratamento de <em>dados pessoais</em>.</p><ul><li>Seus direitos</li></ul>' }
@@ -29,25 +30,37 @@ before(async () => {
   RotaProtegida = (await servidor.ssrLoadModule('/src/componentes/autenticacao/RotaProtegida.jsx')).default;
   Login = (await servidor.ssrLoadModule('/src/paginas/Login.jsx')).default;
   Contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+  Provedor = (await servidor.ssrLoadModule('/src/contextos/AutenticacaoContexto.jsx')).AutenticacaoProvedor;
+  ({ controleSessao } = await servidor.ssrLoadModule('/src/servicos/sessaoNavegador.js'));
   inicial.window.close();
 });
 after(async () => servidor?.close());
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000', pretendToBeVisual: true });
+  dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; };
   Object.assign(globalThis, { window: dom.window, document: dom.window.document, localStorage: dom.window.localStorage, sessionStorage: dom.window.sessionStorage, IS_REACT_ACT_ENVIRONMENT: true });
+  for (const metodo of ['addEventListener', 'removeEventListener', 'dispatchEvent']) {
+    globalThis[metodo] = dom.window[metodo].bind(dom.window);
+  }
+  globalThis.CustomEvent = dom.window.CustomEvent;
   raiz = createRoot(document.getElementById('root'));
 });
 afterEach(async () => {
   await act(() => raiz.unmount());
   dom.window.close();
   globalThis.fetch = fetchOriginal;
-  for (const chave of ['window', 'document', 'localStorage', 'sessionStorage', 'IS_REACT_ACT_ENVIRONMENT']) delete globalThis[chave];
+  globalThis.CustomEvent = customEventOriginal;
+  for (const chave of ['window', 'document', 'localStorage', 'sessionStorage', 'IS_REACT_ACT_ENVIRONMENT', 'addEventListener', 'removeEventListener', 'dispatchEvent']) delete globalThis[chave];
 });
 
 const botao = (texto) => [...document.querySelectorAll('button')].find((elemento) => elemento.textContent === texto);
 const aceite = () => document.querySelector('.aceite-documentos input[type=checkbox]');
 const leitor = () => document.querySelector('.leitura-documento-texto');
 const confirmarLeitura = () => document.querySelector('.leitura-documento .btn-primary');
+const tokenDe = (perfil, tipo) => 'header.' + Buffer.from(JSON.stringify({
+  perfil, tipo, exp: Math.floor(Date.now() / 1000) + 300,
+})).toString('base64url') + '.assinatura';
 
 for (const perfil of [null, 'ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
   test(`consulta pública ${perfil ?? 'visitante'}: documento e rodapé únicos com o mesmo conteúdo`, async () => {
@@ -82,6 +95,8 @@ for (const { fluxo, perfil } of [
     const tipos = perfil === 'ALUNO' ? ['termos', 'privacidade'] : ['termos', 'privacidade', 'responsabilidade'];
     const responsabilidade = { perfil, versao: '3.0', conteudo: 'Responsabilidades de ' + perfil };
     const envios = [];
+    const tokenRestrito = tokenDe(perfil, 'termos');
+    const tokenSessao = tokenDe(perfil, 'sessao');
     let falharPrivacidade = true;
     let falharResponsabilidade = true;
     globalThis.fetch = async (url, opcoes = {}) => {
@@ -98,17 +113,21 @@ for (const { fluxo, perfil } of [
       if (String(url).endsWith('/convites/confirmar-email')) return new Response(null, { status: 204 });
       assert.equal(opcoes.method, 'POST');
       envios.push({ url: String(url), corpo: JSON.parse(opcoes.body) });
+      if (String(url).endsWith('/aceitar-termos-novamente')) {
+        assert.equal(opcoes.headers.Authorization, `Bearer ${tokenRestrito}`);
+        return Response.json({ token: tokenSessao, idUsuario: 1, nome: 'Conta de teste', perfil });
+      }
       return new Response(null, { status: 204 });
     };
 
     const reativacao = fluxo === 'reativação';
-    if (reativacao) sessionStorage.setItem('curso-valido-token-termos', 'header.' + Buffer.from(JSON.stringify({ perfil, exp: Math.floor(Date.now() / 1000) + 300 })).toString('base64url') + '.assinatura');
+    if (reativacao) sessionStorage.setItem('curso-valido-token-termos', tokenRestrito);
     const Pagina = reativacao ? Reativacao : fluxo === 'cadastro por convite' ? Convite : Cadastro;
     await act(async () => raiz.render(h(MemoryRouter, { initialEntries: [fluxo === 'cadastro por convite' ? '/convites/cadastro?token=convite-teste' : '/'] },
-      h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Pagina)))));
+      reativacao ? h(Provedor, null, h(Pagina)) : h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Pagina)))));
     if (fluxo === 'cadastro por convite') await act(async () => botao('Confirmar meu e-mail').click());
 
-    const textoFinal = reativacao ? 'Aceitar termos e voltar ao login' : fluxo === 'cadastro por convite' ? 'Enviar cadastro' : 'Cadastrar';
+    const textoFinal = reativacao ? 'Aceitar termos e continuar' : fluxo === 'cadastro por convite' ? 'Enviar cadastro' : 'Cadastrar';
     if (!reativacao) {
       const valores = ['Aluno Teste', 'aluno@example.com', 'SenhaTeste123!', '1990-01-01'];
       const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
@@ -187,7 +206,10 @@ for (const { fluxo, perfil } of [
       assert.equal(dados.versaoResponsabilidade, '3.0');
     } else assert.equal(dados.aceitouResponsabilidade, undefined);
     if (!reativacao) assert.equal(dados.aceitouTermosLgpd, true);
-    else assert.equal(sessionStorage.getItem('curso-valido-token-termos'), null);
+    else {
+      assert.equal(sessionStorage.getItem('curso-valido-token-termos'), null);
+      assert.equal(controleSessao.obter()?.token, tokenSessao);
+    }
   });
 }
 
@@ -212,12 +234,12 @@ test('primeiro acesso sem perfil identificável não libera envio', async () => 
   await act(async () => raiz.render(h(MemoryRouter, null,
     h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Reativacao)))));
   assert.match(document.querySelector('[role=alert]').textContent, /identificar seu perfil/);
-  assert.equal(botao('Aceitar termos e voltar ao login').disabled, true);
+  assert.equal(botao('Aceitar termos e continuar').disabled, true);
 });
 
 test('recarregar documentos após rejeição invalida todos os aceites mesmo com a mesma versão', async () => {
   const perfil = 'PROFESSOR';
-  sessionStorage.setItem('curso-valido-token-termos', 'header.' + Buffer.from(JSON.stringify({ perfil })).toString('base64url') + '.assinatura');
+  sessionStorage.setItem('curso-valido-token-termos', tokenDe(perfil, 'termos'));
   globalThis.fetch = async (url, opcoes = {}) => {
     if (opcoes.method === 'POST') return Response.json({}, { status: 400 });
     if (String(url).endsWith('/politicas/ativas')) return Response.json([documentos.termos]);
@@ -225,24 +247,84 @@ test('recarregar documentos após rejeição invalida todos os aceites mesmo com
     return Response.json({ perfil, versao: '3.0', conteudo: 'Responsabilidades do professor' });
   };
   await act(async () => raiz.render(h(MemoryRouter, null,
-    h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Reativacao)))));
+    h(Provedor, null, h(Reativacao)))));
   await act(async () => aceite().click());
   for (let indice = 0; indice < 3; indice++) {
     await act(async () => confirmarLeitura().click());
   }
-  await act(async () => botao('Aceitar termos e voltar ao login').click());
+  await act(async () => botao('Aceitar termos e continuar').click());
   assert.match(document.querySelector('[role=alert]').textContent, /Busque novamente/);
   await act(async () => botao('Buscar novamente').click());
   assert.equal(aceite().checked, false);
-  assert.equal(botao('Aceitar termos e voltar ao login').disabled, true);
-  assert.equal(botao('Política de Privacidade — Aceito'), undefined);
-  assert.equal(botao('Termo de Responsabilidade — Aceito'), undefined);
+  assert.equal(botao('Aceitar termos e continuar').disabled, true);
+  assert.equal(botao('Política de Privacidade - Aceito'), undefined);
+  assert.equal(botao('Termo de Responsabilidade - Aceito'), undefined);
   await act(async () => aceite().click());
   assert.equal(confirmarLeitura().disabled, false);
   await act(async () => confirmarLeitura().click());
-  assert.equal(botao('Aceitar termos e voltar ao login').disabled, true);
+  assert.equal(botao('Aceitar termos e continuar').disabled, true);
   assert.equal(document.querySelector('.leitura-documento h3').textContent, 'Política de Privacidade');
 });
+
+for (const { atualizacao, aceitou } of [
+  { atualizacao: true, aceitou: true },
+  { atualizacao: true, aceitou: false },
+  { atualizacao: false, aceitou: false },
+]) {
+  test(`decisão ${aceitou ? 'aceitar' : 'recusar'} ${atualizacao ? 'na sessão aberta' : 'após autenticação'} encerra o acesso`, async () => {
+    const perfil = 'ALUNO';
+    const token = tokenDe(perfil, atualizacao ? 'sessao' : 'termos');
+    const tokenRestrito = tokenDe(perfil, 'novo-aceite');
+    if (atualizacao) controleSessao.iniciar({ token, perfil });
+    else sessionStorage.setItem('curso-valido-token-termos', token);
+
+    const chamadas = [];
+    globalThis.fetch = async (url, opcoes = {}) => {
+      const caminho = new URL(url).pathname;
+      chamadas.push(caminho);
+      if (caminho === '/api/politicas/ativas') return Response.json([documentos.termos]);
+      if (caminho === '/api/autenticacao/login') return Response.json({ requerCodigo2fa: true });
+      if (caminho === '/api/autenticacao/confirmar-2fa') {
+        return Response.json({ codigo: 'TERMOS_NAO_ACEITOS', token: tokenRestrito }, { status: 403 });
+      }
+      assert.equal(caminho, '/api/autenticacao/decidir-termos');
+      assert.equal(opcoes.method, 'POST');
+      assert.equal(opcoes.headers.Authorization, `Bearer ${token}`);
+      assert.deepEqual(JSON.parse(opcoes.body), { aceitou });
+      return new Response(null, { status: 204 });
+    };
+
+    await act(async () => raiz.render(h(MemoryRouter, {
+      initialEntries: [`/termos-aceite?${atualizacao ? 'atualizacao' : 'reativacao'}=true`],
+    }, h(Provedor, null, h(Routes, null,
+      h(Route, { path: '/termos-aceite', element: h(Reativacao) }),
+      h(Route, { path: '/login', element: h(Login) }))))));
+    await act(async () => botao(aceitou ? 'Aceitar' : 'Recusar').click());
+    assert.deepEqual(chamadas, ['/api/politicas/ativas', '/api/autenticacao/decidir-termos']);
+    assert.equal(controleSessao.obter(), null);
+    assert.equal(sessionStorage.getItem('curso-valido-token-termos'), null);
+    assert.equal(document.querySelector('h1').textContent, 'Entrar na plataforma');
+    assert.match(document.querySelector('[role=status]').textContent, aceitou ? /confirme|confirmar/ : /recusou/);
+
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    async function enviarFormulario(valores) {
+      await act(() => {
+        document.querySelectorAll('form input').forEach((campo, indice) => {
+          setter.call(campo, valores[indice]);
+          campo.dispatchEvent(new window.Event('input', { bubbles: true }));
+        });
+      });
+      await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
+    }
+    await enviarFormulario(['aluno@example.com', 'SenhaTeste123!']);
+    assert.ok(botao('Validar código'));
+    await enviarFormulario(['123456']);
+    assert.ok(botao('Recusar'));
+    assert.equal(botao('Aceitar termos e continuar').disabled, true);
+    assert.equal(controleSessao.obter(), null);
+    assert.equal(sessionStorage.getItem('curso-valido-token-termos'), tokenRestrito);
+  });
+}
 
 for (const perfil of ['ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
   test(`revogação ${perfil}: cancelamento preserva conta e saída assíncrona mantém o aviso no login`, async () => {

@@ -40,6 +40,7 @@ function mensagemDeErro(status, dados) {
     CREDENCIAIS_INVALIDAS: 'E-mail ou senha incorretos. Confira os dados e tente novamente.',
     EMAIL_NAO_CONFIRMADO: 'Confirme seu e-mail para entrar. Abra a mensagem de confirmação ou peça um novo envio.',
     TERMOS_NAO_ACEITOS: 'Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.',
+    TERMOS_REAUTENTICACAO: 'Revise os novos termos e entre novamente para continuar.',
     TERMOS_ATUALIZADOS: 'Os termos foram atualizados. Recarregue a página e aceite os documentos novamente.',
     PENDENTE_APROVACAO: 'Seu cadastro está aguardando aprovação. Aguarde a liberação do administrador.',
     ACESSO_REJEITADO: 'Seu cadastro não foi aprovado. Entre em contato pelo Suporte para pedir uma revisão.',
@@ -53,7 +54,10 @@ function mensagemDeErro(status, dados) {
   };
   if (Object.hasOwn(mensagens, dados?.codigo)) return mensagens[dados.codigo];
   if (status >= 500) return 'O serviço está indisponível no momento. Tente novamente em alguns minutos.';
-  if (status === 429) return 'Você fez muitas tentativas. Aguarde alguns minutos e tente novamente.';
+  if (status === 429) {
+    return (dados?.codigo === 'OPERACAO_RECUSADA' && formatarMensagem(dados))
+      || 'Você fez muitas tentativas. Aguarde alguns minutos e tente novamente.';
+  }
   if (status === 401) return 'Sua sessão terminou. Entre na sua conta novamente.';
   if (status === 403) return dados?.codigo === 'OPERACAO_RECUSADA' && formatarMensagem(dados)
     ? formatarMensagem(dados) : 'Você não tem permissão para fazer isso. Se precisar, fale com o Suporte.';
@@ -115,10 +119,9 @@ export async function requisitar(caminho, opcoes = {}) {
       globalThis.dispatchEvent?.(new CustomEvent('curso-valido-restricoes-alteradas'));
       throw new ErroApi(resposta.status, formatarMensagem(dados) ?? 'Há uma restrição ativa na sua conta.', dados);
     }
-    if (resposta.status === 403 && !semAutenticacao && dados?.codigo === 'TERMOS_NAO_ACEITOS') {
-      globalThis.dispatchEvent?.(new CustomEvent('curso-valido-termos-pendentes', {
-        detail: { token: dados?.token ?? dados?.jwt ?? dados?.accessToken, tokenOrigem: token }
-      }));
+    if (resposta.status === 403 && !semAutenticacao && token && tokenAutenticacao === undefined
+        && dados?.codigo === 'TERMOS_REAUTENTICACAO' && obterTokenSessao() === token) {
+      globalThis.dispatchEvent?.(new CustomEvent('curso-valido-termos-atualizados'));
     }
     if (resposta.status === 401 && !semAutenticacao) {
       globalThis.dispatchEvent?.(new CustomEvent('curso-valido-sessao-expirada', { detail: { token: token } }));

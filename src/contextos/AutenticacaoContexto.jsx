@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { requisitar } from '../servicos/api';
-import { confirmarCodigo2fa } from '../servicos/servicoAutenticacao';
-import { CHAVE_CONTROLE_SESSAO, controleSessao, dadosDoToken, tokenValido } from '../servicos/sessaoNavegador';
+import { aceitarTermosNovamente, confirmarCodigo2fa, decidirTermos } from '../servicos/servicoAutenticacao';
+import { CHAVE_SESSAO, controleSessao, dadosDoToken, tokenValido } from '../servicos/sessaoNavegador';
 import { AutenticacaoContexto } from './contextoBaseAutenticacao';
 
 const CHAVE_TOKEN_TERMOS = 'curso-valido-token-termos';
@@ -18,27 +18,44 @@ async function revogarToken(token) {
 
 function limparArmazenamentoLegado() {
   const tokenLegado = sessionStorage.getItem('token') ?? localStorage.getItem('token');
-  for (const chave of ['token', 'curso-valido-sessao']) {
+  for (const chave of ['token', 'curso-valido-sessao', 'curso-valido-sessao-aba', 'curso-valido-controle-sessao']) {
     sessionStorage.removeItem(chave);
     localStorage.removeItem(chave);
   }
   return tokenLegado;
 }
 
+function recuperarSessao() {
+  const persistente = controleSessao.obter();
+  if (persistente) return persistente;
+  try {
+    const anterior = JSON.parse(sessionStorage.getItem('curso-valido-sessao-aba'));
+    if (anterior?.controle === localStorage.getItem('curso-valido-controle-sessao') && tokenValido(anterior.token)) {
+      const { token, idUsuario, nome, perfil } = anterior;
+      return controleSessao.iniciar({ token, idUsuario, nome, perfil });
+    }
+  } catch {
+    // Uma sessão anterior inválida será removida na inicialização.
+  }
+  return null;
+}
+
 export function AutenticacaoProvedor({ children }) {
-  const [sessao, setSessao] = useState(() => controleSessao.obter());
+  const [sessao, setSessao] = useState(recuperarSessao);
   const geracao = useRef(0);
   const emailPendente = useRef('');
 
-  const sair = useCallback(() => {
+  const encerrarSessaoLocal = useCallback(() => {
     geracao.current += 1;
     emailPendente.current = '';
     const anterior = controleSessao.encerrar();
     setSessao(null);
     sessionStorage.removeItem(CHAVE_TOKEN_TERMOS);
     const legado = limparArmazenamentoLegado();
-    return revogarToken(anterior?.token ?? legado);
+    return anterior?.token ?? legado;
   }, []);
+
+  const sair = useCallback(() => revogarToken(encerrarSessaoLocal()), [encerrarSessaoLocal]);
 
   useEffect(() => {
     const legado = limparArmazenamentoLegado();
@@ -49,27 +66,19 @@ export function AutenticacaoProvedor({ children }) {
       sair();
     }
 
-    function guardarTokenDeTermos(evento) {
-      if (evento.detail?.tokenOrigem !== controleSessao.obter()?.token) return;
-      sair();
-      if (evento.detail?.token) sessionStorage.setItem(CHAVE_TOKEN_TERMOS, evento.detail.token);
-    }
-
     function sincronizarAbas(evento) {
-      if (evento.key !== CHAVE_CONTROLE_SESSAO) {
-        if (evento.key !== null) return;
-      }
-      sair();
+      if (evento.key !== CHAVE_SESSAO && evento.key !== null) return;
+      geracao.current += 1;
+      emailPendente.current = '';
+      setSessao(controleSessao.obter());
     }
 
     function conferirAoVoltar() {
       if (document.visibilityState !== 'visible') return;
-      if (!controleSessao.possuiSessao()) return;
-      if (!controleSessao.obter()) sair();
+      setSessao(controleSessao.obter());
     }
 
     globalThis.addEventListener('curso-valido-sessao-expirada', encerrarSessao);
-    globalThis.addEventListener('curso-valido-termos-pendentes', guardarTokenDeTermos);
     window.addEventListener('storage', sincronizarAbas);
     window.addEventListener('pageshow', conferirAoVoltar);
     document.addEventListener('visibilitychange', conferirAoVoltar);
@@ -77,7 +86,6 @@ export function AutenticacaoProvedor({ children }) {
       geracao.current += 1;
       emailPendente.current = '';
       globalThis.removeEventListener('curso-valido-sessao-expirada', encerrarSessao);
-      globalThis.removeEventListener('curso-valido-termos-pendentes', guardarTokenDeTermos);
       window.removeEventListener('storage', sincronizarAbas);
       window.removeEventListener('pageshow', conferirAoVoltar);
       document.removeEventListener('visibilitychange', conferirAoVoltar);
@@ -87,9 +95,9 @@ export function AutenticacaoProvedor({ children }) {
   useEffect(() => {
     if (!sessao) return;
     const expiraEm = dadosDoToken(sessao.token)?.exp * 1000;
-    const temporizador = window.setTimeout(sair, Math.min(Math.max(0, expiraEm - Date.now()), 2147483647));
+    const temporizador = window.setTimeout(() => setSessao(controleSessao.obter()), Math.min(Math.max(0, expiraEm - Date.now()), 2147483647));
     return () => window.clearTimeout(temporizador);
-  }, [sessao, sair]);
+  }, [sessao]);
 
   const guardarResposta = useCallback(async (resposta, tentativa) => {
     if (geracao.current !== tentativa) {
@@ -131,13 +139,31 @@ export function AutenticacaoProvedor({ children }) {
     return guardarResposta(resposta, tentativa);
   }, [guardarResposta]);
 
+  const confirmarAceiteTermos = useCallback(async (token, versao, responsabilidade) => {
+    const tentativa = geracao.current;
+    const resposta = await aceitarTermosNovamente(token, versao, responsabilidade);
+    return guardarResposta(resposta, tentativa);
+  }, [guardarResposta]);
+
+  const encerrarPorDecisaoTermos = useCallback(async (token, aceitou) => {
+    const tentativa = geracao.current;
+    await decidirTermos(token, aceitou);
+    const tokenAtual = controleSessao.obter()?.token ?? sessionStorage.getItem(CHAVE_TOKEN_TERMOS);
+    if (geracao.current !== tentativa || (tokenAtual && tokenAtual !== token)) {
+      throw new Error('A sessão mudou. Abra a tela de termos novamente.');
+    }
+    encerrarSessaoLocal();
+  }, [encerrarSessaoLocal]);
+
   const valor = useMemo(() => ({
     sessao,
     autenticado: sessao ? controleSessao.obter()?.token === sessao.token : false,
     autenticarUsuario,
     validarCodigo2fa,
+    confirmarAceiteTermos,
+    encerrarPorDecisaoTermos,
     sair,
-  }), [autenticarUsuario, sair, sessao, validarCodigo2fa]);
+  }), [autenticarUsuario, confirmarAceiteTermos, encerrarPorDecisaoTermos, sair, sessao, validarCodigo2fa]);
 
   return <AutenticacaoContexto.Provider value={valor}>{children}</AutenticacaoContexto.Provider>;
 }
