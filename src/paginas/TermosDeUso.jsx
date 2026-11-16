@@ -83,7 +83,7 @@ function TelaTermos() {
     if (enviando.current || !token) return;
     if (confirmou && (!versao || carregandoMetadados)) return;
     if (confirmou && !atualizacao && (!perfilValido ||
-        (perfil !== 'ALUNO' && !responsabilidade.aceitouResponsabilidade))) return;
+      (perfil !== 'ALUNO' && !responsabilidade.aceitouResponsabilidade))) return;
 
     enviando.current = true;
     setCarregando(true);
@@ -99,8 +99,10 @@ function TelaTermos() {
       setAceitePendente('');
       navegar('/login', {
         replace: true,
-        state: { mensagem: confirmou ? 'Entre novamente para confirmar o aceite dos novos termos.' :
-          'Você recusou os termos. Entre novamente para revisar sua decisão.' }
+        state: {
+          mensagem: confirmou ? 'Entre novamente para confirmar o aceite dos novos termos.' :
+            'Você recusou os termos. Entre novamente para revisar sua decisão.'
+        }
       });
     } catch (falha) {
       if (falha.status === 400 && !atualizacao && confirmou) {

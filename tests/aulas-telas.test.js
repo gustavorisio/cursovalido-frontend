@@ -1,13 +1,11 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { JSDOM } from 'jsdom';
 import { createElement as h, act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-let servidor, contexto, telas, dom, raiz;
+let contexto, telas, dom, raiz;
 const fetchOriginal = globalThis.fetch;
 const cursos = [
   { id: 1, titulo: 'React para web', descricao: 'Interfaces com React.', idTema: 8, nomeTema: 'Desenvolvimento', idArea: 8 },
@@ -22,16 +20,16 @@ const aulas = [
 const avaliacaoAluno = { id: 1, titulo: 'Avaliação do curso', versao: 1, perguntas: [{ enunciado: 'Qual alternativa?', alternativas: ['Correta', 'Incorreta'] }], resultado: null };
 const avaliacaoGestor = { ...avaliacaoAluno, publicado: true, perguntas: [{ ...avaliacaoAluno.perguntas[0], alternativaCorreta: 0, explicacao: 'Entenda o conceito.', idAulaRevisao: 4 }] };
 
-before(async () => {
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+beforeAll(async () => {
+  contexto = (await import('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
   telas = {};
+  const modulos = import.meta.glob('/src/componentes/aulas/*.jsx');
   for (const nome of ['PaginaCatalogo', 'PaginaGestaoCursos', 'PaginaAulasAdministrador', 'PaginaCursoAluno', 'PaginaAulaAluno', 'PaginaQuestionarioAluno', 'PaginaEditorQuestionario']) {
-    telas[nome] = (await servidor.ssrLoadModule(`/src/componentes/aulas/${nome}.jsx`)).default;
+    telas[nome] = (await modulos[`/src/componentes/aulas/${nome}.jsx`]()).default;
   }
-  telas.QuestionarioCaminhos = (await servidor.ssrLoadModule('/src/componentes/aulas/componentes/QuestionarioCaminhos.jsx')).default;
+  telas.QuestionarioCaminhos = (await import('/src/componentes/aulas/componentes/QuestionarioCaminhos.jsx')).default;
 });
-after(async () => { await servidor?.close(); });
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000' });
   globalThis.window = dom.window;
@@ -39,7 +37,7 @@ beforeEach(() => {
   globalThis.localStorage = dom.window.localStorage;
   globalThis.sessionStorage = dom.window.sessionStorage;
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  window.YT = { Player: class { destroy() {} }, PlayerState: { PLAYING: 1, PAUSED: 2, ENDED: 0 } };
+  window.YT = { Player: class { destroy() { } }, PlayerState: { PLAYING: 1, PAUSED: 2, ENDED: 0 } };
   globalThis.fetch = async (url) => {
     const path = new URL(url).pathname.replace(/^\/api/, '');
     let dados;
@@ -76,10 +74,12 @@ async function renderizar(tela, perfil, caminho, rota = caminho) {
 }
 
 test('questionário confirma a escolha antes de avançar e descarta o ramo anterior ao corrigir', async () => {
-  const questionario = { id: 7, versao: 1, titulo: 'Seu caminho', descricao: 'Descubra uma área.', perguntaInicial: 'inicio', perguntas: [
-    { chave: 'inicio', enunciado: 'O que você gosta de criar?', opcoes: [{ texto: 'Interfaces', proximaPergunta: 'web' }, { texto: 'Dados', resultado: 'dados' }] },
-    { chave: 'web', enunciado: 'Qual interface?', opcoes: [{ texto: 'Sites', resultado: 'web' }, { texto: 'Aplicativos', resultado: 'apps' }] },
-  ] };
+  const questionario = {
+    id: 7, versao: 1, titulo: 'Seu caminho', descricao: 'Descubra uma área.', perguntaInicial: 'inicio', perguntas: [
+      { chave: 'inicio', enunciado: 'O que você gosta de criar?', opcoes: [{ texto: 'Interfaces', proximaPergunta: 'web' }, { texto: 'Dados', resultado: 'dados' }] },
+      { chave: 'web', enunciado: 'Qual interface?', opcoes: [{ texto: 'Sites', resultado: 'web' }, { texto: 'Aplicativos', resultado: 'apps' }] },
+    ]
+  };
   await act(() => raiz.render(h(MemoryRouter, null, h(telas.QuestionarioCaminhos, { dados: { questionario, resultado: null }, aluno: false, catalogo: '/cursos' }))));
   const botao = texto => [...document.querySelectorAll('button')].find(b => b.textContent === texto);
   assert.equal(botao('Continuar').disabled, true);

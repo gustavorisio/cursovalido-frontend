@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test, vi } from 'vitest';
 import assert from 'node:assert/strict';
 import { createElement as h } from 'react';
 import { Route, useLocation } from 'react-router-dom';
@@ -14,8 +14,8 @@ const { renderizar } = prepararTela(async (carregar) => {
   ExclusaoConta = (await carregar('componentes/autenticacao/ExclusaoConta.jsx')).default;
 });
 
-test('confirma o e-mail com o token do link', async (t) => {
-  const chamadas = simularApi(t, () => new Response(null, { status: 204 }));
+test('confirma o e-mail com o token do link', async () => {
+  const chamadas = simularApi(() => new Response(null, { status: 204 }));
   await renderizar(ConfirmacaoEmail, { url: '/confirmacao?token=abc123' });
   assert.equal(chamadas.length, 0);
 
@@ -26,8 +26,8 @@ test('confirma o e-mail com o token do link', async (t) => {
   assert.equal(botao('Confirmar meu e-mail'), undefined);
 });
 
-test('link de confirmação expirado oferece reenvio', async (t) => {
-  const chamadas = simularApi(t, ({ rota }) => rota.endsWith('/confirmar-email')
+test('link de confirmação expirado oferece reenvio', async () => {
+  const chamadas = simularApi(({ rota }) => rota.endsWith('/confirmar-email')
     ? Response.json({ codigo: 'TOKEN_EXPIRADO' }, { status: 400 })
     : new Response(null, { status: 204 }));
   await renderizar(ConfirmacaoEmail, { url: '/confirmacao?token=expirado' });
@@ -41,8 +41,8 @@ test('link de confirmação expirado oferece reenvio', async (t) => {
   assert.match(document.querySelector('[role="status"]').textContent, /novo link/);
 });
 
-test('pede instruções de recuperação e exibe a resposta genérica', async (t) => {
-  const chamadas = simularApi(t, () => new Response(null, { status: 204 }));
+test('pede instruções de recuperação e exibe a resposta genérica', async () => {
+  const chamadas = simularApi(() => new Response(null, { status: 204 }));
   await renderizar(SolicitarAlteracaoSenha);
   await preencher('input[type="email"]', 'aluno@example.com');
   await enviar();
@@ -52,8 +52,8 @@ test('pede instruções de recuperação e exibe a resposta genérica', async (t
   assert.match(document.querySelector('[role="status"]').textContent, /Se a conta existir/);
 });
 
-test('redefinição valida as senhas e permite corrigir uma falha da API', async (t) => {
-  const chamadas = simularApi(t, () => Response.json({}, { status: 503 }));
+test('redefinição valida as senhas e permite corrigir uma falha da API', async () => {
+  const chamadas = simularApi(() => Response.json({}, { status: 503 }));
   await renderizar(AlterarSenha, { url: '/redefinir?token=abc123' });
   await preencher('input[type="password"]:first-of-type', 'fraca');
   await enviar();
@@ -73,9 +73,9 @@ test('redefinição valida as senhas e permite corrigir uma falha da API', async
   assert.equal(botao('Alterar senha').disabled, false);
 });
 
-test('exclusão da conta pede confirmação e preserva o zero inicial do código', async (t) => {
-  const chamadas = simularApi(t, () => new Response(null, { status: 204 }));
-  const aoExcluir = t.mock.fn();
+test('exclusão da conta pede confirmação e preserva o zero inicial do código', async () => {
+  const chamadas = simularApi(() => new Response(null, { status: 204 }));
+  const aoExcluir = vi.fn();
   await renderizar(ExclusaoConta, { props: { aoExcluir } });
 
   await clicar('Excluir minha conta');
@@ -91,14 +91,14 @@ test('exclusão da conta pede confirmação e preserva o zero inicial do código
 
   assert.equal(chamadas[1].metodo, 'DELETE');
   assert.deepEqual(chamadas[1].dados, { codigo: '012345' });
-  assert.equal(aoExcluir.mock.callCount(), 1);
+  assert.equal(aoExcluir.mock.calls.length, 1);
 });
 
-test('falha no código de exclusão mantém o formulário disponível para nova tentativa', async (t) => {
-  simularApi(t, ({ metodo }) => metodo === 'DELETE'
+test('falha no código de exclusão mantém o formulário disponível para nova tentativa', async () => {
+  simularApi(({ metodo }) => metodo === 'DELETE'
     ? Response.json({}, { status: 400 })
     : new Response(null, { status: 204 }));
-  const aoExcluir = t.mock.fn();
+  const aoExcluir = vi.fn();
   await renderizar(ExclusaoConta, { props: { aoExcluir } });
   await clicar('Excluir minha conta');
   await clicar('Confirmar');
@@ -110,14 +110,14 @@ test('falha no código de exclusão mantém o formulário disponível para nova 
   await enviar();
   assert.ok(document.querySelector('[role="alert"]'));
   assert.equal(botao('Confirmar exclusão permanente').disabled, false);
-  assert.equal(aoExcluir.mock.callCount(), 0);
+  assert.equal(aoExcluir.mock.calls.length, 0);
   await clicar('Cancelar');
   assert.equal(document.querySelector('form'), null);
 });
 
-test('alteração de senha na conta encerra a sessão após salvar', async (t) => {
-  const chamadas = simularApi(t, () => new Response(null, { status: 204 }));
-  const sair = t.mock.fn();
+test('alteração de senha na conta encerra a sessão após salvar', async () => {
+  const chamadas = simularApi(() => new Response(null, { status: 204 }));
+  const sair = vi.fn();
   function Login() {
     return h('p', null, useLocation().state.mensagem);
   }
@@ -132,14 +132,14 @@ test('alteração de senha na conta encerra a sessão após salvar', async (t) =
   await enviar();
 
   assert.equal(chamadas[0].rota, '/autenticacao/alterar-senha-autenticado');
-  assert.equal(sair.mock.callCount(), 1);
+  assert.equal(sair.mock.calls.length, 1);
   assert.match(document.body.textContent, /Entre com a nova senha/);
 });
 
-test('dados do usuário podem ser carregados novamente após uma resposta incompleta', async (t) => {
+test('dados do usuário podem ser carregados novamente após uma resposta incompleta', async () => {
   const dados = { id: 5, email: 'ana@example.com', nomeCompleto: 'Ana Silva', perfil: { codigo: 'ALUNO' } };
   let primeira = true;
-  simularApi(t, () => {
+  simularApi(() => {
     if (!primeira) return Response.json(dados);
     primeira = false;
     return Response.json({ id: 5 });

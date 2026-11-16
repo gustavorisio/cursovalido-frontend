@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test, vi } from 'vitest';
 import assert from 'node:assert/strict';
 import { act } from 'react';
 import { prepararTela, botao, clicar, preencher, simularApi } from './apoio/tela.js';
@@ -14,9 +14,9 @@ const curso = { id: 1, titulo: 'Programação Web', descricao: 'Interfaces com R
 const modulo = { id: 2, titulo: 'Fundamentos' };
 const aula = { id: 3, idModulo: 2, titulo: 'Primeira aula', youtubeVideoId: 'abcdefghijk', ordem: 1 };
 
-test('aluno filtra o catálogo, faz matrícula e acessa o curso matriculado', async (t) => {
+test('aluno filtra o catálogo, faz matrícula e acessa o curso matriculado', async () => {
   let tentativas = 0;
-  const chamadas = simularApi(t, ({ rota, metodo }) => {
+  const chamadas = simularApi(({ rota, metodo }) => {
     if (rota === '/aluno/cursos') return Response.json([curso]);
     if (rota === '/aluno/matriculas') return Response.json([]);
     if (rota === '/catalogo/temas') return Response.json([{ id: 4, nome: 'Web' }, { id: 5, nome: 'Dados' }]);
@@ -47,12 +47,12 @@ test('aluno filtra o catálogo, faz matrícula e acessa o curso matriculado', as
   assert.equal(document.querySelector('article a[href="/aluno/cursos/1"]').textContent, 'Acessar curso');
 });
 
-test('aula retoma o vídeo, salva a posição e permite marcar a conclusão', async (t) => {
+test('aula retoma o vídeo, salva a posição e permite marcar a conclusão', async () => {
   let opcoesPlayer;
   let segundos = 10;
   let falhar = true;
   const iframe = document.createElement('iframe');
-  const destruir = t.mock.fn();
+  const destruir = vi.fn();
   window.YT = {
     Player: class {
       constructor(_elemento, opcoes) { opcoesPlayer = opcoes; }
@@ -62,7 +62,7 @@ test('aula retoma o vídeo, salva a posição e permite marcar a conclusão', as
     PlayerState: { PLAYING: 1, PAUSED: 2, ENDED: 0 },
   };
 
-  const chamadas = simularApi(t, ({ rota, metodo, dados }) => {
+  const chamadas = simularApi(({ rota, metodo, dados }) => {
     if (rota === '/aluno/cursos/1') return Response.json(curso);
     if (rota === '/aluno/cursos/1/modulos') return Response.json([modulo]);
     if (rota === '/aluno/aulas/3') return Response.json(aula);
@@ -99,5 +99,5 @@ test('aula retoma o vídeo, salva a posição e permite marcar a conclusão', as
   await clicar('Marcar como concluída');
   assert.equal(chamadas.at(-1).rota, '/aluno/aulas/3/conclusao');
   assert.equal(botao('Aula concluída').disabled, true);
-  assert.equal(destruir.mock.callCount(), 0);
+  assert.equal(destruir.mock.calls.length, 0);
 });

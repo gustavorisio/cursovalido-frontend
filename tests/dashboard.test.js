@@ -1,25 +1,22 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { JSDOM } from 'jsdom';
 import { createElement, act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 
-let servidor, Dashboard, GraficoDashboard, LayoutDashboard, servico, dom, raiz, chamadas;
+let Dashboard, GraficoDashboard, LayoutDashboard, servico, dom, raiz, chamadas;
 const fetchOriginal = globalThis.fetch;
 const resumo = { alunosAtivos: 12, professoresAtivos: 2, cursosAtivos: 3, aulasAtivas: 8, matriculas: 15, topicosAtivos: 0, noticiasAtivas: 0 };
 
-before(async () => {
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  Dashboard = (await servidor.ssrLoadModule('/src/componentes/administracao/DashboardAdministrativo.jsx')).default;
-  GraficoDashboard = (await servidor.ssrLoadModule('/src/componentes/administracao/GraficoDashboard.jsx')).default;
-  LayoutDashboard = (await servidor.ssrLoadModule('/src/paginas/Dashboard.jsx')).default;
-  servico = await servidor.ssrLoadModule('/src/servicos/servicoDashboard.js');
+beforeAll(async () => {
+  Dashboard = (await import('/src/componentes/administracao/DashboardAdministrativo.jsx')).default;
+  GraficoDashboard = (await import('/src/componentes/administracao/GraficoDashboard.jsx')).default;
+  LayoutDashboard = (await import('/src/paginas/Dashboard.jsx')).default;
+  servico = await import('/src/servicos/servicoDashboard.js');
 });
-after(async () => { await servidor?.close(); });
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000' });
   globalThis.window = dom.window;

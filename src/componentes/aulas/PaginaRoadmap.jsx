@@ -38,14 +38,14 @@ function Caminhos({ aluno, administrador, catalogo }) {
 function DiagramaCaminhos() {
   const [aberto, setAberto] = useState(false);
   return <figure className="card caminhos-imagem" aria-labelledby="caminhos-imagem-titulo">
-      <h2 id="caminhos-imagem-titulo">Uma ideia de caminhos possíveis</h2>
-      <p className="texto-suave">Explore como interfaces, servidores, bancos de dados, infraestrutura e inteligência artificial se conectam. Use o mapa para conhecer possibilidades e escolher o que aprofundar, um assunto por vez.</p>
-      <button type="button" className="caminhos-imagem-abrir" onClick={() => setAberto(true)} aria-haspopup="dialog" aria-label="Abrir diagrama em tela cheia">
-        <img src="/imagens/roadmap-fullstack.png" alt="Mapa de caminhos para desenvolvimento fullstack, com interfaces, desenvolvimento no servidor, bancos de dados, arquitetura, DevOps, estruturas de dados, inteligência artificial e carreira." width="4070" height="3002" loading="lazy" decoding="async" />
-      </button>
-      <figcaption>Selecione a imagem para abrir o diagrama em tela cheia.</figcaption>
-      {aberto && <VisualizadorDiagrama onFechar={() => setAberto(false)} />}
-    </figure>;
+    <h2 id="caminhos-imagem-titulo">Uma ideia de caminhos possíveis</h2>
+    <p className="texto-suave">Explore como interfaces, servidores, bancos de dados, infraestrutura e inteligência artificial se conectam. Use o mapa para conhecer possibilidades e escolher o que aprofundar, um assunto por vez.</p>
+    <button type="button" className="caminhos-imagem-abrir" onClick={() => setAberto(true)} aria-haspopup="dialog" aria-label="Abrir diagrama em tela cheia">
+      <img src="/imagens/roadmap-fullstack.png" alt="Mapa de caminhos para desenvolvimento fullstack, com interfaces, desenvolvimento no servidor, bancos de dados, arquitetura, DevOps, estruturas de dados, inteligência artificial e carreira." width="4070" height="3002" loading="lazy" decoding="async" />
+    </button>
+    <figcaption>Selecione a imagem para abrir o diagrama em tela cheia.</figcaption>
+    {aberto && <VisualizadorDiagrama onFechar={() => setAberto(false)} />}
+  </figure>;
 }
 
 function VisualizadorDiagrama({ onFechar }) {

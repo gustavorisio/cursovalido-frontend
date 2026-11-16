@@ -1,12 +1,10 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { createServer } from './apoio/servidor.js';
 
 test('mensagens orientam login, permissão, termos e correção de campos sem detalhes técnicos', async () => {
-  const servidor = await createServer({ configFile: false, server: { middlewareMode: true }, logLevel: 'silent' });
   const fetchOriginal = globalThis.fetch;
   try {
-    const { requisitar } = await servidor.ssrLoadModule('/src/servicos/api.js');
+    const { requisitar } = await import('/src/servicos/api.js');
     for (const [status, dados, mensagem] of [
       [401, { codigo: 'CREDENCIAIS_INVALIDAS' }, 'E-mail ou senha incorretos. Confira os dados e tente novamente.'],
       [401, { codigo: 'AUTENTICACAO_NECESSARIA' }, 'Entre na sua conta para continuar.'],
@@ -24,5 +22,5 @@ test('mensagens orientam login, permissão, termos e correção de campos sem de
         return true;
       });
     }
-  } finally { globalThis.fetch = fetchOriginal; await servidor.close(); }
+  } finally { globalThis.fetch = fetchOriginal; }
 });

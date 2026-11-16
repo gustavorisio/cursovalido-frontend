@@ -1,14 +1,12 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { createServer } from './apoio/servidor.js';
 
 test('fórum impede envio acima do limite ao criar e editar tópicos e comentários', async () => {
-  const servidor = await createServer({ configFile: false, server: { middlewareMode: true }, logLevel: 'silent' });
   const fetchOriginal = globalThis.fetch;
   let chamadas = 0;
   globalThis.fetch = async () => { chamadas++; return new Response('{}'); };
   try {
-    const servico = await servidor.ssrLoadModule('/src/componentes/forum/servicos/servicoForum.js');
+    const servico = await import('/src/componentes/forum/servicos/servicoForum.js');
     const titulo = 't'.repeat(81);
     const longo = 'a'.repeat(5001);
     for (const executar of [
@@ -25,6 +23,5 @@ test('fórum impede envio acima do limite ao criar e editar tópicos e comentár
     assert.equal(chamadas, 2);
   } finally {
     globalThis.fetch = fetchOriginal;
-    await servidor.close();
   }
 });

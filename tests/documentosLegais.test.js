@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test, vi } from 'vitest';
 import assert from 'node:assert/strict';
 import { createElement as h } from 'react';
 import { Route } from 'react-router-dom';
@@ -11,9 +11,9 @@ const { renderizar } = prepararTela(async (carregar) => {
   Termos = (await carregar('paginas/TermosDeUso.jsx')).default;
 });
 
-test('política de privacidade permite recuperar uma consulta que falhou', async (t) => {
+test('política de privacidade permite recuperar uma consulta que falhou', async () => {
   let tentativa = 0;
-  const chamadas = simularApi(t, () => ++tentativa === 1
+  const chamadas = simularApi(() => ++tentativa === 1
     ? Response.json({}, { status: 503 })
     : Response.json({ versao: '2.0', conteudo: 'Dados usados para manter sua conta.' }));
   await renderizar(Privacidade, {
@@ -33,9 +33,9 @@ test('política de privacidade permite recuperar uma consulta que falhou', async
   assert.equal(document.querySelector('h1').textContent, 'Meus cursos');
 });
 
-test('decisão sobre termos atualizados encerra a sessão e retorna ao login', async (t) => {
-  simularApi(t, () => Response.json([{ versao: '2.0', conteudo: 'Termos atualizados.' }]));
-  const encerrarPorDecisaoTermos = t.mock.fn();
+test('decisão sobre termos atualizados encerra a sessão e retorna ao login', async () => {
+  simularApi(() => Response.json([{ versao: '2.0', conteudo: 'Termos atualizados.' }]));
+  const encerrarPorDecisaoTermos = vi.fn();
   await renderizar(Termos, {
     url: '/termos-aceite?atualizacao=true', sessao: { token: 'token-atual' },
     autenticacao: { encerrarPorDecisaoTermos },
@@ -43,13 +43,13 @@ test('decisão sobre termos atualizados encerra a sessão e retorna ao login', a
   });
 
   await clicar('Entrar novamente');
-  assert.deepEqual(encerrarPorDecisaoTermos.mock.calls[0].arguments, ['token-atual', true]);
+  assert.deepEqual(encerrarPorDecisaoTermos.mock.calls[0], ['token-atual', true]);
   assert.equal(document.querySelector('h1').textContent, 'Login');
 });
 
-test('cadastro permite carregar os termos novamente após falha', async (t) => {
+test('cadastro permite carregar os termos novamente após falha', async () => {
   let primeira = true;
-  const chamadas = simularApi(t, () => {
+  const chamadas = simularApi(() => {
     if (!primeira) return Response.json([{ versao: '2.0', conteudo: 'Termos do cadastro.' }]);
     primeira = false;
     return Response.json({}, { status: 503 });

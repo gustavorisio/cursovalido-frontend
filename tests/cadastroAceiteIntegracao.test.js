@@ -1,13 +1,11 @@
 import { Buffer } from 'node:buffer';
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { createElement as h, act, useState } from 'react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-let servidor, createRoot, Cadastro, Convite, Reativacao, Privacidade, Documento, Configuracoes, RotaProtegida, Login, Contexto, Provedor, controleSessao, dom, raiz;
+let createRoot, Cadastro, Convite, Reativacao, Privacidade, Documento, Configuracoes, RotaProtegida, Login, Contexto, Provedor, controleSessao, dom, raiz;
 const fetchOriginal = globalThis.fetch;
 const customEventOriginal = globalThis.CustomEvent;
 const documentos = {
@@ -15,26 +13,25 @@ const documentos = {
   privacidade: { versao: '2.0', conteudo: '<h1>Política de Privacidade</h1><p>Tratamento de <em>dados pessoais</em>.</p><ul><li>Seus direitos</li></ul>' }
 };
 
-before(async () => {
+beforeAll(async () => {
   const inicial = new JSDOM('<div></div>');
   globalThis.window = inicial.window;
   globalThis.document = inicial.window.document;
   ({ createRoot } = await import('react-dom/client'));
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  Cadastro = (await servidor.ssrLoadModule('/src/paginas/Cadastro.jsx')).default;
-  Convite = (await servidor.ssrLoadModule('/src/paginas/CadastroConvite.jsx')).default;
-  Reativacao = (await servidor.ssrLoadModule('/src/paginas/TermosDeUso.jsx')).default;
-  Privacidade = (await servidor.ssrLoadModule('/src/paginas/PoliticaDePrivacidade.jsx')).default;
-  Documento = (await servidor.ssrLoadModule('/src/componentes/comuns/DocumentoLegal.jsx')).default;
-  Configuracoes = (await servidor.ssrLoadModule('/src/paginas/Configuracoes.jsx')).default;
-  RotaProtegida = (await servidor.ssrLoadModule('/src/componentes/autenticacao/RotaProtegida.jsx')).default;
-  Login = (await servidor.ssrLoadModule('/src/paginas/Login.jsx')).default;
-  Contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
-  Provedor = (await servidor.ssrLoadModule('/src/contextos/AutenticacaoContexto.jsx')).AutenticacaoProvedor;
-  ({ controleSessao } = await servidor.ssrLoadModule('/src/servicos/sessaoNavegador.js'));
+  Cadastro = (await import('/src/paginas/Cadastro.jsx')).default;
+  Convite = (await import('/src/paginas/CadastroConvite.jsx')).default;
+  Reativacao = (await import('/src/paginas/TermosDeUso.jsx')).default;
+  Privacidade = (await import('/src/paginas/PoliticaDePrivacidade.jsx')).default;
+  Documento = (await import('/src/componentes/comuns/DocumentoLegal.jsx')).default;
+  Configuracoes = (await import('/src/paginas/Configuracoes.jsx')).default;
+  RotaProtegida = (await import('/src/componentes/autenticacao/RotaProtegida.jsx')).default;
+  Login = (await import('/src/paginas/Login.jsx')).default;
+  Contexto = (await import('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+  Provedor = (await import('/src/contextos/AutenticacaoContexto.jsx')).AutenticacaoProvedor;
+  ({ controleSessao } = await import('/src/servicos/sessaoNavegador.js'));
   inicial.window.close();
 });
-after(async () => servidor?.close());
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000', pretendToBeVisual: true });
   dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
@@ -67,7 +64,7 @@ for (const perfil of [null, 'ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
     globalThis.fetch = async url => Response.json(String(url).endsWith('/politicas/ativas') ? [documentos.termos] : documentos.privacidade);
     for (const [Pagina, tipo] of [[Reativacao, 'termos'], [Privacidade, 'privacidade']]) {
       await act(async () => raiz.render(h(MemoryRouter, null,
-        h(Contexto.Provider, { value: { autenticado: Boolean(perfil), sessao: perfil ? { perfil } : null, sair() {} } }, h(Pagina)))));
+        h(Contexto.Provider, { value: { autenticado: Boolean(perfil), sessao: perfil ? { perfil } : null, sair() { } } }, h(Pagina)))));
       assert.equal(document.querySelectorAll('.site-footer').length, 1);
       assert.equal(document.querySelectorAll('.documento-conteudo').length, 1);
       assert.equal(document.querySelectorAll('.conteudo-legal').length, 1);
@@ -124,7 +121,7 @@ for (const { fluxo, perfil } of [
     if (reativacao) sessionStorage.setItem('curso-valido-token-termos', tokenRestrito);
     const Pagina = reativacao ? Reativacao : fluxo === 'cadastro por convite' ? Convite : Cadastro;
     await act(async () => raiz.render(h(MemoryRouter, { initialEntries: [fluxo === 'cadastro por convite' ? '/convites/cadastro?token=convite-teste' : '/'] },
-      reativacao ? h(Provedor, null, h(Pagina)) : h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Routes, null,
+      reativacao ? h(Provedor, null, h(Pagina)) : h(Contexto.Provider, { value: { autenticado: false, sair() { } } }, h(Routes, null,
         h(Route, { path: "*", element: h(Pagina) }), h(Route, { path: "/login", element: h(Login) }))))));
     if (fluxo === 'cadastro por convite') await act(async () => botao('Confirmar meu e-mail').click());
 
@@ -223,7 +220,7 @@ test('primeiro acesso sem perfil identificável não libera envio', async () => 
   sessionStorage.setItem('curso-valido-token-termos', 'token-invalido');
   globalThis.fetch = async () => Response.json([documentos.termos]);
   await act(async () => raiz.render(h(MemoryRouter, null,
-    h(Contexto.Provider, { value: { autenticado: false, sair() {} } }, h(Reativacao)))));
+    h(Contexto.Provider, { value: { autenticado: false, sair() { } } }, h(Reativacao)))));
   assert.match(document.querySelector('[role=alert]').textContent, /identificar seu perfil/);
   assert.equal(aceite().disabled, true);
 });

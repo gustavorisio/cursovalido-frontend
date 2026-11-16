@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { act } from 'react';
 import { prepararTela, clicar, simularApi } from './apoio/tela.js';
@@ -20,8 +20,8 @@ test('visitante que acessa configurações é redirecionado para o login', async
   assert.equal(document.title, 'Curso Valido - Login');
 });
 
-test('evento de atualização dos termos abre a rota de aceite', async (t) => {
-  const chamadas = simularApi(t, () => Response.json([{ versao: '1.2', conteudo: 'Termos atualizados.' }]));
+test('evento de atualização dos termos abre a rota de aceite', async () => {
+  const chamadas = simularApi(() => Response.json([{ versao: '1.2', conteudo: 'Termos atualizados.' }]));
   await renderizar(App, { navegador: true, url: '/suporte' });
   await act(async () => window.dispatchEvent(new window.Event('curso-valido-termos-atualizados')));
 

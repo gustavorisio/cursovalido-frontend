@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { prepararCapaCurso, validarArquivoCapa, validarResolucaoCapa, LIMITE_CAPA_BYTES } from '../src/componentes/aulas/servicos/capaCurso.js';
 

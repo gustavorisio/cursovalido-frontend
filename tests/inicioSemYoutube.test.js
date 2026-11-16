@@ -1,19 +1,16 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { createElement, act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-let servidor, Inicio, Contexto, dom, raiz;
-before(async () => {
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  Inicio = (await servidor.ssrLoadModule('/src/paginas/Inicio.jsx')).default;
-  Contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+let Inicio, Contexto, dom, raiz;
+beforeAll(async () => {
+  Inicio = (await import('/src/paginas/Inicio.jsx')).default;
+  Contexto = (await import('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
 });
-after(async () => { await servidor?.close(); });
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'https://cursovalido.dev' });
   globalThis.window = dom.window; globalThis.document = dom.window.document;

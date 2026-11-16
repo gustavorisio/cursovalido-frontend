@@ -30,7 +30,7 @@
 }
 
 .forum-regras p {
-  @apply mb-0 mt-5  border-line pt-5 text-sm leading-relaxed text-muted;
+  @apply mb-0 mt-5 border-line pt-5 text-sm leading-relaxed text-muted;
 }
 
 @media (max-width: 900px) {
@@ -79,12 +79,31 @@
   border-color: var(--color-accent);
   --tw-ring-color: var(--color-accent);
 }
-.lista-topicos { @apply grid gap-4; }
-.lista-topicos .card { @apply mb-0; }
-.pagina-forum .page-header { @apply  border-line pb-6; }
-.pagina-forum .topic-title { @apply mb-2 text-lg font-semibold; }
-.pagina-forum .lista-topicos .topic-summary { width: 100%; }
-.pagina-forum .titulo-detalhe { overflow-wrap: anywhere; }
+
+.lista-topicos {
+  @apply grid gap-4;
+}
+
+.lista-topicos .card {
+  @apply mb-0;
+}
+
+.pagina-forum .page-header {
+  @apply border-line pb-6;
+}
+
+.pagina-forum .topic-title {
+  @apply mb-2 text-lg font-semibold;
+}
+
+.pagina-forum .lista-topicos .topic-summary {
+  width: 100%;
+}
+
+.pagina-forum .titulo-detalhe {
+  overflow-wrap: anywhere;
+}
+
 .pagina-forum .lista-topicos .topic-title {
   margin: 0;
   padding: 0;
@@ -92,21 +111,47 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.pagina-forum .topic-meta { @apply gap-x-5 gap-y-3 text-sm; }
+
+.pagina-forum .topic-meta {
+  @apply gap-x-5 gap-y-3 text-sm;
+}
+
 .pagina-forum .lista-topicos .topic-meta {
   min-width: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
-.pagina-forum .lista-topicos .meta-group { min-width: 0; }
-.pagina-forum .topic-meta .meta-group:first-child .meta-value { @apply text-lg font-semibold text-brand-800; }
-.pagina-forum .forum-filtros { @apply mb-6 gap-3; }
-.pagina-forum .forum-filtros [aria-pressed="true"] { @apply border-brand-700 bg-brand-50 text-brand-700; }
-.pagina-forum .formulario-container { @apply mx-auto max-w-[900px]; }
-.pagina-forum .content-text { @apply leading-8; }
-.pagina-forum .detalhe-topico > .card { @apply p-6 sm:p-8; }
+
+.pagina-forum .lista-topicos .meta-group {
+  min-width: 0;
+}
+
+.pagina-forum .topic-meta .meta-group:first-child .meta-value {
+  @apply text-lg font-semibold text-brand-800;
+}
+
+.pagina-forum .forum-filtros {
+  @apply mb-6 gap-3;
+}
+
+.pagina-forum .forum-filtros [aria-pressed="true"] {
+  @apply border-brand-700 bg-brand-50 text-brand-700;
+}
+
+.pagina-forum .formulario-container {
+  @apply mx-auto max-w-[900px];
+}
+
+.pagina-forum .content-text {
+  @apply leading-8;
+}
+
+.pagina-forum .detalhe-topico>.card {
+  @apply p-6 sm:p-8;
+}
+
 .pagina-forum .detalhe-topico .titulo-detalhe,
-.pagina-forum .detalhe-topico > .card > .content-text {
+.pagina-forum .detalhe-topico>.card>.content-text {
   color: var(--color-muted);
 }
 
@@ -115,6 +160,14 @@
 }
 
 @media (max-width: 640px) {
-  .forum-paginacao { gap: 12px; }
+  .forum-paginacao {
+    gap: 12px;
+  }
 }
-@media (min-width: 901px) { .forum-regras { position: sticky; top: 24px; } }
+
+@media (min-width: 901px) {
+  .forum-regras {
+    position: sticky;
+    top: 24px;
+  }
+}

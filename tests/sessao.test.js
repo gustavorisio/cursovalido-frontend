@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { criarControleSessao, CHAVE_SESSAO, tokenValido } from '../src/servicos/sessaoNavegador.js';

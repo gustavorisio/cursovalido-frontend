@@ -1,30 +1,27 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { createElement as h, act } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 let createRoot;
 
-let servidor, CampoSenha, AlterarSenha, contexto, useForum, raiz, dom, forum;
+let CampoSenha, AlterarSenha, contexto, useForum, raiz, dom, forum;
 let ListaComentarios, DadosUsuario, PaginaForum;
 const fetchOriginal = globalThis.fetch;
-before(async () => {
+beforeAll(async () => {
   const inicial = new JSDOM('<div></div>');
   globalThis.window = inicial.window; globalThis.document = inicial.window.document;
   ({ createRoot } = await import('react-dom/client'));
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  CampoSenha = (await servidor.ssrLoadModule('/src/componentes/autenticacao/CampoSenha.jsx')).default;
-  AlterarSenha = (await servidor.ssrLoadModule('/src/componentes/autenticacao/FormularioAlterarSenha.jsx')).default;
-  contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
-  useForum = (await servidor.ssrLoadModule('/src/componentes/forum/hooks/useForum.js')).useForum;
-  ListaComentarios = (await servidor.ssrLoadModule('/src/componentes/forum/componentes/ListaComentarios.jsx')).default;
-  DadosUsuario = (await servidor.ssrLoadModule('/src/componentes/autenticacao/DadosUsuario.jsx')).default;
-  PaginaForum = (await servidor.ssrLoadModule('/src/componentes/forum/PaginaForum.jsx')).default;
+  CampoSenha = (await import('/src/componentes/autenticacao/CampoSenha.jsx')).default;
+  AlterarSenha = (await import('/src/componentes/autenticacao/FormularioAlterarSenha.jsx')).default;
+  contexto = (await import('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+  useForum = (await import('/src/componentes/forum/hooks/useForum.js')).useForum;
+  ListaComentarios = (await import('/src/componentes/forum/componentes/ListaComentarios.jsx')).default;
+  DadosUsuario = (await import('/src/componentes/autenticacao/DadosUsuario.jsx')).default;
+  PaginaForum = (await import('/src/componentes/forum/PaginaForum.jsx')).default;
   inicial.window.close();
 });
-after(async () => servidor.close());
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000' });
   Object.assign(globalThis, { window: dom.window, document: dom.window.document, localStorage: dom.window.localStorage, sessionStorage: dom.window.sessionStorage, IS_REACT_ACT_ENVIRONMENT: true });
@@ -38,7 +35,7 @@ afterEach(async () => {
 
 test('olho alterna visibilidade sem enviar formulário nem alterar senha', async () => {
   let envios = 0;
-  await act(() => raiz.render(h('form', { onSubmit: () => envios++ }, h(CampoSenha, { value: 'Segredo123!', onChange() {} }))));
+  await act(() => raiz.render(h('form', { onSubmit: () => envios++ }, h(CampoSenha, { value: 'Segredo123!', onChange() { } }))));
   const campo = document.querySelector('input');
   const olho = document.querySelector('button');
   assert.equal(campo.type, 'password');

@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test, vi } from 'vitest';
 import assert from 'node:assert/strict';
 import { act } from 'react';
 import { prepararTela, clicar, botao, preencher, enviar, simularApi } from './apoio/tela.js';
@@ -30,9 +30,9 @@ test('filtra usuários pelo nome e informa quando não encontra resultados', asy
   assert.match(document.body.textContent, /Nenhum usuário encontrado/);
 });
 
-test('valida o motivo e a data antes de aplicar uma restrição permanente', async (t) => {
-  const chamadas = simularApi(t, () => new Response(null, { status: 204 }));
-  const onExecutar = t.mock.fn(async (acao) => acao());
+test('valida o motivo e a data antes de aplicar uma restrição permanente', async () => {
+  const chamadas = simularApi(() => new Response(null, { status: 204 }));
+  const onExecutar = vi.fn(async (acao) => acao());
   await renderizar(ModeracaoUsuarios, { props: { usuarios: [aluno], onExecutar } });
   await clicar('Aplicar restrição');
   await enviar('.moderacao-formulario');
@@ -44,20 +44,20 @@ test('valida o motivo e a data antes de aplicar uma restrição permanente', asy
   await preencher('input[type="datetime-local"]', '2020-01-01T10:00');
   await enviar('.moderacao-formulario');
   assert.match(document.querySelector('[role="alert"]').textContent, /deve estar no futuro/);
-  assert.equal(onExecutar.mock.callCount(), 0);
+  assert.equal(onExecutar.mock.calls.length, 0);
 
   await act(async () => document.querySelector('input[type="checkbox"]').click());
   await preencher('select', 'TOPICOS');
   await enviar('.moderacao-formulario');
-  assert.match(onExecutar.mock.calls[0].arguments[1], /Ana Silva/);
+  assert.match(onExecutar.mock.calls[0][1], /Ana Silva/);
   assert.equal(chamadas[0].rota, '/administracao/usuarios/8/suspensoes');
   assert.deepEqual(chamadas[0].dados, { escopo: 'TOPICOS', motivo: 'Publicações repetidas', expiraEm: null });
   assert.equal(document.querySelector('.moderacao-formulario'), null);
 });
 
-test('permite revogar restrição e encaminha a exclusão para confirmação', async (t) => {
-  const chamadas = simularApi(t, () => new Response(null, { status: 204 }));
-  const onExecutar = t.mock.fn();
+test('permite revogar restrição e encaminha a exclusão para confirmação', async () => {
+  const chamadas = simularApi(() => new Response(null, { status: 204 }));
+  const onExecutar = vi.fn();
   const suspensoes = [{ id: 10, escopo: 'FORUM', expiraEm: null, motivo: 'Publicações repetidas' }];
   await renderizar(ModeracaoUsuarios, { props: { usuarios: [{ ...aluno, suspensoes }], onExecutar } });
   assert.equal(botao('Aplicar restrição'), undefined);
@@ -65,7 +65,7 @@ test('permite revogar restrição e encaminha a exclusão para confirmação', a
   await clicar('Excluir conta');
   assert.equal(chamadas.length, 0);
 
-  const [revogar, excluir] = onExecutar.mock.calls.map((chamada) => chamada.arguments[0]);
+  const [revogar, excluir] = onExecutar.mock.calls.map((chamada) => chamada[0]);
   await revogar();
   await excluir();
 
@@ -75,11 +75,11 @@ test('permite revogar restrição e encaminha a exclusão para confirmação', a
   ]);
 });
 
-test('administrador comum restringe professor e encontra a conta pelo filtro', async (t) => {
+test('administrador comum restringe professor e encontra a conta pelo filtro', async () => {
   const professor = { ...professora, podeModerar: true, podeExcluir: false };
   const suspensao = { id: 11, escopo: 'FORUM', motivo: 'Publicações repetidas', expiraEm: null };
   let restringido = false;
-  const chamadas = simularApi(t, ({ rota, busca, metodo }) => {
+  const chamadas = simularApi(({ rota, busca, metodo }) => {
     if (rota === '/administracao/permissoes') return Response.json({ principal: false });
     if (rota === '/administracao/usuarios') {
       const restrito = busca.get('restrito');

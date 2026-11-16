@@ -68,5 +68,5 @@ function FormularioQuestionario({ dados, perfil, idCurso, idModulo }) {
     </fieldset>)}
     <button type="button" className="btn btn-secondary" disabled={perguntas.length >= limitePerguntas} onClick={() => setPerguntas((lista) => lista.length < limitePerguntas ? [...lista, novaPergunta()] : lista)}>Adicionar pergunta</button>
     <label className="editor-publicacao"><input type="checkbox" checked={publicado} onChange={(e) => setPublicado(e.target.checked)} />Disponibilizar avaliação para os alunos</label>
-    </fieldset><button className="btn btn-primary" type="submit" disabled={processando}>{processando ? 'Salvando...' : 'Salvar avaliação'}</button></form>;
+  </fieldset><button className="btn btn-primary" type="submit" disabled={processando}>{processando ? 'Salvando...' : 'Salvar avaliação'}</button></form>;
 }

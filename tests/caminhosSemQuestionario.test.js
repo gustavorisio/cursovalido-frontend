@@ -1,27 +1,29 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { JSDOM } from 'jsdom';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { createElement, act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-let servidor, Roadmap, Gestao, Contexto, controleSessao, dom, raiz;
+let Roadmap, Gestao, Contexto, controleSessao, dom, raiz;
 const fetchOriginal = globalThis.fetch;
 const questionario = {
   id: 7, titulo: 'Descubra sua area', descricao: 'Explore as possibilidades', publicado: true,
   versao: 2, perguntaInicial: 'p1',
   perguntas: [
-    { chave: 'p1', enunciado: 'Qual caminho prefere?', opcoes: [
-      { texto: 'Explorar interfaces', proximaPergunta: 'p2', resultado: null },
-      { texto: 'Explorar servidores', proximaPergunta: null, resultado: 'backend' },
-    ] },
-    { chave: 'p2', enunciado: 'Qual interface prefere?', opcoes: [
-      { texto: 'Navegadores', proximaPergunta: null, resultado: 'frontend' },
-      { texto: 'APIs', proximaPergunta: null, resultado: 'backend' },
-    ] },
+    {
+      chave: 'p1', enunciado: 'Qual caminho prefere?', opcoes: [
+        { texto: 'Explorar interfaces', proximaPergunta: 'p2', resultado: null },
+        { texto: 'Explorar servidores', proximaPergunta: null, resultado: 'backend' },
+      ]
+    },
+    {
+      chave: 'p2', enunciado: 'Qual interface prefere?', opcoes: [
+        { texto: 'Navegadores', proximaPergunta: null, resultado: 'frontend' },
+        { texto: 'APIs', proximaPergunta: null, resultado: 'backend' },
+      ]
+    },
   ],
   resultados: [
     { chave: 'backend', titulo: 'Desenvolvimento backend', orientacao: 'Explore APIs e dados.', temasPesquisa: ['Java', 'SQL'] },
@@ -33,14 +35,13 @@ const resumo = { id: 7, titulo: questionario.titulo, descricao: questionario.des
 function resultado(respostas = [{ pergunta: 'p1', opcao: 1 }], salvo = false) {
   return { versao: 2, respostas, resultado: questionario.resultados[0], atualizadoEm: salvo ? '2026-11-15T10:00:00' : null };
 }
-before(async () => {
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  Roadmap = (await servidor.ssrLoadModule('/src/componentes/aulas/PaginaRoadmap.jsx')).default;
-  Gestao = (await servidor.ssrLoadModule('/src/componentes/aulas/PaginaAdministracaoCaminhos.jsx')).default;
-  Contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
-  controleSessao = (await servidor.ssrLoadModule('/src/servicos/sessaoNavegador.js')).controleSessao;
+beforeAll(async () => {
+  Roadmap = (await import('/src/componentes/aulas/PaginaRoadmap.jsx')).default;
+  Gestao = (await import('/src/componentes/aulas/PaginaAdministracaoCaminhos.jsx')).default;
+  Contexto = (await import('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+  controleSessao = (await import('/src/servicos/sessaoNavegador.js')).controleSessao;
 });
-after(async () => { await servidor?.close(); });
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000' });
   globalThis.window = dom.window;

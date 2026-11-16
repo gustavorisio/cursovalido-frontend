@@ -169,8 +169,8 @@ export default function App() {
           <Route path="/roadmap" element={<PaginaRoadmap />} />
           <Route path="/suporte" element={<PaginaSuporte />} />
           <Route path="/forum" element={<PaginaForum />} />
-            <Route path="/noticias" element={<Noticias />} />
-            <Route path="/noticias/:id" element={<Noticia />} />
+          <Route path="/noticias" element={<Noticias />} />
+          <Route path="/noticias/:id" element={<Noticia />} />
         </Routes></Suspense></AutenticacaoProvedor>
       </div>
     </BrowserRouter>

@@ -1,20 +1,17 @@
-import test, { before, after, beforeEach, afterEach } from 'node:test';
+import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
-import { createServer } from './apoio/servidor.js';
-import react from '@vitejs/plugin-react';
 import { createElement, act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-let servidor, Administracao, Contexto, dom, raiz;
+let Administracao, Contexto, dom, raiz;
 const fetchOriginal = globalThis.fetch;
-before(async () => {
-  servidor = await createServer({ configFile: false, plugins: [react()], server: { middlewareMode: true }, logLevel: 'silent' });
-  Administracao = (await servidor.ssrLoadModule('/src/paginas/Administracao.jsx')).default;
-  Contexto = (await servidor.ssrLoadModule('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
+beforeAll(async () => {
+  Administracao = (await import('/src/paginas/Administracao.jsx')).default;
+  Contexto = (await import('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
 });
-after(async () => { await servidor?.close(); });
+
 beforeEach(() => {
   dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:3000' });
   globalThis.window = dom.window; globalThis.document = dom.window.document;
