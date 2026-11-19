@@ -2,7 +2,7 @@
 
 Interface web do **Curso Válido**, plataforma de aprendizagem na área de tecnologia desenvolvida como Projeto Final de Curso (PFC) do Bacharelado em Engenharia de Software da Universidade de Mogi das Cruzes (UMC).
 
-A aplicação reúne cursos, aulas, acompanhamento de progresso, fórum, notícias, suporte e áreas específicas para alunos, professores e administradores.
+A aplicação reúne cursos, aulas, acompanhamento de progresso, fórum, suporte e áreas específicas para alunos, professores e administradores.
 
 - [Repositório do front-end](https://github.com/gustavorisio/cursovalido-frontend)
 - [Repositório do back-end](https://github.com/gustavorisio/cursovalido-backend)
@@ -37,10 +37,8 @@ A aplicação reúne cursos, aulas, acompanhamento de progresso, fórum, notíci
 - Arquivamento por administradores ou pelo professor autor do tópico.
 - Exclusão de tópicos por administradores e de comentários pelo autor ou administrador.
 
-### Notícias e suporte
+### Suporte
 
-- Listagem, pesquisa e leitura de notícias.
-- Publicação de notícias por administradores; edição e exclusão pela conta administrativa autora.
 - Formulário público de suporte com validação dos campos, protocolo e encaminhamento por e-mail por meio da API.
 
 ### Administração
@@ -164,7 +162,7 @@ npm run preview
 
 | Área | Rotas |
 | --- | --- |
-| Conteúdo público | `/`, `/cursos`, `/forum`, `/noticias`, `/noticias/:id`, `/suporte` |
+| Conteúdo público | `/`, `/cursos`, `/forum`, `/suporte` |
 | Autenticação | `/login`, `/cadastro`, `/convites/cadastro`, `/confirmacao-email` |
 | Recuperação de senha | `/solicitar-alteracao-senha`, `/redefinir-senha` |
 | Documentos legais | `/termos`, `/termos-aceite`, `/privacidade` |
@@ -172,9 +170,8 @@ npm run preview
 | Aluno | `/aluno/cursos`, `/aluno/cursos/:idCurso`, `/aluno/cursos/:idCurso/aulas/:idAula` |
 | Professor | `/professor/cursos`, `/professor/cursos/:idCurso/modulos`, `/professor/cursos/:idCurso/modulos/:idModulo/aulas` |
 | Administração | `/administracao`, `/administracao/dashboard`, `/administracao/usuarios`, `/administracao/convites`, `/administracao/cursos`, `/administracao/termos`, `/administracao/privacidade` |
-| Edição de notícias | `/noticias/nova`, `/noticias/:id/editar` |
 
-As rotas de aluno, professor e administração exigem o perfil correspondente. As rotas de edição de notícias exigem perfil de administrador.
+As rotas de aluno, professor e administração exigem o perfil correspondente.
 
 ## Estrutura do projeto
 
@@ -183,7 +180,7 @@ src/
 ├── assets/          # Imagens e recursos visuais
 ├── componentes/     # Componentes comuns e módulos de aulas, fórum, suporte e administração
 ├── contextos/       # Autenticação e restrições da conta
-├── paginas/         # Páginas de autenticação, conta, notícias e administração
+├── paginas/         # Páginas de autenticação, conta e administração
 ├── servicos/        # Cliente HTTP, sessão, validações e serviços compartilhados
 ├── App.jsx          # Rotas e composição principal
 ├── index.css        # Estilos globais

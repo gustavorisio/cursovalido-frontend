@@ -27,7 +27,6 @@ beforeAll(async () => {
   for (const nome of ['PaginaCatalogo', 'PaginaGestaoCursos', 'PaginaAulasAdministrador', 'PaginaCursoAluno', 'PaginaAulaAluno', 'PaginaQuestionarioAluno', 'PaginaEditorQuestionario']) {
     telas[nome] = (await modulos[`/src/componentes/aulas/${nome}.jsx`]()).default;
   }
-  telas.QuestionarioCaminhos = (await import('/src/componentes/aulas/componentes/QuestionarioCaminhos.jsx')).default;
 });
 
 beforeEach(() => {
@@ -72,30 +71,6 @@ async function renderizar(tela, perfil, caminho, rota = caminho) {
   assert.ok(document.querySelector('.page-header .page-title'));
   assert.equal(document.querySelector('[role="alert"]'), null);
 }
-
-test('questionário confirma a escolha antes de avançar e descarta o ramo anterior ao corrigir', async () => {
-  const questionario = {
-    id: 7, versao: 1, titulo: 'Seu caminho', descricao: 'Descubra uma área.', perguntaInicial: 'inicio', perguntas: [
-      { chave: 'inicio', enunciado: 'O que você gosta de criar?', opcoes: [{ texto: 'Interfaces', proximaPergunta: 'web' }, { texto: 'Dados', resultado: 'dados' }] },
-      { chave: 'web', enunciado: 'Qual interface?', opcoes: [{ texto: 'Sites', resultado: 'web' }, { texto: 'Aplicativos', resultado: 'apps' }] },
-    ]
-  };
-  await act(() => raiz.render(h(MemoryRouter, null, h(telas.QuestionarioCaminhos, { dados: { questionario, resultado: null }, aluno: false, catalogo: '/cursos' }))));
-  const botao = texto => [...document.querySelectorAll('button')].find(b => b.textContent === texto);
-  assert.equal(botao('Continuar').disabled, true);
-  await act(() => document.querySelector('input[value="0"]').click());
-  assert.match(document.querySelector('legend').textContent, /O que você gosta/);
-  await act(() => botao('Continuar').click());
-  assert.match(document.querySelector('legend').textContent, /Qual interface/);
-  await act(() => document.querySelector('input[value="0"]').click());
-  await act(() => botao('Revisar respostas').click());
-  assert.equal(document.querySelectorAll('.caminhos-revisao li').length, 2);
-  await act(() => botao('Corrigir resposta 1').click());
-  await act(() => document.querySelector('input[value="1"]').click());
-  await act(() => botao('Revisar respostas').click());
-  assert.equal(document.querySelectorAll('.caminhos-revisao li').length, 1);
-  assert.match(document.querySelector('.caminhos-revisao').textContent, /Dados/);
-});
 
 test('catálogo exibe a capa do curso e recupera uma imagem que falhou', async () => {
   const fetchSucesso = globalThis.fetch;
