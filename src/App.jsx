@@ -9,8 +9,6 @@ import PaginaCatalogo from './componentes/aulas/PaginaCatalogo';
 import PaginaCursoAluno from './componentes/aulas/PaginaCursoAluno';
 import PaginaAulaAluno from './componentes/aulas/PaginaAulaAluno';
 import PaginaAulasAdministrador from './componentes/aulas/PaginaAulasAdministrador';
-import PaginaRoadmap from './componentes/aulas/PaginaRoadmap';
-import PaginaAdministracaoCaminhos from './componentes/aulas/PaginaAdministracaoCaminhos';
 import PaginaQuestionarioAluno from './componentes/aulas/PaginaQuestionarioAluno';
 import PaginaEditorQuestionario from './componentes/aulas/PaginaEditorQuestionario';
 import Inicio from './paginas/Inicio';
@@ -30,9 +28,6 @@ import { AutenticacaoProvedor } from './contextos/ContextoAutenticacao';
 
 const Dashboard = lazy(() => import('./paginas/Dashboard'));
 const PaginaNotificacoes = lazy(() => import('./componentes/notificacoes/PaginaNotificacoes'));
-const Noticias = lazy(() => import('./paginas/Noticias'));
-const Noticia = lazy(() => import('./paginas/Noticia'));
-const EditorNoticia = lazy(() => import('./paginas/EditorNoticia'));
 
 const titulosPaginas = [
   ['/', 'Início'],
@@ -57,7 +52,6 @@ const titulosPaginas = [
   ['/administracao/privacidade', 'Administrar privacidade'],
   ['/administracao/usuarios', 'Usuários'],
   ['/administracao/convites', 'Convites'],
-  ['/administracao/caminhos', 'Administrar caminhos na tecnologia'],
   ['/administracao/cursos/:idCurso/aulas/:idAula', 'Administrar aula'],
   ['/administracao/cursos/:idCurso/diagnostico', 'Editar avaliação'],
   ['/administracao/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
@@ -73,13 +67,8 @@ const titulosPaginas = [
   ['/aluno/cursos/:idCurso', 'Curso'],
   ['/aluno/cursos', 'Catálogo de cursos'],
   ['/cursos', 'Cursos'],
-  ['/roadmap', 'Caminhos na tecnologia'],
   ['/suporte', 'Suporte'],
   ['/forum', 'Fórum'],
-  ['/noticias/nova', 'Publicar notícia'],
-  ['/noticias/:id/editar', 'Editar notícia'],
-  ['/noticias/:id', 'Notícia'],
-  ['/noticias', 'Notícias'],
 ];
 
 function TituloPagina() {
@@ -136,15 +125,12 @@ export default function App() {
           <Route element={<RotaProtegida perfis={['ADMINISTRADOR']} />}>
             <Route path="/administracao/dashboard" element={<Dashboard />} />
             <Route path="/administracao/comunicados" element={<PaginaNotificacoes administrador />} />
-            <Route path="/noticias/nova" element={<EditorNoticia />} />
-            <Route path="/noticias/:id/editar" element={<EditorNoticia />} />
             <Route path="/administracao" element={<Administracao key="geral" />} />
             <Route path="/administracao/termos" element={<Administracao key="termos" tela="termos" />} />
             <Route path="/administracao/privacidade" element={<Administracao key="privacidade" tela="privacidade" />} />
             <Route path="/administracao/usuarios" element={<Administracao key="usuarios" tela="usuarios" />} />
             <Route path="/administracao/convites" element={<Administracao key="convites" tela="convites" />} />
             <Route path="/administracao/cursos" element={<PaginaAulasAdministrador />} />
-            <Route path="/administracao/caminhos" element={<PaginaAdministracaoCaminhos />} />
             <Route path="/administracao/cursos/:idCurso" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso/aulas/:idAula" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso/diagnostico" element={<PaginaEditorQuestionario />} />
@@ -166,11 +152,8 @@ export default function App() {
             <Route path="/aluno/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaQuestionarioAluno />} />
           </Route>
           <Route path="/cursos" element={<InicioCursos />} />
-          <Route path="/roadmap" element={<PaginaRoadmap />} />
           <Route path="/suporte" element={<PaginaSuporte />} />
           <Route path="/forum" element={<PaginaForum />} />
-          <Route path="/noticias" element={<Noticias />} />
-          <Route path="/noticias/:id" element={<Noticia />} />
         </Routes></Suspense></AutenticacaoProvedor>
       </div>
     </BrowserRouter>

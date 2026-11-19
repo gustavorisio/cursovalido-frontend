@@ -8,7 +8,7 @@ import { MemoryRouter } from 'react-router-dom';
 
 let Dashboard, GraficoDashboard, LayoutDashboard, servico, dom, raiz, chamadas;
 const fetchOriginal = globalThis.fetch;
-const resumo = { alunosAtivos: 12, professoresAtivos: 2, cursosAtivos: 3, aulasAtivas: 8, matriculas: 15, topicosAtivos: 0, noticiasAtivas: 0 };
+const resumo = { alunosAtivos: 12, professoresAtivos: 2, cursosAtivos: 3, aulasAtivas: 8, matriculas: 15, topicosAtivos: 0 };
 
 beforeAll(async () => {
   Dashboard = (await import('/src/componentes/administracao/DashboardAdministrativo.jsx')).default;
@@ -25,7 +25,7 @@ beforeEach(() => {
   chamadas = [];
   globalThis.fetch = async (url) => {
     chamadas.push(url);
-    return new Response(JSON.stringify(url.endsWith('/resumo') ? resumo : url.includes('/atividade-diaria?') ? { data: new URL(url).searchParams.get('data'), matriculas: 3, cursosCriados: 0, aulasCriadas: 0, topicosCriados: 0, noticiasPublicadas: 0 } : []), { status: 200 });
+    return new Response(JSON.stringify(url.endsWith('/resumo') ? resumo : url.includes('/atividade-diaria?') ? { data: new URL(url).searchParams.get('data'), matriculas: 3, cursosCriados: 0, aulasCriadas: 0, topicosCriados: 0 } : []), { status: 200 });
   };
   raiz = createRoot(document.getElementById('root'));
 });
