@@ -525,17 +525,6 @@
 
 :root { color-scheme: dark; }
 
-/* O destaque vermelho fica restrito ao conteúdo de notícias. */
-.noticias-container {
-  --color-brand-50: #2b1718;
-  --color-brand-100: #59302f;
-  --color-brand-500: #ff7b72;
-  --color-brand-600: #ffa198;
-  --color-brand-700: #ff7b72;
-  --color-brand-800: #ffa198;
-  --color-accent: #ff7b72;
-}
-
 .cabecalho-area { --cor-cabecalho: var(--color-accent); }
 .cabecalho-area a, .cabecalho-area .btn { color: var(--cor-cabecalho); }
 .cabecalho-area .btn { border-color: var(--cor-cabecalho); }

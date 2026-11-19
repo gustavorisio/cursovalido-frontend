@@ -7,11 +7,11 @@ import './dashboard.css';
 const indicadores = [
   ['alunosAtivos', 'Alunos ativos'], ['professoresAtivos', 'Professores ativos'],
   ['cursosAtivos', 'Cursos ativos'], ['aulasAtivas', 'Aulas ativas'],
-  ['matriculas', 'Matrículas'], ['topicosAtivos', 'Tópicos ativos'], ['noticiasAtivas', 'Notícias ativas'],
+  ['matriculas', 'Matrículas'], ['topicosAtivos', 'Tópicos ativos'],
 ];
 const indicadoresDiarios = [
   ['matriculas', 'Matrículas realizadas'], ['cursosCriados', 'Cursos criados'], ['aulasCriadas', 'Aulas criadas'],
-  ['topicosCriados', 'Tópicos criados'], ['noticiasPublicadas', 'Notícias publicadas'],
+  ['topicosCriados', 'Tópicos criados'],
 ];
 const formatoDia = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' });
 

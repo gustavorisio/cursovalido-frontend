@@ -124,7 +124,6 @@ export default function Administracao({ tela = 'geral' }) {
       {principal && <><NavLink to="/administracao/termos">Termos de Aceite</NavLink><NavLink to="/administracao/privacidade">Privacidade</NavLink><NavLink to="/administracao/convites">Convites</NavLink></>}
       <NavLink to="/administracao/dashboard">Dashboard</NavLink>
       <NavLink to="/administracao/comunicados">Comunicados</NavLink>
-      <NavLink to="/administracao/caminhos">Caminhos na tecnologia</NavLink>
     </nav>
     {erro ? <div className="mensagem-erro" role="alert">{erro}<div><button className="btn btn-secondary" type="button" disabled={carregando} onClick={() => { setErro(''); carregarDados(); }}>Tentar novamente</button></div></div> : null}
     {mensagem ? <div className="mensagem-sucesso" role="status">{mensagem}</div> : null}

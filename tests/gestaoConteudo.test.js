@@ -4,12 +4,11 @@ import { createElement as h } from 'react';
 import { Route, useLocation } from 'react-router-dom';
 import { prepararTela, clicar, preencher, enviar, simularApi } from './apoio/tela.js';
 
-let Gestao, InicioCursos, EditorCaminhos, FormularioConteudo;
+let Gestao, InicioCursos, FormularioConteudo;
 const { renderizar } = prepararTela(async (carregar) => {
   FormularioConteudo = (await carregar('componentes/aulas/componentes/FormularioConteudo.jsx')).default;
   Gestao = (await carregar('componentes/aulas/PaginaGestaoCursos.jsx')).default;
   InicioCursos = (await carregar('componentes/aulas/InicioCursos.jsx')).default;
-  EditorCaminhos = (await carregar('componentes/aulas/componentes/EditorCaminhos.jsx')).default;
 });
 
 for (const [perfil, destino] of [
@@ -79,49 +78,6 @@ test('professor valida, cadastra, edita e exclui uma aula', async () => {
   await clicar('Confirmar');
   assert.equal(chamadas.at(-1).metodo, 'DELETE');
   assert.match(document.querySelector('.empty-list').textContent, /Nenhum conteúdo cadastrado/);
-});
-
-test('editor de caminhos limpa destinos removidos e normaliza os assuntos', async () => {
-  const onSalvar = vi.fn();
-  const dados = { titulo: 'Seu caminho', descricao: '', publicado: false, perguntas: [], resultados: [] };
-  await renderizar(EditorCaminhos, { props: { dados, onSalvar } });
-  await clicar('Adicionar pergunta');
-  await clicar('Adicionar pergunta');
-  await clicar('Adicionar resultado');
-  await preencher('#enunciado-pergunta-1', 'O que você quer criar?');
-  await preencher('#opcao-pergunta-1-0', 'Interfaces');
-  await preencher('#destino-pergunta-1-0', 'pergunta:pergunta-2');
-  await preencher('#destino-pergunta-1-1', 'resultado:resultado-1');
-
-  const segunda = [...document.querySelectorAll('.editor-pergunta')][1];
-  await clicar('Remover pergunta', segunda);
-  assert.equal(document.querySelector('#destino-pergunta-1-0').value, '');
-  await clicar('Remover resultado');
-  assert.equal(document.querySelector('#destino-pergunta-1-1').value, '');
-
-  await clicar('Adicionar resultado');
-  await preencher('#resultado-titulo-resultado-1', 'Desenvolvimento web');
-  await preencher('#resultado-texto-resultado-1', 'Comece pelas interfaces.');
-  await preencher('#resultado-temas-resultado-1', '  HTML  \n\n CSS ');
-  await preencher('#destino-pergunta-1-0', 'resultado:resultado-1');
-  await enviar();
-
-  const salvo = onSalvar.mock.calls[0][0];
-  assert.equal(salvo.perguntaInicial, 'pergunta-1');
-  assert.deepEqual(salvo.perguntas[0].opcoes[0], { texto: 'Interfaces', proximaPergunta: null, resultado: 'resultado-1' });
-  assert.deepEqual(salvo.resultados[0].temasPesquisa, ['HTML', 'CSS']);
-});
-
-test('editor de caminhos não salva resultado com mais de 15 assuntos', async () => {
-  const onSalvar = vi.fn();
-  const dados = { titulo: 'Seu caminho', descricao: '', publicado: false, perguntas: [], resultados: [] };
-  await renderizar(EditorCaminhos, { props: { dados, onSalvar } });
-  await clicar('Adicionar resultado');
-  await preencher('#resultado-temas-resultado-1', Array.from({ length: 16 }, (_, i) => 'Tema ' + i).join('\n'));
-  await enviar();
-
-  assert.match(document.querySelector('[role="alert"]').textContent, /até 15 assuntos/);
-  assert.equal(onSalvar.mock.calls.length, 0);
 });
 
 test('edição de curso mantém a área e permite remover a capa', async () => {
