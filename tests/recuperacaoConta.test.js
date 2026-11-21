@@ -57,7 +57,7 @@ test('redefinição valida as senhas e permite corrigir uma falha da API', async
   await renderizar(AlterarSenha, { url: '/redefinir?token=abc123' });
   await preencher('input[type="password"]:first-of-type', 'fraca');
   await enviar();
-  assert.match(document.querySelector('[role="alert"]').textContent, /maiúsculas/);
+  assert.match(document.querySelector('[role="alert"]').textContent, /pelo menos uma letra maiúscula/);
 
   await preencher('.formulario-publico > :nth-child(1) input', 'NovaSenha!');
   await preencher('.formulario-publico > :nth-child(2) input', 'OutraSenha!');
@@ -150,4 +150,19 @@ test('dados do usuário podem ser carregados novamente após uma resposta incomp
   await clicar('Tentar novamente');
   assert.equal(document.querySelector('[role="alert"]'), null);
   assert.match(document.querySelector('dl').textContent, /Ana Silva/);
+});
+
+test('alteração de senha na conta recusa senha atual vazia ou repetida sem chamar o servidor', async () => {
+  const chamadas = simularApi(() => new Response(null, { status: 204 }));
+  await renderizar(AlterarSenhaConta, { url: '/configuracoes/alterar-senha', autenticacao: { sair: vi.fn() } });
+
+  await preencher('.formulario-publico > :nth-child(2) input', 'SenhaNova!');
+  await preencher('.formulario-publico > :nth-child(3) input', 'SenhaNova!');
+  await enviar();
+  assert.match(document.querySelector('[role="alert"]').textContent, /Informe sua senha atual/);
+
+  await preencher('input[autocomplete="current-password"]', 'SenhaNova!');
+  await enviar();
+  assert.match(document.querySelector('[role="alert"]').textContent, /diferente da senha atual/);
+  assert.equal(chamadas.length, 0);
 });

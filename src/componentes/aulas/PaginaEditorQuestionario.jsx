@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAutenticacao } from '../../contextos/useAutenticacao';
 import LayoutAulas from './componentes/LayoutAulas';
@@ -37,6 +37,8 @@ function FormularioQuestionario({ dados, perfil, idCurso, idModulo }) {
   const [publicado, setPublicado] = useState(dados.questionario?.publicado ?? false);
   const [perguntas, setPerguntas] = useState(dados.questionario?.perguntas ?? [novaPergunta()]);
   const [processando, setProcessando] = useState(false);
+  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
+  const acaoEmAndamento = useRef(false);
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
 
@@ -45,18 +47,18 @@ function FormularioQuestionario({ dados, perfil, idCurso, idModulo }) {
   }
   async function salvar(e) {
     e.preventDefault();
-    if (processando) return;
+    if (processando || acaoEmAndamento.current) return;
     if (perguntas.length > limitePerguntas) {
       setErro(`Você pode salvar no máximo ${limitePerguntas} perguntas.`);
       return;
     }
     if (!titulo.trim() || perguntas.some((p) => !p.enunciado.trim() || !p.explicacao.trim() || p.alternativas.some((a) => !a.trim()))) { setErro('Preencha as perguntas, alternativas e explicações.'); return; }
-    setProcessando(true); setErro(''); setMensagem('');
+    acaoEmAndamento.current = true; setProcessando(true); setErro(''); setMensagem('');
     try {
       const salvo = await salvarQuestionario(perfil, idCurso, idModulo, { titulo: titulo.trim(), publicado, perguntas: perguntas.map(({ enunciado, alternativas, alternativaCorreta, explicacao }) => ({ enunciado, alternativas, alternativaCorreta, explicacao })) });
       setMensagem(`Avaliação salva como ${salvo.publicado ? 'publicada' : 'rascunho'}. Versão ${salvo.versao}.`);
     } catch (falha) { setErro(falha.message); }
-    finally { setProcessando(false); }
+    finally { acaoEmAndamento.current = false; setProcessando(false); }
   }
   return <form className="card editor-questionario" onSubmit={salvar}><h2>{dados.modulo?.titulo ?? dados.curso.titulo}</h2><p className="texto-suave">Até {limitePerguntas} perguntas, com 2 a 6 alternativas. Cada alteração salva cria uma nova versão; os alunos precisarão responder novamente para atualizar o resultado.</p>{erro && <p className="mensagem-erro" role="alert">{erro}</p>}{mensagem && <p className="mensagem-sucesso" role="status">{mensagem}</p>}<fieldset disabled={processando}><label htmlFor="questionario-titulo">Título da avaliação</label><input className="input-field" id="questionario-titulo" value={titulo} maxLength={255} required onChange={(e) => setTitulo(e.target.value)} />
     {perguntas.map((p, indice) => <fieldset className="editor-pergunta" key={indice}><legend>Pergunta {indice + 1}</legend>

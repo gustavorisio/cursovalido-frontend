@@ -16,7 +16,7 @@ function prepararApi(lista = [topico]) {
   let comentarios = [];
   return simularApi(({ rota, metodo, dados }) => {
     if (rota === '/autenticacao/restricoes') return Response.json([]);
-    if (rota === '/forum/users') return Response.json([{ id: 5, nome: 'Ana', perfil: { nome: 'ADMINISTRADOR' } }]);
+    if (rota === '/forum/users') return Response.json({ value: [{ id: 5, nome: 'Ana', perfil: 'ADMINISTRADOR' }], count: 1 });
     if (rota === '/forum/topicos' && metodo === 'GET') return Response.json(topicos);
     if (rota === '/forum/topicos' && metodo === 'POST') {
       const novo = { ...topico, ...dados };
@@ -82,6 +82,9 @@ test('publica, edita e apaga uma resposta do próprio usuário', async () => {
   assert.match(document.querySelector('.comment-card').textContent, /useState/);
 
   await clicar('Editar');
+  assert.equal(document.querySelectorAll('.comment-card textarea').length, 1);
+  assert.equal(document.querySelector('.detalhe-topico > .formulario-comentario'), null);
+  assert.equal(document.querySelector('.comment-card .subtitulo-formulario').textContent, 'Editar comentário');
   await preencher('textarea', 'Use useState ou useReducer.');
   await clicar('Salvar alterações');
   const edicao = chamadas.find(({ metodo }) => metodo === 'PUT');

@@ -1,14 +1,13 @@
-import { senhaValida } from '../servicos/politicaSenha';
 import AceiteDocumentos from '../componentes/comuns/AceiteDocumentos';
 import CampoSenha from '../componentes/autenticacao/CampoSenha';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Rodape from '../componentes/comuns/Rodape';
-import { buscarPoliticaAtiva, completarCadastroConvite, confirmarEmailConvite, consultarConvite } from '../servicos/servicoAutenticacao';
-import { limparNomeCompleto, validarIdade } from './validacoesCadastro';
+import { buscarPoliticaAtiva, completarCadastroConvite, consultarConvite } from '../servicos/servicoAutenticacao';
+import { limparNomeCompleto } from './validacoesCadastro';
+import { LIMITES, validarCadastro } from '../servicos/validacoesAutenticacao';
 
-const INICIAL = { nomeCompleto: '', email: '', senha: '', confirmacaoSenha: '', dataNascimento: '', declarouMaiorIdade: false, aceitouTermosLgpd: false, versaoTermos: '', aceitouResponsabilidade: false, versaoResponsabilidade: '' };
-const CAMPOS = ['nomeCompleto', 'email', 'senha', 'dataNascimento'];
+const INICIAL = { nomeCompleto: '', email: '', senha: '', confirmacaoSenha: '', declarouMaiorIdade: false, aceitouTermosLgpd: false, versaoTermos: '', aceitouResponsabilidade: false, versaoResponsabilidade: '' };
 
 export default function CadastroConvite() {
   const [parametros] = useSearchParams();
@@ -20,14 +19,19 @@ function ConfirmarConvite({ token }) {
   const navegar = useNavigate();
   const [dados, setDados] = useState(INICIAL);
   const [perfil, setPerfil] = useState('');
-  const [confirmado, setConfirmado] = useState(false);
+  const [conviteValido, setConviteValido] = useState(false);
   const [erro, setErro] = useState(token ? '' : 'O link do convite é inválido. Solicite um novo convite.');
-  const emConfirmacao = useRef(false);
-  const [mensagem, setMensagem] = useState('');
-  const [carregando, setCarregando] = useState(false);
+  const [carregando, setCarregando] = useState(Boolean(token));
   const [enviando, setEnviando] = useState(false);
-  const idade = validarIdade(dados.dataNascimento);
-  const valido = useMemo(() => CAMPOS.every((campo) => String(dados[campo]).trim()) && senhaValida(dados.senha) && dados.senha === dados.confirmacaoSenha && idade >= 18 && idade <= 90 && dados.declarouMaiorIdade && dados.aceitouTermosLgpd && Boolean(dados.versaoTermos) && Boolean(perfil) && dados.aceitouResponsabilidade && Boolean(dados.versaoResponsabilidade), [dados, idade, perfil]);
+  const emEnvio = useRef(false);
+  const problema = useMemo(() => {
+    const erroCadastro = validarCadastro(dados);
+    if (erroCadastro) return erroCadastro;
+    if (!perfil) return 'O convite ainda está sendo verificado.';
+    if (!dados.aceitouResponsabilidade || !dados.versaoResponsabilidade) return 'Aceite o Termo de Responsabilidade para continuar.';
+    return '';
+  }, [dados, perfil]);
+  const valido = !problema;
 
   useEffect(() => {
     let ativo = true;
@@ -37,36 +41,40 @@ function ConfirmarConvite({ token }) {
     return () => { ativo = false; };
   }, [token]);
 
-  async function confirmarConvite() {
-    if (!token || confirmado || emConfirmacao.current) return;
-    emConfirmacao.current = true;
-    setCarregando(true); setErro('');
-    try {
-      const convite = await consultarConvite(token);
-      await confirmarEmailConvite(token);
+  useEffect(() => {
+    if (!token) return undefined;
+    let ativo = true;
+    consultarConvite(token).then((convite) => {
+      if (!ativo) return;
       setPerfil(convite.perfil);
       setDados((atual) => ({ ...atual, email: convite.email }));
-      setConfirmado(true);
-      setMensagem('E-mail confirmado. Complete seus dados para enviar o cadastro.');
-    } catch (falha) { setErro(falha.message || 'O link do convite é inválido ou expirou.'); }
-    finally { setCarregando(false); emConfirmacao.current = false; }
-  }
+      setConviteValido(true);
+    }).catch((falha) => {
+      if (ativo) setErro(falha.message || 'O link do convite é inválido ou expirou. Peça um novo convite à administração.');
+    }).finally(() => ativo && setCarregando(false));
+    return () => { ativo = false; };
+  }, [token]);
 
   function alterar(campo, valor) { setDados((atual) => ({ ...atual, [campo]: valor })); setErro(''); }
   async function enviar(evento) {
     evento.preventDefault();
-    if (enviando) return;
-    if (dados.senha !== dados.confirmacaoSenha) { setErro('As senhas devem coincidir.'); return; }
-    if (idade > 90) { setErro('A idade máxima permitida é 90 anos.'); return; }
-    if (!valido) { setErro('Preencha os campos obrigatórios e aceite os termos.'); return; }
+    // A trava por referencia impede um segundo envio antes de o estado ser atualizado.
+    if (emEnvio.current) return;
+    if (problema) { setErro(problema); return; }
+    emEnvio.current = true;
     setEnviando(true); setErro('');
-    try { await completarCadastroConvite(token, dados); navegar('/login', { replace: true, state: { mensagem: 'Cadastro enviado. Aguarde a aprovação do administrador para entrar.' } }); }
-    catch (falha) { setErro(falha.message); } finally { setEnviando(false); }
+    try {
+      await completarCadastroConvite(token, dados);
+      navegar('/login', { replace: true, state: { mensagem: 'Conta criada. Entre com seu e-mail e senha.' } });
+    } catch (falha) {
+      setErro(falha.message);
+      emEnvio.current = false;
+      setEnviando(false);
+    }
   }
 
-  return <div className="pagina-publica"><main className="painel-cadastro"><div className="marca-publica">CURSO VÁLIDO </div><h1>Cadastro por convite</h1>{token && !confirmado && <><p className="texto-suave">Confirme seu e-mail para continuar o cadastro por convite.</p><button className="botao-destaque" type="button" disabled={carregando} onClick={confirmarConvite}>{carregando ? 'Confirmando...' : 'Confirmar meu e-mail'}</button></>}{erro && <div className="mensagem-erro" role="alert">{erro}</div>}{mensagem && <div className="mensagem-sucesso" role="status">{mensagem}</div>}{confirmado && <form className="formulario-publico" onSubmit={enviar}><label>Nome completo<input required autoComplete="name" maxLength={120} value={dados.nomeCompleto} onChange={(evento) => alterar('nomeCompleto', limparNomeCompleto(evento.target.value))} /></label><label>E-mail<input required type="email" readOnly value={dados.email} onChange={(evento) => alterar('email', evento.target.value)} /></label><CampoSenha required value={dados.senha} onChange={(evento) => alterar('senha', evento.target.value)} />
+  return <div className="pagina-publica"><main className="painel-cadastro"><div className="marca-publica">CURSO VÁLIDO </div><h1>Cadastro por convite</h1>{carregando && <p className="texto-suave" role="status">Verificando o convite...</p>}{conviteValido && <p className="texto-suave">Preencha seus dados para criar a conta de {perfil === 'ADMINISTRADOR' ? 'administrador' : 'professor'}. O link vale para um único cadastro.</p>}{erro && <div className="mensagem-erro" role="alert">{erro}</div>}{conviteValido && <form className="formulario-publico" onSubmit={enviar} noValidate><label>Nome completo<input required autoComplete="name" maxLength={LIMITES.nome} value={dados.nomeCompleto} onChange={(evento) => alterar('nomeCompleto', limparNomeCompleto(evento.target.value))} /></label><label>E-mail<input required type="email" readOnly value={dados.email} onChange={(evento) => alterar('email', evento.target.value)} /></label><CampoSenha required value={dados.senha} onChange={(evento) => alterar('senha', evento.target.value)} />
     <CampoSenha rotulo="Confirmar senha" required validarPolitica={false} maxLength={72} value={dados.confirmacaoSenha} onChange={(evento) => alterar('confirmacaoSenha', evento.target.value)} />
-    <label>Data de nascimento<input required type="date" value={dados.dataNascimento} onChange={(evento) => alterar('dataNascimento', evento.target.value)} /></label>
     {dados.confirmacaoSenha && dados.senha !== dados.confirmacaoSenha && <p className="erro-campo" role="status">As senhas devem coincidir.</p>}
-    <label className="checkbox"><input type="checkbox" checked={dados.declarouMaiorIdade} onChange={(evento) => alterar('declarouMaiorIdade', evento.target.checked)} />Declaro que possuo 18 anos ou mais.</label><AceiteDocumentos key={dados.versaoTermos + perfil} perfil={perfil} onResponsabilidade={(valor) => setDados((atual) => ({ ...atual, ...valor }))} versaoTermos={dados.versaoTermos} aceito={dados.aceitouTermosLgpd} desabilitado={enviando} onAlterar={(valor) => alterar('aceitouTermosLgpd', valor)} /><button className="botao-destaque" disabled={!valido || enviando}>{enviando ? 'Enviando cadastro...' : 'Enviar cadastro'}</button></form>}<p className="texto-rodape-formulario"><Link to="/login">Voltar para o login</Link></p></main><Rodape /></div>;
+    <label className="checkbox"><input type="checkbox" checked={dados.declarouMaiorIdade} onChange={(evento) => alterar('declarouMaiorIdade', evento.target.checked)} />Declaro que possuo 18 anos ou mais.</label><AceiteDocumentos key={dados.versaoTermos + perfil} perfil={perfil} onResponsabilidade={(valor) => setDados((atual) => ({ ...atual, ...valor }))} versaoTermos={dados.versaoTermos} aceito={dados.aceitouTermosLgpd} desabilitado={enviando} onAlterar={(valor) => alterar('aceitouTermosLgpd', valor)} /><button className="botao-destaque" disabled={enviando} aria-disabled={!valido}>{enviando ? 'Criando conta...' : 'Criar conta'}</button></form>}<p className="texto-rodape-formulario"><Link to="/login">Voltar para o login</Link></p></main><Rodape /></div>;
 }

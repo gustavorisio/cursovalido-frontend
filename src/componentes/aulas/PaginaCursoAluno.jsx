@@ -7,9 +7,9 @@ import LayoutAulas from './componentes/LayoutAulas';
 import EstadoCarregamento from './componentes/EstadoCarregamento';
 import useCarregamento from './hooks/useCarregamento';
 import * as servico from './servicos/servicoAluno';
-import CabecalhoAulas from './componentes/CabecalhoAulas';
 import PlanoEstudos from './componentes/PlanoEstudos';
 import { useAutenticacao } from '../../contextos/useAutenticacao';
+import CapaCurso from './componentes/CapaCurso';
 
 
 export default function PaginaCursoAluno() {
@@ -38,15 +38,31 @@ function CursoAluno({ idCurso }) {
   const concluidas = aulas.filter((aula) => aula.progresso.concluida).length;
   const percentual = aulas.length ? Math.round(concluidas / aulas.length * 100) : 0;
 
-  return <LayoutAulas>
-    <Link className="btn btn-link" to="/aluno/cursos">Voltar aos cursos</Link>
+  return <LayoutAulas className="pagina-detalhe-curso">
     <EstadoCarregamento carga={carga} />
     {carga.carregando ? null : carga.erro ? null : carga.dados ? <>
-      <CabecalhoAulas etiqueta="Área do aluno · Seu curso" titulo={carga.dados.curso.titulo} descricao={carga.dados.curso.descricao}>
-        <div className="aulas-indicadores"><span>{carga.dados.modulos.length} módulos</span><span>{carga.dados.modulos.reduce((total, modulo) => total + modulo.aulas.length, 0)} aulas</span></div>
-        <div className="aulas-progresso"><div><span>Seu progresso</span><strong>{concluidas} de {aulas.length} aulas concluídas</strong></div><progress max="100" value={percentual} aria-label="Progresso do curso" /><span>{percentual}% concluído</span></div>
-      </CabecalhoAulas>
-      <section className="catalogo-resultados" aria-labelledby="aulas-modulos-titulo">
+      <nav aria-label="Trilha de navegação" className="!-mx-[var(--space-page)] flex min-h-12 items-center gap-3 bg-[#e9e9e9] px-[var(--space-page)] text-sm text-slate-600">
+        <Link to="/" className="text-slate-600 no-underline hover:text-blue-700">Início</Link>
+        <Link to="/aluno/cursos" className="text-slate-600 no-underline hover:text-blue-700">Cursos</Link><span className="truncate font-medium text-slate-700" aria-current="page">{carga.dados.curso.titulo}</span>
+      </nav>
+      <section className="card curso-visao-geral mx-auto mb-8 mt-0 w-full max-w-[1240px] bg-white p-6 sm:p-8" aria-labelledby="curso-titulo">
+        <div className="mx-auto grid w-full max-w-[1240px] grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="min-w-0">
+            <h1 className="!mb-8 !mt-0 !text-3xl !font-normal !leading-tight text-slate-800 sm:!text-[42px]">Informações do curso</h1>
+            <p className="!mb-2 text-sm text-slate-600">Curso online</p>
+            <h2 id="curso-titulo" className="!mb-5 !mt-0 !text-2xl !font-normal !leading-snug text-slate-800 sm:!text-[32px]">{carga.dados.curso.titulo}</h2>
+            <div className="mb-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-blue-700"><span>{carga.dados.modulos.length} módulos</span><span>{aulas.length} aulas</span><span>{percentual}% concluído</span></div>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600"><span className="font-medium text-blue-700">Seu progresso</span><strong className="font-medium text-slate-700">{concluidas} de {aulas.length} aulas concluídas</strong></div>
+            <progress className="mt-3 h-2 w-full max-w-xl overflow-hidden rounded-full accent-blue-600" max="100" value={percentual} aria-label="Progresso do curso" />
+          </div>
+          <div className="overflow-hidden rounded-2xl bg-white shadow-lg"><CapaCurso curso={carga.dados.curso} className="!m-0 !aspect-[11/5] !max-h-none !w-full !overflow-hidden" /></div>
+        </div>
+      </section>
+      <section className="catalogo-resultados card curso-conteudo" aria-labelledby="aulas-modulos-titulo">
+        <nav aria-label="Seções do curso" className="mb-8 flex flex-wrap gap-x-7 gap-y-3 border-b border-slate-300 pb-4 text-sm font-medium">
+          <a className="text-blue-700 no-underline hover:text-blue-800" href="#curso-progresso">Visão geral</a><a className="text-blue-700 no-underline hover:text-blue-800" href="#aulas-modulos-titulo">Conteúdo do curso</a><a className="text-blue-700 no-underline hover:text-blue-800" href="#curso-avaliacoes">Avaliações</a>
+        </nav>
+        <span id="curso-progresso" className="sr-only">Progresso: {percentual}%</span>
         <div className="catalogo-secao-cabecalho"><div><span className="aulas-etiqueta">Sua jornada de aprendizagem</span><h2 id="aulas-modulos-titulo">Módulos e aulas</h2></div></div>
         <PesquisaConteudo valor={busca} onAlterar={setBusca} label="Pesquisar aula por nome" />
         {busca.trim() && modulos.length === 0 && <p className="card empty-list" role="status">Nenhuma aula encontrada para esta pesquisa.</p>}
@@ -64,7 +80,7 @@ function CursoAluno({ idCurso }) {
           </div>)}
         </ModuloExpansivel>)}
       </section>
-      <PlanoEstudos idCurso={idCurso} />
+      <div id="curso-avaliacoes"><PlanoEstudos idCurso={idCurso} /></div>
     </> : null}
   </LayoutAulas>;
 }

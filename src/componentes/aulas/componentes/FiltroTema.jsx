@@ -3,14 +3,14 @@ import useCarregamento from '../hooks/useCarregamento';
 import { listarTemas } from '../servicos/servicoTemas';
 import GerenciarTemas from './GerenciarTemas';
 
-export default function FiltroTema({ valor, onAlterar, gerenciar = false, cadastro = false, onAtualizar }) {
+export default function FiltroTema({ valor, onAlterar, gerenciar = false, cadastro = false, onAtualizar, className = '', labelClassName = '', selectClassName = '', rowClassName = '' }) {
   const id = useId();
   const carga = useCarregamento(listarTemas);
   const [aberto, setAberto] = useState(false);
-  return <div className="aulas-filtro-tema">
-    <label htmlFor={id}>{cadastro ? 'Tema do curso' : 'Filtrar por tema'}</label>
-    <div className="aulas-filtro-tema-linha"><select id={id} className="input-field" value={valor} disabled={carga.carregando || Boolean(carga.erro)} onChange={(e) => onAlterar(e.target.value)}>
-      <option value="">{cadastro ? 'Sem tema' : 'Todos os temas'}</option>
+  return <div className={`aulas-filtro-tema ${className}`}>
+    <label className={labelClassName} htmlFor={id}>{cadastro ? 'Tema do curso' : 'Filtrar por tema'}</label>
+    <div className={`aulas-filtro-tema-linha ${rowClassName}`}><select id={id} className={`input-field ${selectClassName}`} value={valor} disabled={carga.carregando || Boolean(carga.erro)} onChange={(e) => onAlterar(e.target.value)}>
+      <option value="">{cadastro ? 'Sem tema' : 'Filtrar por tema'}</option>
       {!cadastro && <option value="sem-tema">Sem tema</option>}
       {(carga.dados ?? []).map((tema) => <option key={tema.id} value={tema.id}>{tema.nome}</option>)}
     </select>{gerenciar && <button className="btn btn-secondary" type="button" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? 'Fechar temas' : 'Gerenciar temas'}</button>}</div>

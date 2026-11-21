@@ -127,7 +127,7 @@ export function AutenticacaoProvedor({ children }) {
     if (geracao.current !== tentativa) throw new Error('A tentativa de login foi encerrada. Entre novamente.');
     if (resposta.requerCodigo2fa) {
       emailPendente.current = email.trim().toLowerCase();
-      return { requerCodigo2fa: true };
+      return { requerCodigo2fa: true, finalidadeCodigo: resposta.finalidadeCodigo };
     }
     return guardarResposta(resposta, tentativa);
   }, [sair, guardarResposta]);

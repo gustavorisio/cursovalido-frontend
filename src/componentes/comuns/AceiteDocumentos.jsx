@@ -62,7 +62,8 @@ function LeituraDocumento({ tipo, perfil, versaoTermos, desabilitado, onAceitar,
 }
 
 export default function AceiteDocumentos({ versaoTermos, aceito, onAlterar, desabilitado = false, perfil, onResponsabilidade, onConcluir }) {
-  const [aceitos, setAceitos] = useState({ termos: false, privacidade: false });
+  const [aceitos, setAceitos] = useState({ termos: false, privacidade: false, responsabilidade: false });
+  const versaoResponsabilidade = useRef('');
   const [aberto, setAberto] = useState(null);
   const documentos = useRef(new Map());
   const carregarDocumento = useCallback((tipo) => {
@@ -83,10 +84,11 @@ export default function AceiteDocumentos({ versaoTermos, aceito, onAlterar, desa
 
   function aceitarDocumento(documento) {
     const proximos = { ...aceitos, [aberto]: true };
+    if (aberto === 'responsabilidade') versaoResponsabilidade.current = documento.versao;
     setAceitos(proximos);
     const completo = tipos.every((tipo) => proximos[tipo]);
-    const responsabilidade = exigeResponsabilidade && completo
-      ? { aceitouResponsabilidade: true, versaoResponsabilidade: documento.versao }
+    const responsabilidade = exigeResponsabilidade && completo && versaoResponsabilidade.current
+      ? { aceitouResponsabilidade: true, versaoResponsabilidade: versaoResponsabilidade.current }
       : undefined;
     if (responsabilidade) onResponsabilidade?.(responsabilidade);
     onAlterar(completo);
@@ -96,7 +98,7 @@ export default function AceiteDocumentos({ versaoTermos, aceito, onAlterar, desa
 
   return <div className="aceite-documentos">
     <label className="checkbox"><input type="checkbox" checked={Boolean(aceito && tipos.every((tipo) => aceitos[tipo]))} disabled={desabilitado || !versaoTermos} onChange={(evento) => {
-      if (!evento.target.checked) { setAceitos({ termos: false, privacidade: false }); onAlterar(false); if (exigeResponsabilidade) onResponsabilidade?.({ aceitouResponsabilidade: false, versaoResponsabilidade: '' }); }
+      if (!evento.target.checked) { setAceitos({ termos: false, privacidade: false, responsabilidade: false }); versaoResponsabilidade.current = ''; onAlterar(false); if (exigeResponsabilidade) onResponsabilidade?.({ aceitouResponsabilidade: false, versaoResponsabilidade: '' }); }
       else setAberto(tipos.find((tipo) => !aceitos[tipo]) ?? 'termos');
     }} />Li e aceito os Termos de Aceite, a Política de Privacidade{exigeResponsabilidade ? ' e o Termo de Responsabilidade do meu perfil' : ''}.</label>
     <p className="texto-suave">Leia e aceite {exigeResponsabilidade ? 'os três' : 'os dois'} documentos para continuar.</p>

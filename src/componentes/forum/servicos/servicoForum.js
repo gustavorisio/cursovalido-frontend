@@ -84,3 +84,20 @@ export function buscarMeusTopicos(page = 0, size = TAMANHO_PAGINA_PADRAO, busca 
   const parametros = new URLSearchParams({ page: String(page), size: String(size), busca: busca.trim() });
   return requisitar(`/forum/topicos/meus?${parametros}`);
 }
+
+export function denunciarTopico(idTopico, dados) {
+  return requisitar(`/forum/topicos/${idTopico}/denuncias`, { method: 'POST', body: JSON.stringify(dados) });
+}
+
+export function denunciarComentario(idComentario, dados) {
+  return requisitar(`/forum/comentarios/${idComentario}/denuncias`, { method: 'POST', body: JSON.stringify(dados) });
+}
+
+export function listarDenunciasForum(status = 'PENDENTE') {
+  const parametros = status ? `?status=${encodeURIComponent(status)}` : '';
+  return requisitar(`/administracao/forum/denuncias${parametros}`);
+}
+
+export function decidirDenunciaForum(idDenuncia, decisao) {
+  return requisitar(`/administracao/forum/denuncias/${idDenuncia}`, { method: 'PUT', body: JSON.stringify(decisao) });
+}

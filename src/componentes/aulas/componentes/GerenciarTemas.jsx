@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { salvarTema, excluirTema } from '../servicos/servicoTemas';
 import ConfirmacaoModal from '../../forum/componentes/ConfirmacaoModal';
 
@@ -7,27 +7,29 @@ export default function GerenciarTemas({ temas, onAtualizar }) {
   const [editando, setEditando] = useState(null);
   const [excluindo, setExcluindo] = useState(null);
   const [processando, setProcessando] = useState(false);
+  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
+  const acaoEmAndamento = useRef(false);
   const [erro, setErro] = useState('');
 
   async function salvar() {
-    if (processando || !nome.trim()) return;
-    setProcessando(true); setErro('');
+    if (processando || acaoEmAndamento.current || !nome.trim()) return;
+    acaoEmAndamento.current = true; setProcessando(true); setErro('');
     try {
       await salvarTema(editando, nome.trim());
       setNome(''); setEditando(null); onAtualizar();
     } catch (falha) { setErro(falha.message); }
-    finally { setProcessando(false); }
+    finally { acaoEmAndamento.current = false; setProcessando(false); }
   }
 
   async function excluir() {
-    if (processando) return;
-    setProcessando(true); setErro('');
+    if (processando || acaoEmAndamento.current) return;
+    acaoEmAndamento.current = true; setProcessando(true); setErro('');
     try {
       await excluirTema(excluindo.id);
       if (editando === excluindo.id) { setEditando(null); setNome(''); }
       setExcluindo(null); onAtualizar(excluindo.id);
     } catch (falha) { setErro(falha.message); }
-    finally { setProcessando(false); }
+    finally { acaoEmAndamento.current = false; setProcessando(false); }
   }
 
   return <div className="aulas-gestao-temas">

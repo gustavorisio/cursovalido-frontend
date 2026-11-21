@@ -1,5 +1,6 @@
 import { useAutenticacao } from '../../contextos/useAutenticacao';
 import CabecalhoPagina from '../comuns/CabecalhoPagina';
+import ControlesPaginacao from '../comuns/ControlesPaginacao';
 import PesquisaPagina from '../comuns/PesquisaPagina';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
@@ -9,15 +10,19 @@ import FormularioTopico from './componentes/FormularioTopico';
 import ListaTopicos from './componentes/ListaTopicos';
 import Rodape from '../comuns/Rodape';
 import { perfilDoUsuario, useForum } from './hooks/useForum';
+import { contemTermoOfensivo, MENSAGEM_CONTEUDO_OFENSIVO } from '../../servicos/filtroConteudo';
+import { useAcaoUnica } from '../../contextos/useAcaoUnica';
 
 export default function PaginaForum() {
   const { autenticado } = useAutenticacao();
   if (autenticado) return <ForumAutenticado />;
-  return <div className="app-container"><main className="main-content"><p className="mensagem-erro" role="alert">Você não tem permissão.</p></main><Rodape /></div>;
+  return <div className="app-container"><main className="main-content"><div className="mensagem-erro" role="alert"><p className="m-0">Para acessar o fórum e participar das discussões, entre na sua conta.</p><Link className="btn btn-primary mt-4 inline-flex" to="/login">Entrar</Link></div></main><Rodape /></div>;
 }
 
 function ForumAutenticado() {
   const forum = useForum();
+  const criacaoBloqueada = forum.topicosBloqueados;
+  const respostaBloqueada = forum.comentariosBloqueados;
   const [tela, setTela] = useState('lista');
   const [termo, setTermo] = useState('');
   const [titulo, setTitulo] = useState('');
@@ -25,7 +30,7 @@ function ForumAutenticado() {
   const [texto, setTexto] = useState('');
   const [comentarioEditando, setComentarioEditando] = useState(null);
   const [erroTela, setErroTela] = useState('');
-  const [processando, setProcessando] = useState(false);
+  const [executar, processando] = useAcaoUnica();
 
   async function pesquisar() {
     forum.limparMensagem();
@@ -37,9 +42,8 @@ function ForumAutenticado() {
     if (processando) return;
     forum.limparMensagem(); setErroTela('');
     if (!titulo.trim() || !descricao.trim()) { setErroTela('Preencha o título e a descrição.'); return; }
-    setProcessando(true);
-    const criado = await forum.salvarTopico(titulo, descricao);
-    setProcessando(false);
+    if (contemTermoOfensivo(titulo, descricao)) { setErroTela(MENSAGEM_CONTEUDO_OFENSIVO); return; }
+    const criado = await executar(() => forum.salvarTopico(titulo, descricao));
     if (criado) { setTitulo(''); setDescricao(''); setTela('lista'); }
   }
 
@@ -48,9 +52,8 @@ function ForumAutenticado() {
     if (processando) return;
     forum.limparMensagem(); setErroTela('');
     if (!titulo.trim() || !descricao.trim()) { setErroTela('Preencha o título e a descrição.'); return; }
-    setProcessando(true);
-    const atualizado = await forum.editarTopico(forum.topicoSelecionado.id, titulo, descricao);
-    setProcessando(false);
+    if (contemTermoOfensivo(titulo, descricao)) { setErroTela(MENSAGEM_CONTEUDO_OFENSIVO); return; }
+    const atualizado = await executar(() => forum.editarTopico(forum.topicoSelecionado.id, titulo, descricao));
     if (atualizado) {
       setTitulo(''); setDescricao(''); setTela('detalhe');
     }
@@ -61,11 +64,10 @@ function ForumAutenticado() {
     if (processando) return;
     forum.limparMensagem(); setErroTela('');
     if (!texto.trim()) { setErroTela('Preencha o comentário.'); return; }
-    setProcessando(true);
-    const sucesso = comentarioEditando
-      ? await forum.editarComentario(comentarioEditando, texto)
-      : await forum.salvarComentario(texto);
-    setProcessando(false);
+    if (contemTermoOfensivo(texto)) { setErroTela(MENSAGEM_CONTEUDO_OFENSIVO); return; }
+    const sucesso = await executar(() => (comentarioEditando
+      ? forum.editarComentario(comentarioEditando, texto)
+      : forum.salvarComentario(texto)));
     if (sucesso) { setTexto(''); setComentarioEditando(null); }
   }
 
@@ -80,7 +82,7 @@ function ForumAutenticado() {
     {forum.mensagemSucesso && <div className="card mensagem-sucesso" role="status">{forum.mensagemSucesso}<button className="btn btn-link" type="button" onClick={forum.limparMensagem}>Fechar aviso</button></div>}
     {tela === 'lista' && <>
       <CabecalhoPagina titulo="Fórum" acoes={<>
-        {forum.autenticado ? <button className="btn btn-primary" type="button" disabled={forum.topicosBloqueados} onClick={() => setTela('criacao')}>Novo tópico</button> : <Link className="btn btn-primary" to="/login">Entrar para participar</Link>}
+        {forum.autenticado ? <button className="btn btn-primary" type="button" disabled={criacaoBloqueada} onClick={() => setTela('criacao')}>Novo tópico</button> : <Link className="btn btn-primary" to="/login">Entrar para participar</Link>}
         <PesquisaPagina valor={termo} onAlterar={setTermo} onPesquisar={pesquisar} rotulo="Pesquisar por título" placeholder="Buscar por título" />
       </>} />
       {forum.autenticado && <div className="forum-filtros" role="group" aria-label="Filtrar tópicos">
@@ -89,7 +91,8 @@ function ForumAutenticado() {
       </div>}
       <div className="forum-colunas"><section className="forum-topicos" aria-label="Tópicos do fórum">
         {forum.carregando ? <div className="card empty-list">Carregando tópicos...</div> : <ListaTopicos topicos={forum.topicos} usuarios={forum.usuarios} onSelecionar={selecionar} />}
-        <nav className="forum-paginacao" aria-label="Páginas do fórum"><button type="button" className="btn btn-secondary" disabled={forum.pagina === 0 || forum.carregando} onClick={() => forum.carregarTopicos(forum.pagina - 1)}>Anterior</button><span aria-live="polite">Página {forum.pagina + 1}</span><button type="button" className="btn btn-secondary" disabled={forum.pagina + 1 >= forum.totalPaginas || forum.carregando} onClick={() => forum.carregarTopicos(forum.pagina + 1)}>Próxima</button></nav>
+        <ControlesPaginacao pagina={forum.pagina} total={forum.totalPaginas} rotulo="Páginas do fórum" desabilitada={forum.carregando}
+          onAnterior={() => forum.carregarTopicos(forum.pagina - 1)} onProxima={() => forum.carregarTopicos(forum.pagina + 1)} />
       </section><aside className="forum-regras" aria-labelledby="forum-regras-titulo">
           <h2 id="forum-regras-titulo">Regras básicas</h2>
           <ul>
@@ -107,7 +110,7 @@ function ForumAutenticado() {
           <p>Ajude a manter o fórum útil e acolhedor para todos.</p>
         </aside></div>
     </>}
-    {(tela === 'criacao' || tela === 'edicao') && <FormularioTopico titulo={titulo} descricao={descricao} onMudarTitulo={setTitulo} onMudarDescricao={setDescricao} onPublicar={tela === 'criacao' ? publicar : editarTopico} onCancelar={() => setTela(tela === 'edicao' ? 'detalhe' : 'lista')} modoEdicao={tela === 'edicao'} desabilitado={processando ? true : forum.topicosBloqueados} />}
-    {tela === 'detalhe' && forum.topicoSelecionado && <DetalheTopico autenticado={forum.autenticado} topico={{ ...forum.topicoSelecionado, perfilAutor: forum.topicoSelecionado.perfilAutor ?? perfilDoUsuario(forum.usuarios.find((usuario) => Number(usuario.id) === Number(forum.topicoSelecionado.idAutor))) }} comentarios={forum.comentarios.map((comentario) => ({ ...comentario, perfilAutor: comentario.perfilAutor ?? perfilDoUsuario(forum.usuarios.find((usuario) => Number(usuario.id) === Number(comentario.idAutor))) }))} podeGerenciarTopico={forum.podeGerenciarTopico} podeEditarTopico={forum.podeEditarTopico} podeEditarComentario={forum.podeEditarComentario} podeExcluirComentario={forum.podeExcluirComentario} onFechar={forum.fecharTopicoSelecionado} onArquivar={async (topico) => { if (await forum.arquivarTopicoSelecionado(topico)) setTela('lista'); }} onEditarTopico={abrirEdicao} onExcluirComentario={forum.excluirComentarioSelecionado} onEditarComentario={(comentario) => { setComentarioEditando(comentario); setTexto(comentario.conteudo); }} textoComentario={texto} onMudarComentario={setTexto} onEnviarComentario={enviarComentario} comentarioEditando={comentarioEditando} onCancelarEdicaoComentario={() => { setComentarioEditando(null); setTexto(''); }} onVoltar={() => setTela('lista')} desabilitado={processando} comentariosBloqueados={forum.comentariosBloqueados} />}
+    {(tela === 'criacao' || tela === 'edicao') && <FormularioTopico titulo={titulo} descricao={descricao} onMudarTitulo={setTitulo} onMudarDescricao={setDescricao} onPublicar={tela === 'criacao' ? publicar : editarTopico} onCancelar={() => setTela(tela === 'edicao' ? 'detalhe' : 'lista')} modoEdicao={tela === 'edicao'} desabilitado={processando ? true : criacaoBloqueada} />}
+    {tela === 'detalhe' && forum.topicoSelecionado && <DetalheTopico autenticado={forum.autenticado} idUsuario={forum.sessao?.idUsuario ?? forum.sessao?.id} onDenunciar={forum.denunciarConteudo} topico={{ ...forum.topicoSelecionado, perfilAutor: forum.topicoSelecionado.perfilAutor ?? perfilDoUsuario(forum.usuarios.find((usuario) => Number(usuario.id) === Number(forum.topicoSelecionado.idAutor))) }} comentarios={forum.comentarios.map((comentario) => ({ ...comentario, perfilAutor: comentario.perfilAutor ?? perfilDoUsuario(forum.usuarios.find((usuario) => Number(usuario.id) === Number(comentario.idAutor))) }))} podeGerenciarTopico={forum.podeGerenciarTopico} podeEditarTopico={forum.podeEditarTopico} podeEditarComentario={forum.podeEditarComentario} podeExcluirComentario={forum.podeExcluirComentario} onFechar={forum.fecharTopicoSelecionado} onArquivar={async (topico) => { if (await forum.arquivarTopicoSelecionado(topico)) setTela('lista'); }} onEditarTopico={abrirEdicao} onExcluirComentario={forum.excluirComentarioSelecionado} onEditarComentario={(comentario) => { setComentarioEditando(comentario); setTexto(comentario.conteudo); }} textoComentario={texto} onMudarComentario={setTexto} onEnviarComentario={enviarComentario} comentarioEditando={comentarioEditando} onCancelarEdicaoComentario={() => { setComentarioEditando(null); setTexto(''); }} onVoltar={() => setTela('lista')} desabilitado={processando} comentariosBloqueados={respostaBloqueada} />}
   </main><Rodape /></div>;
 }

@@ -1,30 +1,28 @@
-import { senhaValida } from '../servicos/politicaSenha';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormularioCadastro from '../componentes/autenticacao/FormularioCadastro';
 import Rodape from '../componentes/comuns/Rodape';
 import { buscarPoliticaAtiva, cadastrarUsuario } from '../servicos/servicoAutenticacao';
-import { validarIdade } from './validacoesCadastro';
+import { validarCadastro } from '../servicos/validacoesAutenticacao';
+import { useAcaoUnica } from '../contextos/useAcaoUnica';
 
 const VALOR_PADRAO = {
-  nomeCompleto: '', email: '', senha: '', confirmacaoSenha: '', dataNascimento: '',
+  nomeCompleto: '', email: '', senha: '', confirmacaoSenha: '',
   declarouMaiorIdade: false,
   aceitouTermosLgpd: false, versaoTermos: ''
 };
-const CAMPOS_OBRIGATORIOS = ['nomeCompleto', 'email', 'senha', 'dataNascimento'];
 
 export default function Cadastro() {
   const navegar = useNavigate();
   const localizacao = useLocation();
   const [dados, setDados] = useState(VALOR_PADRAO);
   const [erro, setErro] = useState('');
-  const [carregando, setCarregando] = useState(false);
+  const [executar, carregando] = useAcaoUnica();
   const [carregandoPolitica, setCarregandoPolitica] = useState(true);
   const [erroPolitica, setErroPolitica] = useState('');
   const [politica, setPolitica] = useState(null);
-  const idade = validarIdade(dados.dataNascimento);
-  const formularioValido = useMemo(() => CAMPOS_OBRIGATORIOS.every((campo) => String(dados[campo]).trim())
-    && senhaValida(dados.senha) && dados.senha === dados.confirmacaoSenha && idade >= 18 && idade <= 90 && dados.declarouMaiorIdade && dados.aceitouTermosLgpd && Boolean(dados.versaoTermos) && !carregandoPolitica, [dados, idade, carregandoPolitica]);
+  const problema = useMemo(() => validarCadastro(dados), [dados]);
+  const formularioValido = !problema && !carregandoPolitica;
 
   async function carregarPolitica() {
     setCarregandoPolitica(true);
@@ -63,16 +61,16 @@ export default function Cadastro() {
   async function enviar(evento) {
     evento.preventDefault();
     if (carregando) return;
-    if (dados.senha !== dados.confirmacaoSenha) { setErro('As senhas devem coincidir.'); return; }
-    if (idade > 90) { setErro('A idade máxima permitida é 90 anos.'); return; }
-    if (idade < 18) { setErro('A plataforma Curso Válido é destinada a pessoas com 18 anos ou mais.'); return; }
-    if (!politica?.versao) { setErro('A versão atual dos documentos ainda não foi carregada.'); return; }
-    if (!formularioValido) { setErro('Preencha todos os campos obrigatórios e aceite os termos.'); return; }
-    setCarregando(true); setErro('');
-    try {
-      await cadastrarUsuario(dados);
-      navegar('/login', { replace: true, state: { mensagem: 'Cadastro realizado. Autentique-se para acessar a plataforma.' } });
-    } catch (falha) { setErro(falha.message); } finally { setCarregando(false); }
+    // Mostra exatamente o que falta, em vez de apenas manter o botão bloqueado.
+    if (problema) { setErro(problema); return; }
+    if (!politica?.versao || carregandoPolitica) { setErro('A versão atual dos documentos ainda não foi carregada.'); return; }
+    await executar(async () => {
+      setErro('');
+      try {
+        await cadastrarUsuario(dados);
+        navegar('/login', { replace: true, state: { mensagem: 'Cadastro realizado. Autentique-se para acessar a plataforma.' } });
+      } catch (falha) { setErro(falha.message); }
+    });
   }
 
   return (
@@ -84,7 +82,7 @@ export default function Cadastro() {
         {localizacao.state?.mensagem && <div className="mensagem-sucesso" role="status">{localizacao.state.mensagem}</div>}
         {carregandoPolitica && <p className="texto-suave">Carregando os documentos atuais...</p>}
         {erroPolitica && <><div className="mensagem-erro" role="alert">{erroPolitica}</div><button className="btn btn-secondary" type="button" onClick={carregarPolitica} disabled={carregandoPolitica}>Buscar novamente</button></>}
-        <FormularioCadastro dados={dados} idade={idade} carregando={carregando} formularioValido={formularioValido} onAlterar={alterar} onEnviar={enviar} erro={erro} />
+        <FormularioCadastro dados={dados} carregando={carregando} formularioValido={formularioValido} onAlterar={alterar} onEnviar={enviar} erro={erro} />
         <p className="texto-rodape-formulario">Já possui uma conta? <Link to="/login">Entrar</Link></p>
       </main><Rodape />
     </div>
