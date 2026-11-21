@@ -30,7 +30,7 @@ export default function Administracao({ tela = 'geral' }) {
   const [processando, setProcessando] = useState(false);
   const [confirmacao, setConfirmacao] = useState(null);
   const [politica, setPolitica] = useState(null);
-  const [nomePolitica, setNomePolitica] = useState(tela === 'privacidade' ? 'Política de Privacidade' : 'Termos de Aceite');
+  const [nomePolitica, setNomePolitica] = useState('');
 
   const [conteudoPolitica, setConteudoPolitica] = useState('');
 
@@ -45,7 +45,8 @@ export default function Administracao({ tela = 'geral' }) {
         tarefas.push(buscarPoliticasAtivas().then((politicas) => {
           const atual = politicas[0] ?? null;
           setPolitica(atual);
-          if (atual) { setNomePolitica(atual.nome); setConteudoPolitica(atual.conteudo); }
+          setNomePolitica(atual?.nome ?? '');
+          setConteudoPolitica(atual?.conteudo ?? '');
         }));
       }
       if (permissoes.principal && tela === 'privacidade') {
@@ -54,7 +55,7 @@ export default function Administracao({ tela = 'geral' }) {
           if (atual) { setNomePolitica(atual.nome); setConteudoPolitica(atual.conteudo); }
         }));
       }
-      if (permissoes.principal && tela === 'convites') {
+      if (tela === 'convites') {
         tarefas.push(buscarConvites().then(setConvites), buscarConvitesPendentes().then(setPendentes));
       }
       const resultados = await Promise.allSettled(tarefas);
@@ -100,7 +101,8 @@ export default function Administracao({ tela = 'geral' }) {
 
   function convidar(evento) {
     evento.preventDefault();
-    acionar(async () => { await criarConvite(email.trim(), perfil); setEmail(''); }, 'Convite enviado com sucesso.');
+    if (!email.trim()) return;
+    acionar(async () => { await criarConvite(email.trim(), perfil); setEmail(''); }, 'Convite enviado. A pessoa convidada cria a conta pelo link recebido no e-mail.');
   }
 
   function publicar(evento) {
@@ -108,12 +110,15 @@ export default function Administracao({ tela = 'geral' }) {
     const erroValidacao = validarDocumento(nomePolitica, conteudoPolitica);
     if (erroValidacao) { setErro(erroValidacao); return; }
     setErro('');
+    const aviso = politica
+      ? 'Publicar esta versão arquivará a atual. Os usuários precisarão revisar os documentos e confirmar o aceite após se autenticar. Deseja continuar?'
+      : 'Publicar este documento para habilitar o cadastro e o aceite dos usuários?';
     solicitar(async () => {
       const publicarDocumento = tela === 'privacidade' ? publicarPrivacidade : publicarPolitica;
       await publicarDocumento(nomePolitica.trim(), conteudoPolitica.trim());
 
       setConteudoPolitica('');
-    }, 'Publicar esta versão arquivará a atual. Os usuários precisarão revisar os documentos e confirmar o aceite após se autenticar. Deseja continuar?', 'Nova versão publicada.');
+    }, aviso, politica ? 'Nova versão publicada.' : 'Documento publicado.');
   }
 
   return <div className="app-container"><main className="main-content administracao">
@@ -121,7 +126,8 @@ export default function Administracao({ tela = 'geral' }) {
     <CabecalhoPagina etiqueta="Gestão da plataforma" titulo={({ termos: 'Termos de Aceite', privacidade: 'Política de Privacidade', usuarios: 'Moderação de usuários', convites: 'Convites' })[tela] ?? 'Administração'} descricao={`Administrador: ${sessao?.nome}`} />
     <nav className="administracao-navegacao" aria-label="Ferramentas administrativas">
       <NavLink to="/administracao/usuarios">Usuários</NavLink>
-      {principal && <><NavLink to="/administracao/termos">Termos de Aceite</NavLink><NavLink to="/administracao/privacidade">Privacidade</NavLink><NavLink to="/administracao/convites">Convites</NavLink></>}
+      <NavLink to="/administracao/convites">Convites</NavLink>
+      {principal && <><NavLink to="/administracao/termos">Termos de Aceite</NavLink><NavLink to="/administracao/privacidade">Privacidade</NavLink></>}
       <NavLink to="/administracao/dashboard">Dashboard</NavLink>
       <NavLink to="/administracao/comunicados">Comunicados</NavLink>
     </nav>
@@ -135,18 +141,18 @@ export default function Administracao({ tela = 'geral' }) {
           <div><dt>Nome</dt><dd>{sessao?.nome ?? 'Não informado'}</dd></div>
           <div><dt>Perfil</dt><dd>Administrador</dd></div>
           <div><dt>Identificação da conta</dt><dd>{sessao?.idUsuario ?? 'Não informada'}</dd></div>
-          <div><dt>Permissão administrativa</dt><dd>{principal ? 'Administrador principal' : 'Administrador'}</dd></div>
+          <div><dt>Permissão administrativa</dt><dd>{principal ? 'Root (conta protegida)' : 'Administrador'}</dd></div>
         </dl>
         <Link className="btn btn-secondary" to="/configuracoes">Configurações da minha conta</Link>
       </section> : null}
-      {['termos', 'privacidade', 'convites'].includes(tela) && !principal ? <p className="mensagem-erro" role="alert">Esta tela está disponível apenas para o administrador principal.</p> : null}
-      {principal ? <>
+      {['termos', 'privacidade'].includes(tela) && !principal ? <p className="mensagem-erro" role="alert">Esta tela está disponível apenas para o root.</p> : null}
+      {(principal || tela === 'convites') ? <>
         {tela === 'convites' ? <>
           <section className="card configuracoes-conta">
-            <h2 className="titulo-detalhe">Convidar professor ou administrador</h2>
+            <h2 className="titulo-detalhe">{principal ? 'Convidar professor ou administrador' : 'Convidar professor'}</h2>
             <form className="formulario-publico" onSubmit={convidar}>
               <label>E-mail<input required type="email" maxLength={254} value={email} onChange={(evento) => setEmail(evento.target.value)} /></label>
-              <label>Perfil<select value={perfil} onChange={(evento) => setPerfil(evento.target.value)}><option value="PROFESSOR">Professor</option><option value="ADMINISTRADOR">Administrador</option></select></label>
+              <label>Perfil<select value={perfil} onChange={(evento) => setPerfil(evento.target.value)}><option value="PROFESSOR">Professor</option>{principal && <option value="ADMINISTRADOR">Administrador</option>}</select></label>
               <button className="btn btn-primary" disabled={processando}>{processando ? 'Enviando...' : 'Enviar convite'}</button>
             </form>
           </section>
@@ -156,10 +162,10 @@ export default function Administracao({ tela = 'geral' }) {
           <p className="texto-suave">Versão vigente: {politica?.versao ?? 'Nenhuma versão publicada'}</p>
           <form className="formulario-publico" onSubmit={publicar}>
             <label>Nome do documento<input required maxLength={255} value={nomePolitica} onChange={(evento) => setNomePolitica(evento.target.value)} /></label>
-            <p className="texto-suave">A versão será incrementada automaticamente ao publicar{tela === 'termos' ? ' (v1.2, v1.4, v1.6, v1.8, v2.0...)' : ''}.</p>
+            <>{!politica && <p className="texto-suave">Nenhum documento foi publicado. Cadastre aqui o conteúdo oficial para liberar o cadastro de usuários.</p>}<p className="texto-suave">A versão será incrementada automaticamente ao publicar.</p></>
             <p className="texto-suave">O conteúdo pode ser escrito em texto simples ou HTML básico (títulos, parágrafos e listas).</p>
             <label>Conteúdo<textarea className="input-field" required maxLength={10000} rows={12} value={conteudoPolitica} onChange={(evento) => setConteudoPolitica(evento.target.value)} /></label>
-            <button className="btn btn-primary" disabled={processando}>Publicar nova versão</button>
+            <button className="btn btn-primary" disabled={processando}>{politica ? 'Publicar nova versão' : 'Publicar documento'}</button>
           </form>
         </section> : null}
         {tela === 'convites' ? <>
