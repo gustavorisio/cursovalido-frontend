@@ -1,5 +1,6 @@
 import { Link, Navigate } from 'react-router-dom';
 import Rodape from '../componentes/comuns/Rodape';
+import VideoApresentacaoInicio from '../componentes/comuns/VideoApresentacaoInicio';
 import { useAutenticacao } from '../contextos/useAutenticacao';
 import './inicio.css';
 
@@ -24,6 +25,7 @@ export default function Inicio() {
           <p className="cv-hero-note">Já tem cadastro? <Link to="/login">Entre para continuar seus estudos</Link></p>
         </div>
       </section>
+      <VideoApresentacaoInicio />
 
       <section className="cv-explore" aria-labelledby="cv-explore-titulo">
         <div className="cv-section-heading"><h2 id="cv-explore-titulo">Conheça o CursoVálido</h2><p>Estude com as aulas online e participe da comunidade no fórum de discussões.</p></div>
