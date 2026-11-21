@@ -31,7 +31,7 @@ function formatarMensagem(dados) {
     });
     if (campos.length) return campos.join(' ');
   }
-  const mensagem = dados?.erro || dados?.message || dados?.mensagem;
+  const mensagem = dados?.erro || dados?.message || dados?.mensagem || dados?.detail;
   return typeof mensagem === 'string' && mensagem.trim() ? mensagem : null;
 }
 
@@ -56,18 +56,35 @@ function mensagemDeErro(status, dados) {
   if (Object.hasOwn(mensagens, dados?.codigo)) return mensagens[dados.codigo];
   if (status >= 500) return 'O serviço está indisponível no momento. Tente novamente em alguns minutos.';
   if (status === 429) {
-    return (dados?.codigo === 'OPERACAO_RECUSADA' && formatarMensagem(dados))
+    return formatarMensagem(dados)
       || 'Você fez muitas tentativas. Aguarde alguns minutos e tente novamente.';
   }
   if (status === 401) return 'Sua sessão terminou. Entre na sua conta novamente.';
   if (status === 403) return dados?.codigo === 'OPERACAO_RECUSADA' && formatarMensagem(dados)
     ? formatarMensagem(dados) : 'Você não tem permissão para fazer isso. Se precisar, fale com o Suporte.';
   if (status === 404) return 'Este conteúdo não foi encontrado ou foi removido. Atualize a página para continuar.';
-  if (status === 409) return 'Os dados já existem ou foram alterados. Atualize a página e tente novamente.';
+  if (status === 409) return formatarMensagem(dados)
+    || 'Os dados já existem ou foram alterados. Atualize a página e tente novamente.';
   return formatarMensagem(dados) || 'Confira os dados informados e tente novamente.';
 }
 
-export async function requisitar(caminho, opcoes = {}) {
+const requisicoesEmAndamento = new Map();
+
+// Envios iguais disparados ao mesmo tempo (duplo clique, Enter repetido, dois botões ligados à
+// mesma ação) compartilham uma única requisição. Consultas GET não passam por esta trava.
+export function requisitar(caminho, opcoes = {}) {
+  const metodo = String(opcoes.method ?? 'GET').toUpperCase();
+  if (metodo === 'GET' || metodo === 'HEAD') return executarRequisicao(caminho, opcoes);
+  const corpo = typeof opcoes.body === 'string' ? opcoes.body : '';
+  const chave = `${metodo} ${caminho} ${opcoes.tokenAutenticacao ?? ''} ${corpo}`;
+  const existente = requisicoesEmAndamento.get(chave);
+  if (existente) return existente;
+  const requisicao = executarRequisicao(caminho, opcoes).finally(() => requisicoesEmAndamento.delete(chave));
+  requisicoesEmAndamento.set(chave, requisicao);
+  return requisicao;
+}
+
+async function executarRequisicao(caminho, opcoes = {}) {
   const { semAutenticacao = false, tokenAutenticacao, ...opcoesFetch } = opcoes;
   const token = tokenAutenticacao ?? obterTokenSessao();
   const cabecalhos = { Accept: 'application/json', ...opcoesFetch.headers };
@@ -113,7 +130,8 @@ export async function requisitar(caminho, opcoes = {}) {
     if (Object.hasOwn(mensagensServico, dados?.codigo)) {
       throw new ErroApi(resposta.status, mensagensServico[dados.codigo], dados);
     }
-    if (['EMAIL_JA_CADASTRADO', 'PERFIL_CONVITE_INVALIDO'].includes(dados?.codigo)) {
+    if (['EMAIL_JA_CADASTRADO', 'PERFIL_CONVITE_INVALIDO', 'CONVITE_JA_PENDENTE', 'LIMITE_CONVITES',
+      'REENVIO_CONVITE_AGUARDE', 'LIMITE_REENVIO_CONVITE'].includes(dados?.codigo)) {
       throw new ErroApi(resposta.status, formatarMensagem(dados) ?? 'Não foi possível enviar o convite.', dados);
     }
     if (['CONTA_SUSPENSA', 'FORUM_SUSPENSO', 'TOPICOS_SUSPENSOS', 'COMENTARIOS_SUSPENSOS'].includes(dados?.codigo)) {
