@@ -47,9 +47,9 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
   }
 
   const termo = busca.trim().toLowerCase();
-  const resultados = termo ? usuarios.filter((usuario) => `${usuario.nome} ${usuario.email} ${usuario.perfil}`.toLowerCase().includes(termo)) : [];
+  const resultados = termo ? usuarios.filter((usuario) => `${usuario.nome} ${usuario.perfil}`.toLowerCase().includes(termo)) : [];
   const equipe = usuarios.filter((usuario) => ['PROFESSOR', 'ADMINISTRADOR'].includes(usuario.perfil));
-  const alunos = usuarios.filter((usuario) => !['PROFESSOR', 'ADMINISTRADOR'].includes(usuario.perfil));
+  const alunos = usuarios.filter((usuario) => usuario.perfil === 'ALUNO');
   const grupos = termo ? [{ titulo: 'Resultados da busca', lista: resultados, vazio: 'Nenhum usuário encontrado.' }] : [
     { titulo: 'Alunos', lista: alunos, vazio: 'Nenhum aluno cadastrado.' },
     { titulo: 'Professores e administradores', lista: equipe, vazio: 'Nenhum professor ou administrador cadastrado.' },
@@ -59,7 +59,7 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
     <h2 className="titulo-detalhe">Moderação de usuários</h2>
     <p className="texto-suave">Restrinja a conta inteira ou apenas ações do fórum. Restrições temporárias expiram automaticamente; permanentes podem ser revogadas.</p>
     <div className="administracao-resumo"><span><strong>{usuarios.length}</strong> contas</span><span><strong>{equipe.length}</strong> membros da equipe</span><span><strong>{usuarios.filter((usuario) => usuario.suspensoes.length > 0).length}</strong> com restrições</span></div>
-    <p className="texto-suave">E-mails de alunos são exibidos parcialmente. Busque alunos pelo nome ou perfil; os e-mails completos da equipe ficam disponíveis à administração.</p>
+    <p className="texto-suave">Por privacidade, os e-mails aparecem parcialmente e os nomes exibem apenas o primeiro nome.</p>
     {onFiltrarRestricao && <div className="acoes-topico" role="group" aria-label="Filtrar usuários por restrição">
       {FILTROS.map(([valor, rotulo]) => <button key={rotulo} className={filtroRestricao === valor ? 'btn btn-primary' : 'btn btn-secondary'} type="button"
         aria-pressed={filtroRestricao === valor} disabled={ocupado} onClick={() => {
@@ -68,8 +68,8 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
           onFiltrarRestricao(valor);
         }}>{rotulo}</button>)}
     </div>}
-    <PesquisaPagina valor={busca} onAlterar={setBusca} rotulo="Buscar usuário" placeholder="Nome, perfil ou e-mail da equipe" />
-    {!termo ? <p className="texto-suave">Digite um nome, e-mail ou perfil para encontrar um usuário.</p> : null}
+    <PesquisaPagina valor={busca} onAlterar={setBusca} rotulo="Buscar usuário" placeholder="Nome ou perfil" />
+    {!termo ? <p className="texto-suave">Digite um nome ou perfil para encontrar um usuário.</p> : null}
     {podeAplicarRestricao ? <form className="formulario-publico moderacao-formulario" onSubmit={solicitar}>
       <h3>Restringir {selecionado.nome}</h3>
       {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
@@ -92,7 +92,7 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
           {lista.length === 0 ? <p className="texto-suave">{vazio}</p> : null}
           {usuariosDaPagina.map((usuario) => <article key={usuario.id} className="moderacao-usuario">
             <div className="post-heading">
-              <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">{usuario.email}</p><div className="administracao-badges"><span>{usuario.perfil}</span><span className={usuario.ativo ? 'status-ativo' : ''}>{usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</span></div></div>
+              <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">{usuario.email}</p><div className="administracao-badges"><span>{usuario.root ? 'ROOT' : usuario.perfil}</span><span className={usuario.ativo ? 'status-ativo' : ''}>{usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</span></div></div>
               <div className="acoes-topico">
                 {usuario.podeModerar && usuario.suspensoes.length === 0 ? <button className="btn btn-secondary btn-small" type="button" disabled={ocupado} onClick={() => { setSelecionado(usuario.id); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
                 {usuario.podeExcluir ? <button className="btn btn-danger btn-small" type="button" disabled={ocupado} onClick={() => excluir(usuario)}>Excluir conta</button> : null}
