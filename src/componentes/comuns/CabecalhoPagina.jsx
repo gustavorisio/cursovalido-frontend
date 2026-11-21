@@ -1,5 +1,5 @@
-export default function CabecalhoPagina({ titulo, descricao, etiqueta, acoes, children }) {
-  return <header className="page-header">
+export default function CabecalhoPagina({ titulo, descricao, etiqueta, acoes, children, className = '' }) {
+  return <header className={`page-header ${className}`}>
     <div className="page-header-content">
       <h1 className="page-title">{titulo}</h1>
       {etiqueta && <span className="page-eyebrow">{etiqueta}</span>}

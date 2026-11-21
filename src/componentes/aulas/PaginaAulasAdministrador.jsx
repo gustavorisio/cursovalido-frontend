@@ -5,7 +5,7 @@ import ModuloExpansivel from './componentes/ModuloExpansivel';
 import PesquisaConteudo from './componentes/PesquisaConteudo';
 import Paginacao from '../comuns/Paginacao';
 import { correspondeAoNome } from './servicos/pesquisaConteudo';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import LayoutAulas from './componentes/LayoutAulas';
 import EstadoCarregamento from './componentes/EstadoCarregamento';
@@ -43,6 +43,8 @@ function ConsultaAulas({ idCurso, idAula }) {
   const [editando, setEditando] = useState(null);
   const [confirmacao, setConfirmacao] = useState(null);
   const [processando, setProcessando] = useState(false);
+  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
+  const acaoEmAndamento = useRef(false);
   const [erroAcao, setErroAcao] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [busca, setBusca] = useState('');
@@ -60,15 +62,16 @@ function ConsultaAulas({ idCurso, idAula }) {
     finally { setProcessando(false); }
   }
   async function abrirEdicao(aula) {
-    if (processando) return;
-    setProcessando(true); setErroAcao(''); setMensagem('');
+    if (processando || acaoEmAndamento.current) return;
+    acaoEmAndamento.current = true; setProcessando(true); setErroAcao(''); setMensagem('');
     try { setEditando(await servico.buscarAula(aula.id)); }
     catch (falha) { setErroAcao(falha.message); }
-    finally { setProcessando(false); }
+    finally { acaoEmAndamento.current = false; setProcessando(false); }
   }
 
   function formulario(aula) {
-    return editando?.id === aula.id ? <FormularioConteudo key={editando.id} tipo="aula" item={editando} processando={processando} onCancelar={() => setEditando(null)} onSalvar={valores => executar(() => servico.editarAula(editando.id, valores), 'Aula atualizada.')} /> : null;
+    const idEditando = editando?.id;
+    return idEditando === aula.id ? <FormularioConteudo key={idEditando} tipo="aula" item={editando} processando={processando} onCancelar={() => setEditando(null)} onSalvar={valores => executar(() => servico.editarAula(idEditando, valores), 'Aula atualizada.')} /> : null;
   }
 
   function acoes(aula) {
@@ -122,7 +125,7 @@ function ConsultaAulas({ idCurso, idAula }) {
         </> : null}
         {dados.aula ? editando ? formulario(dados.aula) : <section className="card aulas-detalhe aulas-sala-player">
           <p className="aulas-etiqueta">{dados.aula.ativo === false ? 'Arquivada' : 'Disponível'}</p>{acoes(dados.aula)}
-          <PlayerAula videoId={dados.aula.youtubeVideoId} />
+          <PlayerAula vimeoUrl={dados.aula.vimeoVideoUrl} videoId={dados.aula.youtubeVideoId} />
           <p className="content-text">{dados.aula.descricao}</p>
         </section> : dados.curso ? <>
           <p className="card content-text">{dados.curso.descricao}</p>

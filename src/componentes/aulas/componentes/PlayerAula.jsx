@@ -1,12 +1,41 @@
 import { useEffect, useRef, useState } from 'react';
 import { carregarYoutube, mensagemErroPlayer } from '../servicos/youtubePlayer';
 
-export default function PlayerAula({ videoId, posicaoInicial = 0, onSalvar }) {
+let carregamentoVimeo;
+
+function carregarVimeo() {
+  if (window.Vimeo?.Player) return Promise.resolve(window.Vimeo);
+  if (carregamentoVimeo) return carregamentoVimeo;
+  carregamentoVimeo = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    const limite = window.setTimeout(() => falhar(), 15000);
+    function limpar() { window.clearTimeout(limite); script.onerror = null; }
+    function falhar() { limpar(); script.remove(); carregamentoVimeo = null; reject(new Error('Não foi possível carregar o player do Vimeo.')); }
+    script.src = 'https://player.vimeo.com/api/player.js';
+    script.onload = () => { limpar(); window.Vimeo?.Player ? resolve(window.Vimeo) : falhar(); };
+    script.onerror = falhar;
+    document.head.appendChild(script);
+  });
+  return carregamentoVimeo;
+}
+
+function urlDeIncorporacao(url) {
+  const endereco = new URL(url);
+  const id = endereco.pathname.match(/(?:^|\/)(\d+)(?:\/|$)/)?.[1];
+  if (!id) throw new Error('A URL do Vimeo não contém um identificador de vídeo válido.');
+  const hash = endereco.searchParams.get('h') || endereco.pathname.match(/\/(\d+)\/([a-f\d]+)/i)?.[2];
+  const embed = new URL(`https://player.vimeo.com/video/${id}`);
+  if (hash) embed.searchParams.set('h', hash);
+  return embed.toString();
+}
+
+export default function PlayerAula({ videoId, vimeoUrl, posicaoInicial = 0, onSalvar }) {
   const recipiente = useRef(null);
   const player = useRef(null);
   const retomada = useRef(posicaoInicial);
   const [inicio] = useState(posicaoInicial);
   const [tentativa, setTentativa] = useState(0);
+  const [usarReserva, setUsarReserva] = useState(!vimeoUrl);
   const [erro, setErro] = useState('');
   const [pronto, setPronto] = useState(false);
 
@@ -15,81 +44,93 @@ export default function PlayerAula({ videoId, posicaoInicial = 0, onSalvar }) {
     let iniciou = false;
     let falhou = false;
     let intervalo;
+    let tempoListener;
     const posicaoDeInicio = retomada.current;
     let ultimaEnviada = posicaoDeInicio;
-    const elemento = document.createElement('div');
     const local = recipiente.current;
-    local.appendChild(elemento);
 
     function lerPosicao() {
-      if (!iniciou) return null;
-      if (falhou) return null;
-      let segundos;
-      try {
-        segundos = player.current?.getCurrentTime();
-      } catch {
-        return null;
+      if (!iniciou || falhou) return null;
+      if (usarReserva) {
+        try {
+          const segundos = player.current?.getCurrentTime();
+          if (Number.isFinite(segundos)) retomada.current = Math.max(0, Math.floor(segundos));
+        } catch { return null; }
       }
-      if (!Number.isFinite(segundos)) return null;
-      retomada.current = Math.max(0, Math.floor(segundos));
       return retomada.current;
     }
 
     async function salvar(aoSair = false) {
       if (typeof onSalvar !== 'function') return;
       const posicao = lerPosicao();
-      if (posicao === null) return;
-      if (posicao === ultimaEnviada) return;
+      if (posicao === null || posicao === ultimaEnviada) return;
       ultimaEnviada = posicao;
       const sucesso = await onSalvar(posicao, aoSair);
       if (!sucesso) ultimaEnviada = -1;
     }
 
-    function aoOcultar() {
-      if (document.visibilityState === 'hidden') salvar(true);
-    }
-
+    function aoOcultar() { if (document.visibilityState === 'hidden') salvar(true); }
     function aoSair() { salvar(true); }
 
-    async function criarPlayer() {
-      try {
-        const YT = await carregarYoutube();
-        if (!ativo) return;
-        player.current = new YT.Player(elemento, {
-          width: '100%',
-          height: '100%',
-          videoId,
-          playerVars: { origin: window.location.origin, playsinline: 1, start: posicaoDeInicio },
-          events: {
-            onReady: (evento) => {
-              if (!ativo) return;
-              evento.target.getIframe().title = 'Vídeo da aula';
-              setPronto(true);
-            },
-            onStateChange: (evento) => {
-              if (!ativo) return;
-              if (evento.data === YT.PlayerState.PLAYING) {
-                iniciou = true;
-                falhou = false;
-              }
-              if ([YT.PlayerState.PAUSED, YT.PlayerState.ENDED].includes(evento.data)) salvar();
-            },
-            onError: (evento) => {
-              if (!ativo) return;
-              falhou = true;
-              setErro(mensagemErroPlayer(evento.data));
-            },
+    async function iniciarVimeo() {
+      const Vimeo = await carregarVimeo();
+      if (!ativo) return;
+      const iframe = document.createElement('iframe');
+      iframe.src = urlDeIncorporacao(vimeoUrl);
+      iframe.title = 'Vídeo da aula no Vimeo';
+      iframe.allow = 'autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share';
+      iframe.allowFullscreen = true;
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+      iframe.className = 'player-video-frame';
+      local.replaceChildren(iframe);
+      const instancia = new Vimeo.Player(iframe);
+      player.current = instancia;
+      tempoListener = (dados) => { if (Number.isFinite(dados.seconds)) retomada.current = Math.floor(dados.seconds); };
+      instancia.on('timeupdate', tempoListener);
+      instancia.on('play', () => { iniciou = true; falhou = false; });
+      instancia.on('pause', () => salvar());
+      instancia.on('ended', () => salvar());
+      instancia.on('error', () => { if (ativo) { falhou = true; setPronto(false); setUsarReserva(true); } });
+      await instancia.ready();
+      if (posicaoDeInicio > 0) await instancia.setCurrentTime(posicaoDeInicio);
+      if (ativo) setPronto(true);
+      intervalo = window.setInterval(() => salvar(), 10000);
+    }
+
+    async function iniciarYouTube() {
+      const elemento = document.createElement('div');
+      local.replaceChildren(elemento);
+      const YT = await carregarYoutube();
+      if (!ativo) return;
+      player.current = new YT.Player(elemento, {
+        width: '100%', height: '100%', videoId,
+        playerVars: { origin: window.location.origin, playsinline: 1, start: posicaoDeInicio },
+        events: {
+          onReady: (evento) => { if (ativo) { evento.target.getIframe().title = 'Vídeo da aula no YouTube'; setPronto(true); } },
+          onStateChange: (evento) => {
+            if (!ativo) return;
+            if (evento.data === YT.PlayerState.PLAYING) { iniciou = true; falhou = false; }
+            if ([YT.PlayerState.PAUSED, YT.PlayerState.ENDED].includes(evento.data)) salvar();
           },
-        });
-        intervalo = window.setInterval(() => salvar(), 10000);
-      } catch (falha) {
-        if (ativo) setErro(falha.message);
-      }
+          onError: (evento) => { if (ativo) { falhou = true; setErro(mensagemErroPlayer(evento.data)); } },
+        },
+      });
+      intervalo = window.setInterval(() => salvar(), 10000);
     }
 
     document.addEventListener('visibilitychange', aoOcultar);
     window.addEventListener('pagehide', aoSair);
-    criarPlayer();
+    (async () => {
+      try {
+        if (!usarReserva && vimeoUrl) await iniciarVimeo();
+        else if (videoId) await iniciarYouTube();
+        else throw new Error('Esta aula não tem um vídeo reserva configurado no YouTube.');
+      } catch (falha) {
+        if (!ativo) return;
+        if (!usarReserva && videoId) { falhou = true; setPronto(false); setUsarReserva(true); }
+        else setErro(falha.message || 'Não foi possível reproduzir este vídeo.');
+      }
+    })();
 
     return () => {
       ativo = false;
@@ -97,17 +138,18 @@ export default function PlayerAula({ videoId, posicaoInicial = 0, onSalvar }) {
       window.clearInterval(intervalo);
       document.removeEventListener('visibilitychange', aoOcultar);
       window.removeEventListener('pagehide', aoSair);
-      player.current?.destroy();
+      if (tempoListener) player.current?.off?.('timeupdate', tempoListener);
+      player.current?.destroy?.();
       player.current = null;
-      local.replaceChildren();
+      local?.replaceChildren();
     };
-  }, [videoId, inicio, tentativa, onSalvar]);
+  }, [videoId, vimeoUrl, inicio, tentativa, usarReserva, onSalvar]);
 
   return <>
     {erro ? <div className="mensagem-erro" role="alert">
       <p>{erro}</p>
-      <button className="btn btn-secondary" type="button" onClick={() => { setErro(''); setPronto(false); setTentativa((valor) => valor + 1); }}>Tentar carregar novamente</button>
-    </div> : pronto ? null : <p className="texto-suave" role="status">Carregando vídeo...</p>}
+      <button className="btn btn-secondary" type="button" onClick={() => { setErro(''); setPronto(false); setUsarReserva(!vimeoUrl); setTentativa((valor) => valor + 1); }}>Tentar carregar novamente</button>
+    </div> : pronto ? null : <p className="texto-suave" role="status">Carregando vídeo{usarReserva ? ' de reserva' : ''}...</p>}
     <div className="video-wrapper min-h-[200px]" ref={recipiente} />
   </>;
 }

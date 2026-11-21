@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import ControlesPaginacao from './ControlesPaginacao';
 
-export default function Paginacao({ itens, tamanho, rotulo, desabilitada = false, children }) {
+export default function Paginacao({ itens, tamanho, rotulo, desabilitada = false, exibirPaginaUnica = false, children }) {
   const [indice, setIndice] = useState(0);
   const total = Math.max(1, Math.ceil(itens.length / tamanho));
   const pagina = Math.min(indice, total - 1);
@@ -9,10 +10,7 @@ export default function Paginacao({ itens, tamanho, rotulo, desabilitada = false
 
   return <>
     {children(itens.slice(inicio, inicio + tamanho))}
-    {total > 1 && <nav className="paginacao-lista" aria-label={rotulo}>
-      <button className="btn btn-secondary" type="button" disabled={desabilitada || pagina === 0} onClick={() => setIndice(pagina - 1)}>Anterior</button>
-      <span aria-live="polite">Página {pagina + 1} de {total}</span>
-      <button className="btn btn-secondary" type="button" disabled={desabilitada || pagina + 1 >= total} onClick={() => setIndice(pagina + 1)}>Próxima</button>
-    </nav>}
+    <ControlesPaginacao pagina={pagina} total={total} rotulo={rotulo} desabilitada={desabilitada} exibirPaginaUnica={exibirPaginaUnica}
+      onAnterior={() => setIndice(pagina - 1)} onProxima={() => setIndice(pagina + 1)} />
   </>;
 }
