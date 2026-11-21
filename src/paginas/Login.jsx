@@ -5,6 +5,8 @@ import FormularioLogin from '../componentes/autenticacao/FormularioLogin';
 import Rodape from '../componentes/comuns/Rodape';
 import { useAutenticacao } from '../contextos/useAutenticacao';
 import { reenviarCodigo2fa, reenviarConfirmacao } from '../servicos/servicoAutenticacao';
+import { validarCodigo, validarLogin } from '../servicos/validacoesAutenticacao';
+import { useAcaoUnica } from '../contextos/useAcaoUnica';
 
 export default function Login() {
   const { autenticado, autenticarUsuario, validarCodigo2fa, sair } = useAutenticacao();
@@ -14,9 +16,10 @@ export default function Login() {
   const [erro, setErro] = useState('');
   const [mensagemReenvio, setMensagemReenvio] = useState('');
   const [contaNaoConfirmada, setContaNaoConfirmada] = useState(false);
-  const [reenviando, setReenviando] = useState(false);
+  const [executarReenvio, reenviando] = useAcaoUnica();
   const [carregando, setCarregando] = useState(false);
   const [segundoFator, setSegundoFator] = useState(false);
+  const [finalidadeCodigo, setFinalidadeCodigo] = useState(null);
   const [codigo, setCodigo] = useState('');
   const [exibirReenvio2fa, setExibirReenvio2fa] = useState(false);
   const [reenviando2fa, setReenviando2fa] = useState(false);
@@ -38,6 +41,7 @@ export default function Login() {
   function cancelarSegundoFator() {
     sair();
     setSegundoFator(false);
+    setFinalidadeCodigo(null);
     setCodigo('');
     setEmailEnviado('');
     setErro('');
@@ -49,6 +53,10 @@ export default function Login() {
   async function enviar(evento) {
     evento.preventDefault();
     if (enviando.current || solicitandoCodigo.current) return;
+    const campos = evento.currentTarget.elements;
+    const problema = segundoFator ? validarCodigo(codigo)
+      : validarLogin(campos.namedItem('email')?.value, campos.namedItem('senha')?.value);
+    if (problema) { setErro(problema); setMensagemReenvio(''); return; }
     enviando.current = true;
     setErro('');
     setMensagemReenvio('');
@@ -56,12 +64,12 @@ export default function Login() {
     setCarregando(true);
     try {
       if (!segundoFator) {
-        const campos = evento.currentTarget.elements;
-        const email = campos.namedItem('email').value;
+        const email = campos.namedItem('email').value.trim();
         setEmailEnviado(email);
         const resposta = await autenticarUsuario(email, campos.namedItem('senha').value);
         if (resposta?.requerCodigo2fa) {
           setSegundoFator(true);
+          setFinalidadeCodigo(resposta.finalidadeCodigo);
           setExibirReenvio2fa(true);
           setSegundosReenvio2fa(60);
           return;
@@ -124,16 +132,18 @@ export default function Login() {
   }
 
   async function reenviar() {
-    setReenviando(true); setErro('');
-    try {
-      await reenviarConfirmacao(emailEnviado);
-      setMensagemReenvio('Se o e-mail estiver cadastrado, um novo link de confirmação será enviado.');
-      setContaNaoConfirmada(false);
-    } catch (falha) {
-      setErro(falha.status === 429
-        ? 'Limite de reenvio atingido. Aguarde alguns minutos antes de tentar novamente.'
-        : falha.message || 'Não foi possível reenviar a confirmação agora.');
-    } finally { setReenviando(false); }
+    await executarReenvio(async () => {
+      setErro('');
+      try {
+        await reenviarConfirmacao(emailEnviado);
+        setMensagemReenvio('Se o e-mail estiver cadastrado, um novo link de confirmação será enviado.');
+        setContaNaoConfirmada(false);
+      } catch (falha) {
+        setErro(falha.status === 429
+          ? 'Limite de reenvio atingido. Aguarde alguns minutos antes de tentar novamente.'
+          : falha.message || 'Não foi possível reenviar a confirmação agora.');
+      }
+    });
   }
 
   return (
@@ -142,7 +152,7 @@ export default function Login() {
         <div className="marca-publica">CURSO VÁLIDO </div>
         <h1>Entrar na plataforma</h1>
         <p className="texto-suave">Acesse o fórum e continue sua jornada de aprendizagem.</p>
-        <FormularioLogin codigo={codigo} segundoFator={segundoFator} erro={erro} carregando={carregando} mensagem={mensagemReenvio || localizacao.state?.mensagem} onCodigo={setCodigo} onEnviar={enviar} />
+        <FormularioLogin codigo={codigo} segundoFator={segundoFator} finalidadeCodigo={finalidadeCodigo} erro={erro} carregando={carregando} mensagem={mensagemReenvio || localizacao.state?.mensagem} onCodigo={setCodigo} onEnviar={enviar} />
         {segundoFator ? <button className="btn btn-link" type="button" disabled={carregando} onClick={cancelarSegundoFator}>Cancelar login e usar outra conta</button> : null}
         {contaNaoConfirmada && <button className="botao-destaque" type="button" disabled={reenviando} onClick={reenviar}>{reenviando ? 'Enviando...' : 'Reenviar confirmação'}</button>}
         {segundoFator && exibirReenvio2fa && <button className="botao-destaque botao-reenvio-2fa" type="button" disabled={carregando || reenviando2fa || segundosReenvio2fa > 0} onClick={reenviarCodigo}>{reenviando2fa ? 'Reenviando...' : segundosReenvio2fa > 0 ? `Reenviar código novamente em ${segundosReenvio2fa}s` : 'Reenviar código'}</button>}
