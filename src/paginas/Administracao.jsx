@@ -4,6 +4,7 @@ import { Link, NavLink } from 'react-router-dom';
 import ConfirmacaoModal from '../componentes/forum/componentes/ConfirmacaoModal';
 import Rodape from '../componentes/comuns/Rodape';
 import ModeracaoUsuarios from '../componentes/administracao/ModeracaoUsuarios';
+import DenunciasForum from '../componentes/administracao/DenunciasForum';
 import VoltarAdministracao from '../componentes/administracao/VoltarAdministracao';
 import {
   aprovarConvite, buscarConvites, buscarConvitesPendentes, cancelarConvite,
@@ -126,6 +127,7 @@ export default function Administracao({ tela = 'geral' }) {
     <CabecalhoPagina etiqueta="Gestão da plataforma" titulo={({ termos: 'Termos de Aceite', privacidade: 'Política de Privacidade', usuarios: 'Moderação de usuários', convites: 'Convites' })[tela] ?? 'Administração'} descricao={`Administrador: ${sessao?.nome}`} />
     <nav className="administracao-navegacao" aria-label="Ferramentas administrativas">
       <NavLink to="/administracao/usuarios">Usuários</NavLink>
+      <NavLink to="/administracao/forum/denuncias">Denúncias do fórum</NavLink>
       <NavLink to="/administracao/convites">Convites</NavLink>
       {principal && <><NavLink to="/administracao/termos">Termos de Aceite</NavLink><NavLink to="/administracao/privacidade">Privacidade</NavLink></>}
       <NavLink to="/administracao/dashboard">Dashboard</NavLink>
@@ -195,6 +197,7 @@ export default function Administracao({ tela = 'geral' }) {
         </> : null}
       </> : null}
       {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios ?? []} processando={processando} carregando={carregando} filtroRestricao={filtroRestricao} onFiltrarRestricao={filtrarUsuarios} onExecutar={solicitar} /> : null}
+      {tela === 'denuncias' ? <DenunciasForum /> : null}
     </>}
     {confirmacao ? <ConfirmacaoModal titulo="Confirmar ação" processando={processando} mensagem={confirmacao.texto} onConfirmar={() => { if (!processando) acionar(confirmacao.acao, confirmacao.sucesso); }} onCancelar={() => { if (!processando) setConfirmacao(null); }} /> : null}
   </main><Rodape /></div>;

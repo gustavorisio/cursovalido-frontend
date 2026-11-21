@@ -1,7 +1,7 @@
 export default function FormularioComentario({ texto, onMudarTexto, onEnviar, onCancelar, modoEdicao = false, desabilitado = false }) {
   return (
-    <div className="card formulario-comentario">
-      <h4 className="subtitulo-formulario">Adicionar Resposta</h4>
+    <div className={`card formulario-comentario ${modoEdicao ? 'm-0 border-0 p-0 shadow-none' : ''}`}>
+      <h4 className="subtitulo-formulario">{modoEdicao ? 'Editar comentário' : 'Adicionar resposta'}</h4>
       <textarea
         className="input-field" disabled={desabilitado}
         style={{ minHeight: '120px' }}

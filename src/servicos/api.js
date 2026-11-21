@@ -51,6 +51,7 @@ function mensagemDeErro(status, dados) {
     JSON_INVALIDO: 'Não foi possível enviar os dados. Confira os campos e tente novamente.',
     PARAMETRO_INVALIDO: 'Faltam informações ou há dados inválidos. Volte à página anterior e tente novamente.',
     EMAIL_JA_CADASTRADO: 'Este e-mail já está cadastrado. Entre na sua conta ou recupere sua senha.',
+    CONTEUDO_OFENSIVO: 'Seu texto contém palavras ofensivas, xingamentos ou termos pejorativos. Revise o conteúdo antes de publicar.',
   };
   if (Object.hasOwn(mensagens, dados?.codigo)) return mensagens[dados.codigo];
   if (status >= 500) return 'O serviço está indisponível no momento. Tente novamente em alguns minutos.';

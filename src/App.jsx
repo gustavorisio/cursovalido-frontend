@@ -51,6 +51,7 @@ const titulosPaginas = [
   ['/administracao/termos', 'Administrar termos'],
   ['/administracao/privacidade', 'Administrar privacidade'],
   ['/administracao/usuarios', 'Usuários'],
+  ['/administracao/forum/denuncias', 'Denúncias do fórum'],
   ['/administracao/convites', 'Convites'],
   ['/administracao/cursos/:idCurso/aulas/:idAula', 'Administrar aula'],
   ['/administracao/cursos/:idCurso/diagnostico', 'Editar avaliação'],
@@ -129,6 +130,7 @@ export default function App() {
             <Route path="/administracao/termos" element={<Administracao key="termos" tela="termos" />} />
             <Route path="/administracao/privacidade" element={<Administracao key="privacidade" tela="privacidade" />} />
             <Route path="/administracao/usuarios" element={<Administracao key="usuarios" tela="usuarios" />} />
+            <Route path="/administracao/forum/denuncias" element={<Administracao key="denuncias" tela="denuncias" />} />
             <Route path="/administracao/convites" element={<Administracao key="convites" tela="convites" />} />
             <Route path="/administracao/cursos" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso" element={<PaginaAulasAdministrador />} />

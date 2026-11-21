@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   apagarComentario, atualizarComentario, atualizarTopico, buscarComentarios,
-  buscarTopicos, buscarMeusTopicos, buscarUsuarios, criarComentario, criarTopico, fecharTopico, arquivarTopico
+  buscarTopicos, buscarMeusTopicos, buscarUsuarios, criarComentario, criarTopico, fecharTopico, arquivarTopico,
+  denunciarTopico, denunciarComentario
 } from '../servicos/servicoForum';
 import { useAutenticacao } from '../../../contextos/useAutenticacao';
 import { useRestricoes } from '../../../contextos/useRestricoes';
@@ -71,7 +72,9 @@ export function useForum() {
 
   useEffect(() => {
     queueMicrotask(() => carregarTopicos(0));
-    if (autenticado) buscarUsuarios().then(setUsuarios).catch(tratarErro);
+    if (autenticado) buscarUsuarios()
+      .then((resposta) => setUsuarios(Array.isArray(resposta) ? resposta : resposta?.value ?? resposta?.usuarios ?? []))
+      .catch(tratarErro);
     return undefined;
   }, [autenticado, carregarTopicos, tratarErro]);
 
@@ -167,11 +170,22 @@ export function useForum() {
     catch (erro) { tratarErro(erro); return false; }
   }
 
+  async function denunciarConteudo(tipo, idConteudo, dados) {
+    limparMensagem();
+    if (!autenticado) { setMensagemErro('Entre na sua conta para denunciar conteúdo.'); return false; }
+    try {
+      if (tipo === 'TOPICO') await denunciarTopico(idConteudo, dados);
+      else await denunciarComentario(idConteudo, dados);
+      setMensagemSucesso('Denúncia enviada para análise da moderação.');
+      return true;
+    } catch (erro) { tratarErro(erro); return false; }
+  }
+
   return {
     meusTopicos, setMeusTopicos, topicosBloqueados, comentariosBloqueados,
     autenticado, sessao, topicos, usuarios, pagina, totalPaginas, carregando, topicoSelecionado, comentarios, mensagemErro, mensagemSucesso,
     limparMensagem, carregarTopicos, selecionarTopico, salvarTopico, salvarComentario,
     editarTopico, editarComentario, fecharTopicoSelecionado, arquivarTopicoSelecionado,
-    excluirComentarioSelecionado, podeGerenciarTopico, podeEditarTopico, podeEditarComentario, podeExcluirComentario
+    excluirComentarioSelecionado, denunciarConteudo, podeGerenciarTopico, podeEditarTopico, podeEditarComentario, podeExcluirComentario
   };
 }
