@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Rodape from '../componentes/comuns/Rodape';
 import { confirmarEmail, reenviarConfirmacao } from '../servicos/servicoAutenticacao';
+import { useAcaoUnica } from '../contextos/useAcaoUnica';
+import { LIMITES, validarEmail } from '../servicos/validacoesAutenticacao';
 
 export default function ConfirmacaoEmail() {
   const [parametros] = useSearchParams();
@@ -15,7 +17,7 @@ function ConfirmarCadastro({ token }) {
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
-  const [carregandoReenvio, setCarregandoReenvio] = useState(false);
+  const [executarReenvio, carregandoReenvio] = useAcaoUnica();
   const [mostrarReenvio, setMostrarReenvio] = useState(!token);
 
   const emAndamento = useRef(false);
@@ -45,13 +47,16 @@ function ConfirmarCadastro({ token }) {
   }
   async function reenviar(evento) {
     evento.preventDefault();
-    setErro(''); setMensagem(''); setCarregandoReenvio(true);
-    try {
-      await reenviarConfirmacao(email);
-      setMensagem('Se o e-mail estiver cadastrado, um novo link de confirmação será enviado.');
-      setEmail('');
-    } catch (falha) { setErro(falha.status === 429 ? 'Limite de reenvio atingido. Aguarde alguns minutos antes de tentar novamente.' : falha.message); }
-    finally { setCarregandoReenvio(false); }
+    const erroEmail = validarEmail(email);
+    if (erroEmail) { setErro(erroEmail); return; }
+    await executarReenvio(async () => {
+      setErro(''); setMensagem('');
+      try {
+        await reenviarConfirmacao(email.trim());
+        setMensagem('Se o e-mail estiver cadastrado, um novo link de confirmação será enviado.');
+        setEmail('');
+      } catch (falha) { setErro(falha.status === 429 ? 'Limite de reenvio atingido. Aguarde alguns minutos antes de tentar novamente.' : falha.message); }
+    });
   }
 
   return <div className="pagina-publica"><main className="painel-autenticacao">
@@ -59,7 +64,7 @@ function ConfirmarCadastro({ token }) {
     {token && !confirmado && <><p className="texto-suave">Para ativar sua conta e confirmar que este e-mail é seu, clique no botão abaixo.</p><button className="botao-destaque" type="button" disabled={carregando || carregandoReenvio} onClick={confirmar}>{carregando ? 'Confirmando...' : 'Confirmar meu e-mail'}</button></>}
     {mensagem && <div className="mensagem-sucesso" role="status">{mensagem}</div>}
     {erro && <div className="mensagem-erro" role="alert">{erro}</div>}
-    {mostrarReenvio && <><p className="texto-suave">Informe seu e-mail para receber novamente o link de ativação.</p><form className="formulario-publico" onSubmit={reenviar}><label>E-mail<input required type="email" value={email} onChange={(evento) => setEmail(evento.target.value)} /></label><button className="botao-destaque" disabled={carregandoReenvio}>{carregandoReenvio ? 'Enviando...' : 'Reenviar confirmação'}</button></form></>}
+    {mostrarReenvio && <><p className="texto-suave">Informe seu e-mail para receber novamente o link de ativação.</p><form className="formulario-publico" onSubmit={reenviar} noValidate><label>E-mail<input required type="email" autoComplete="email" maxLength={LIMITES.email} value={email} onChange={(evento) => setEmail(evento.target.value)} /></label><button className="botao-destaque" disabled={carregandoReenvio}>{carregandoReenvio ? 'Enviando...' : 'Reenviar confirmação'}</button></form></>}
     <p className="texto-rodape-formulario"><Link to="/login">Voltar para o login</Link></p>
   </main><Rodape /></div>;
 }

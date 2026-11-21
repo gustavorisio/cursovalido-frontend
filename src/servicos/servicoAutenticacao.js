@@ -1,7 +1,7 @@
 import { requisitar } from './api';
 
 export function cadastrarUsuario(dados) {
-  const { nomeCompleto, email, senha, confirmacaoSenha, dataNascimento,
+  const { nomeCompleto, email, senha, confirmacaoSenha,
     declarouMaiorIdade,
     aceitouTermosLgpd, versaoTermos } = dados;
   return requisitar('/autenticacao/cadastro', {
@@ -12,8 +12,6 @@ export function cadastrarUsuario(dados) {
       email,
       senha,
       confirmacaoSenha,
-      dataNascimento,
-
       declarouMaiorIdade,
       aceitouTermosLgpd,
       versaoTermos
@@ -166,12 +164,6 @@ export function reenviarConvite(id) {
   return requisitar(`/administracao/convites/${id}/reenviar`, { method: 'POST' });
 }
 
-export function confirmarEmailConvite(token) {
-  return requisitar('/convites/confirmar-email', {
-    method: 'POST', semAutenticacao: true, body: JSON.stringify({ token })
-  });
-}
-
 export async function consultarConvite(token) {
   const dados = await requisitar('/convites/consultar', {
     method: 'POST', semAutenticacao: true, body: JSON.stringify({ token })
@@ -192,7 +184,7 @@ export async function buscarResponsabilidade(perfil) {
 }
 
 export function completarCadastroConvite(token, cadastro) {
-  const { nomeCompleto, email, senha, confirmacaoSenha, dataNascimento,
+  const { nomeCompleto, email, senha, confirmacaoSenha,
     declarouMaiorIdade,
     aceitouTermosLgpd, versaoTermos, aceitouResponsabilidade, versaoResponsabilidade } = cadastro;
   return requisitar('/convites/completar-cadastro', {
@@ -203,8 +195,6 @@ export function completarCadastroConvite(token, cadastro) {
         email,
         senha,
         confirmacaoSenha,
-        dataNascimento,
-
         declarouMaiorIdade,
         aceitouTermosLgpd,
         versaoTermos,
@@ -221,6 +211,12 @@ export async function buscarMeusDados() {
     throw new Error('Não foi possível carregar seus dados pessoais. Tente novamente.');
   }
   return dados;
+}
+
+export function configurarSegundoFator(ativo) {
+  return requisitar('/autenticacao/segundo-fator', {
+    method: 'PUT', body: JSON.stringify({ ativo: Boolean(ativo) })
+  });
 }
 
 export async function baixarDadosPessoais() {
