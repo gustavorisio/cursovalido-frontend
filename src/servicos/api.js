@@ -15,11 +15,11 @@ export class ErroApi extends Error {
 
 const NOMES_CAMPOS = {
   nomeCompleto: 'Nome completo', email: 'E-mail', senha: 'Senha', senhaAtual: 'Senha atual',
-  novaSenha: 'Nova senha', confirmacaoSenha: 'Confirmação da senha', dataNascimento: 'Data de nascimento',
+  novaSenha: 'Nova senha', confirmacaoSenha: 'Confirmação da senha',
   declarouMaiorIdade: 'Confirmação de maioridade', aceitouTermosLgpd: 'Aceite dos documentos',
   aceitouResponsabilidade: 'Termo de responsabilidade', versaoTermos: 'Termos de Uso',
   titulo: 'Título', descricao: 'Descrição', conteudo: 'Texto', codigo: 'Código enviado por e-mail',
-  codigo2fa: 'Código enviado por e-mail', emailConta: 'E-mail da conta', usuario: 'Nome de usuário',
+  codigo2fa: 'Código enviado por e-mail', confirmacaoSenhaValida: 'Confirmação da senha', token: 'Link', emailConta: 'E-mail da conta', usuario: 'Nome de usuário',
   assunto: 'Assunto', motivo: 'Motivo', nome: 'Nome', ordem: 'Ordem', youtubeUrl: 'Link do vídeo',
 };
 

@@ -35,35 +35,39 @@ afterEach(async () => {
 });
 
 test('cadastro comum solicita somente os dados necessarios e mantem maioridade', async () => {
-  const props = { dados: { nomeCompleto: '', email: '', senha: '', confirmacaoSenha: '', dataNascimento: '', declarouMaiorIdade: false, aceitouTermosLgpd: false }, idade: 0, carregando: false, formularioValido: false, onAlterar: () => { }, onEnviar: () => { } };
+  const props = { dados: { nomeCompleto: '', email: '', senha: '', confirmacaoSenha: '', declarouMaiorIdade: false, aceitouTermosLgpd: false }, carregando: false, formularioValido: false, onAlterar: () => { }, onEnviar: () => { } };
   await act(() => raiz.render(createElement(MemoryRouter, null, createElement(Formulario, props))));
   assert.doesNotMatch(document.body.textContent, /telefone/i);
-  assert.deepEqual([...document.querySelectorAll('input')].map(input => input.type), ['text', 'email', 'password', 'password', 'date', 'checkbox', 'checkbox']);
+  assert.deepEqual([...document.querySelectorAll('input')].map(input => input.type), ['text', 'email', 'password', 'password', 'checkbox', 'checkbox']);
   assert.match(document.body.textContent, /18 anos ou mais/);
-  assert.equal(document.querySelector('button[type=submit], button:not([type])').disabled, true);
+  // O botao continua clicavel para que o envio explique o que falta preencher.
+  const cadastrar = document.querySelector('button[type=submit], button:not([type])');
+  assert.equal(cadastrar.disabled, false);
+  assert.equal(cadastrar.getAttribute('aria-disabled'), 'true');
 });
 
-test('cadastro por convite nao solicita telefone e mantem maioridade', async () => {
-  globalThis.fetch = async (url) => String(url).includes('/convites/consultar') ? Response.json({ perfil: 'PROFESSOR', email: 'convidado@example.com' }) : String(url).includes('confirmar-email') ? new Response(null, { status: 204 }) : Response.json([{ nome: 'Termos', versao: '1.0', conteudo: 'Termos' }]);
+test('cadastro por convite abre direto pelo link sem telefone', async () => {
+  const chamadas = [];
+  globalThis.fetch = async (url) => { chamadas.push(String(url)); return String(url).includes('/convites/consultar') ? Response.json({ perfil: 'PROFESSOR', email: 'convidado@example.com' }) : Response.json([{ nome: 'Termos', versao: '1.0', conteudo: 'Termos' }]); };
   await act(async () => raiz.render(createElement(MemoryRouter, { initialEntries: ['/convites/cadastro?token=teste'] }, createElement(Convite))));
-  await act(async () => [...document.querySelectorAll('button')].find(b => b.textContent === 'Confirmar meu e-mail').click());
   assert.ok(document.querySelector('form'));
+  assert.equal(chamadas.some(url => url.includes('confirmar-email')), false);
   assert.doesNotMatch(document.querySelector('form').textContent, /telefone/i);
   assert.match(document.querySelector('form').textContent, /18 anos ou mais/);
-  assert.deepEqual([...document.querySelectorAll('form input')].map(input => input.type), ['text', 'email', 'password', 'password', 'date', 'checkbox', 'checkbox']);
-  assert.equal(document.querySelector('form button:not([type])').disabled, true);
+  assert.equal(document.querySelector('form input[type=email]').readOnly, true);
+  assert.equal(document.querySelector('form input[type=email]').value, 'convidado@example.com');
+  assert.equal(document.querySelector('form button:not([type])').getAttribute('aria-disabled'), 'true');
 });
 
 test('contratos dos dois cadastros nao enviam telefone mesmo em dados legados', async () => {
   const enviados = [];
   globalThis.fetch = async (_url, options) => { enviados.push(JSON.parse(options.body)); return new Response(null, { status: 204 }); };
-  const dados = { nomeCompleto: 'Aluno', email: 'aluno@example.com', senha: 'SenhaTeste123!', confirmacaoSenha: 'SenhaTeste123!', dataNascimento: '1990-01-01', telefone: '11999999999', declarouMaiorIdade: true, aceitouTermosLgpd: true, versaoTermos: '1.0' };
+  const dados = { nomeCompleto: 'Aluno', email: 'aluno@example.com', senha: 'SenhaTeste123!', confirmacaoSenha: 'SenhaTeste123!', telefone: '11999999999', declarouMaiorIdade: true, aceitouTermosLgpd: true, versaoTermos: '1.0' };
   await servico.cadastrarUsuario(dados);
   await servico.completarCadastroConvite('teste', dados);
-  for (const envio of [enviados[0], enviados[1].cadastro]) {
-    assert.equal(Object.hasOwn(envio, 'telefone'), false);
-    assert.deepEqual(envio, { nomeCompleto: dados.nomeCompleto, email: dados.email, senha: dados.senha, confirmacaoSenha: dados.confirmacaoSenha, dataNascimento: dados.dataNascimento, declarouMaiorIdade: true, aceitouTermosLgpd: true, versaoTermos: dados.versaoTermos });
-  }
+  for (const envio of [enviados[0], enviados[1].cadastro]) assert.equal(Object.hasOwn(envio, 'telefone'), false);
+  assert.deepEqual(enviados[0], { nomeCompleto: dados.nomeCompleto, email: dados.email, senha: dados.senha, confirmacaoSenha: dados.confirmacaoSenha, declarouMaiorIdade: true, aceitouTermosLgpd: true, versaoTermos: dados.versaoTermos });
+  assert.deepEqual(enviados[1], { token: 'teste', cadastro: { nomeCompleto: dados.nomeCompleto, email: dados.email, senha: dados.senha, confirmacaoSenha: dados.confirmacaoSenha, declarouMaiorIdade: true, aceitouTermosLgpd: true, versaoTermos: dados.versaoTermos } });
 });
 
 test('aceite abre ambos os documentos e permite aceitar sem rolagem', async () => {

@@ -107,7 +107,6 @@ for (const { fluxo, perfil } of [
         if (falharResponsabilidade) { falharResponsabilidade = false; return Response.json({}, { status: 503 }); }
         return Response.json(responsabilidade);
       }
-      if (String(url).endsWith('/convites/confirmar-email')) return new Response(null, { status: 204 });
       assert.equal(opcoes.method, 'POST');
       envios.push({ url: String(url), corpo: JSON.parse(opcoes.body) });
       if (String(url).endsWith('/aceitar-termos-novamente')) {
@@ -123,9 +122,8 @@ for (const { fluxo, perfil } of [
     await act(async () => raiz.render(h(MemoryRouter, { initialEntries: [fluxo === 'cadastro por convite' ? '/convites/cadastro?token=convite-teste' : '/'] },
       reativacao ? h(Provedor, null, h(Pagina)) : h(Contexto.Provider, { value: { autenticado: false, sair() { } } }, h(Routes, null,
         h(Route, { path: "*", element: h(Pagina) }), h(Route, { path: "/login", element: h(Login) }))))));
-    if (fluxo === 'cadastro por convite') await act(async () => botao('Confirmar meu e-mail').click());
 
-    const textoFinal = fluxo === 'cadastro por convite' ? 'Enviar cadastro' : 'Cadastrar';
+    const textoFinal = fluxo === 'cadastro por convite' ? 'Criar conta' : 'Cadastrar';
     if (!reativacao) {
       const valores = ['Aluno Teste', 'aluno@example.com', 'SenhaTeste123!', 'SenhaTeste123!', '1990-01-01'];
       const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
@@ -138,7 +136,8 @@ for (const { fluxo, perfil } of [
     async function verificarEnvioBloqueado() {
       assert.equal(botao('Aceitar termos e continuar'), undefined);
       if (!reativacao) {
-        assert.equal(botao(textoFinal).disabled, true);
+        // O botao fica clicavel e o envio informa o que falta, sem chamar a API.
+        assert.equal(botao(textoFinal).getAttribute('aria-disabled'), 'true');
         await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
       }
       assert.equal(envios.length, 0);
@@ -178,7 +177,7 @@ for (const { fluxo, perfil } of [
         assert.equal(confirmarLeitura().disabled, false);
         await act(async () => confirmarLeitura().click());
       }
-      assert.equal(botao(textoFinal).disabled, false);
+      assert.equal(botao(textoFinal).getAttribute('aria-disabled'), 'false');
       await act(async () => botao(textoFinal).click());
     }
     assert.equal(envios.length, 1);
@@ -202,7 +201,7 @@ for (const { fluxo, perfil } of [
 }
 
 
-test('convite sem perfil válido bloqueia confirmação e não permite cadastro', async () => {
+test('convite sem perfil válido não exibe o formulário de cadastro', async () => {
   const chamadas = [];
   globalThis.fetch = async (url) => {
     chamadas.push(String(url));
@@ -210,10 +209,9 @@ test('convite sem perfil válido bloqueia confirmação e não permite cadastro'
     return Response.json({ email: 'aluno@example.com', perfil: 'ALUNO' });
   };
   await act(async () => raiz.render(h(MemoryRouter, { initialEntries: ['/convites/cadastro?token=invalido'] }, h(Convite))));
-  await act(async () => botao('Confirmar meu e-mail').click());
   assert.equal(document.querySelector('form'), null);
   assert.match(document.querySelector('[role=alert]').textContent, /perfil do convite/);
-  assert.equal(chamadas.some(url => url.endsWith('/convites/confirmar-email')), false);
+  assert.equal(chamadas.some(url => url.endsWith('/convites/completar-cadastro')), false);
 });
 
 test('primeiro acesso sem perfil identificável não libera envio', async () => {
