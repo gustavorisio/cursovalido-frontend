@@ -36,7 +36,7 @@ export default function ListaTopicos({ topicos, usuarios, onSelecionar }) {
               <span className="meta-label">Autor</span>
               <span className="meta-value">{usuarios.find((usuario) => Number(usuario.id) === Number(topico.idAutor))?.nome ?? topico.nomeAutor}</span>
             </div>
-            <PerfilAutor perfil={topico.perfilAutor ?? topico.perfil ?? topico.nomePerfil ?? topico.autor?.perfil ?? topico.autor?.tipoPerfil ?? perfilDoUsuario(usuarios.find((usuario) => Number(usuario.id ?? usuario.idUsuario) === Number(topico.idAutor ?? topico.idUsuario ?? topico.autor?.id ?? topico.autor?.idUsuario)))} />
+            <PerfilAutor perfil={topico.papelAutor ?? topico.perfilAutor ?? topico.perfil ?? topico.nomePerfil ?? topico.autor?.perfil ?? topico.autor?.tipoPerfil ?? perfilDoUsuario(usuarios.find((usuario) => Number(usuario.id ?? usuario.idUsuario) === Number(topico.idAutor ?? topico.idUsuario ?? topico.autor?.id ?? topico.autor?.idUsuario)))} />
             <div className="meta-group">
               <span className="meta-label">Criado em</span>
               <span className="meta-value">{formatarData(topico.criadoEm)}</span>

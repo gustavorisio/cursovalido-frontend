@@ -1,9 +1,10 @@
 import PerfilAutor from './PerfilAutor';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import ConfirmacaoModal from './ConfirmacaoModal';
 import FormularioComentario from './FormularioComentario';
 import ListaComentarios from './ListaComentarios';
+import FormularioDenuncia from './FormularioDenuncia';
 
 function formatarData(valor) {
   if (!valor) return '--/--/----';
@@ -37,20 +38,26 @@ export default function DetalheTopico({
   onCancelarEdicaoComentario,
   onVoltar
   , comentariosBloqueados = false
+  , mensagemBloqueio = null
   , desabilitado = false
+  , idUsuario = null
+  , onDenunciar
 }) {
   const [confirmacao, setConfirmacao] = useState('');
+  const [denunciaAberta, setDenunciaAberta] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
+  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
+  const acaoEmAndamento = useRef(false);
 
   async function confirmarAcao() {
-    if (confirmando) return;
-    setConfirmando(true);
+    if (confirmando || acaoEmAndamento.current) return;
+    acaoEmAndamento.current = true; setConfirmando(true);
     try {
       if (confirmacao === 'fechar') await onFechar(topico);
       else await onArquivar(topico);
       setConfirmacao('');
     } finally {
-      setConfirmando(false);
+      acaoEmAndamento.current = false; setConfirmando(false);
     }
   }
 
@@ -66,7 +73,7 @@ export default function DetalheTopico({
               <span className="meta-label">Autor</span>
               <span className="meta-value">{topico.nomeAutor ?? topico.autor?.nome}</span>
             </div>
-            <PerfilAutor perfil={topico.perfilAutor ?? topico.perfil ?? topico.nomePerfil ?? topico.autor?.perfil ?? topico.autor?.tipoPerfil} />
+            <PerfilAutor perfil={topico.papelAutor ?? topico.perfilAutor ?? topico.perfil ?? topico.nomePerfil ?? topico.autor?.perfil ?? topico.autor?.tipoPerfil} />
             <div className="meta-group">
               <span className="meta-label">Publicado em</span>
               <span className="meta-value">{formatarData(topico.criadoEm)}</span>
@@ -91,8 +98,10 @@ export default function DetalheTopico({
               )}
             </div>
           )}
+          {autenticado && idUsuario != null && (topico.idAutor ?? topico.autor?.id ?? topico.autor?.idUsuario) != null && Number(topico.idAutor ?? topico.autor?.id ?? topico.autor?.idUsuario) !== Number(idUsuario) && <button className="btn btn-secondary btn-small" type="button" onClick={() => setDenunciaAberta((aberta) => !aberta)} aria-expanded={denunciaAberta}>Denunciar tópico</button>}
         </div>
         <p className="content-text">{topico.descricao}</p>
+        {denunciaAberta && <FormularioDenuncia aoEnviar={(dados) => onDenunciar('TOPICO', topico.id, dados)} aoCancelar={() => setDenunciaAberta(false)} desabilitado={desabilitado} />}
         {topico.fechado && <p className="aviso-fechado">Este tópico está fechado para novas respostas.</p>}
       </div>
 
@@ -103,18 +112,25 @@ export default function DetalheTopico({
         podeEditar={podeEditarComentario}
         onExcluir={onExcluirComentario}
         onEditar={onEditarComentario}
+        comentarioEditando={comentarioEditando}
+        textoComentario={textoComentario}
+        onMudarComentario={onMudarComentario}
+        onSalvarEdicao={onEnviarComentario}
+        onCancelarEdicao={onCancelarEdicaoComentario}
+        desabilitado={desabilitado}
+        autenticado={autenticado}
+        idUsuario={idUsuario}
+        onDenunciar={onDenunciar}
       />
 
-      {!autenticado ? <p className="card">Faça login para responder e participar. <Link to="/login">Entrar</Link></p> : comentariosBloqueados ? <p className="mensagem-erro" role="status">Você está temporária ou permanentemente impedido de enviar comentários. Consulte a restrição no cabeçalho.</p> : !topico.fechado ? (
+      {!comentarioEditando && (!autenticado ? <p className="card">Faça login para responder e participar. <Link to="/login">Entrar</Link></p> : comentariosBloqueados ? <p className="mensagem-erro" role="status">{mensagemBloqueio || 'Você está temporária ou permanentemente impedido de enviar comentários. Consulte a restrição no cabeçalho.'}</p> : !topico.fechado ? (
         <FormularioComentario
           texto={textoComentario}
           onMudarTexto={onMudarComentario}
           onEnviar={onEnviarComentario}
-          onCancelar={onCancelarEdicaoComentario}
-          modoEdicao={Boolean(comentarioEditando)}
           desabilitado={desabilitado}
         />
-      ) : null}
+      ) : null)}
       {confirmacao && (
         <ConfirmacaoModal
           titulo={confirmacao === 'fechar' ? 'Fechar tópico' : 'Arquivar tópico'}
