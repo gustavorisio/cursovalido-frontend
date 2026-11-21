@@ -3,7 +3,7 @@ import CapaCurso from './componentes/CapaCurso';
 import PesquisaConteudo from './componentes/PesquisaConteudo';
 import Paginacao from '../comuns/Paginacao';
 import { correspondeAoNome } from './servicos/pesquisaConteudo';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import ConfirmacaoModal from '../forum/componentes/ConfirmacaoModal';
 import LayoutAulas from './componentes/LayoutAulas';
@@ -45,6 +45,8 @@ function GestaoConteudo({ idCurso, idModulo }) {
   const [editando, setEditando] = useState(null);
   const [excluindo, setExcluindo] = useState(null);
   const [processando, setProcessando] = useState(false);
+  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
+  const acaoEmAndamento = useRef(false);
 
   useEffect(() => {
     let ativo = true;
@@ -88,8 +90,8 @@ function GestaoConteudo({ idCurso, idModulo }) {
   }
 
   async function salvar(dados) {
-    if (processando) return;
-    setProcessando(true);
+    if (processando || acaoEmAndamento.current) return;
+    acaoEmAndamento.current = true; setProcessando(true);
     setErro('');
     try {
       let salvo;
@@ -103,13 +105,13 @@ function GestaoConteudo({ idCurso, idModulo }) {
     } catch (falha) {
       setErro(falha.message);
     } finally {
-      setProcessando(false);
+      acaoEmAndamento.current = false; setProcessando(false);
     }
   }
 
   async function excluir() {
-    if (processando) return;
-    setProcessando(true);
+    if (processando || acaoEmAndamento.current) return;
+    acaoEmAndamento.current = true; setProcessando(true);
     setErro('');
     setSucesso('');
     try {
@@ -122,7 +124,7 @@ function GestaoConteudo({ idCurso, idModulo }) {
       setErro(falha.message);
     } finally {
       setExcluindo(null);
-      setProcessando(false);
+      acaoEmAndamento.current = false; setProcessando(false);
     }
   }
 
@@ -156,7 +158,7 @@ function GestaoConteudo({ idCurso, idModulo }) {
                 <div className="aulas-cartao-corpo">
                   {tipo !== 'modulo' && <h2 className="topic-title">{item.titulo}</h2>}
                   <p className="content-text">{item.descricao}</p>
-                  {tipo === 'aula' ? <p className="texto-suave">Vídeo: <a href={`https://www.youtube.com/watch?v=${item.youtubeVideoId}`} target="_blank" rel="noreferrer">Abrir no YouTube</a></p> : null}
+                  {tipo === 'aula' && (item.vimeoVideoUrl || item.youtubeVideoId) ? <p className="texto-suave">{item.vimeoVideoUrl ? <>Vídeo principal: <a href={item.vimeoVideoUrl} target="_blank" rel="noreferrer">Abrir no Vimeo</a>{item.youtubeVideoId ? <> · <a href={`https://www.youtube.com/watch?v=${item.youtubeVideoId}`} target="_blank" rel="noreferrer">Abrir reserva no YouTube</a></> : null}</> : <>Vídeo: <a href={`https://www.youtube.com/watch?v=${item.youtubeVideoId}`} target="_blank" rel="noreferrer">Abrir no YouTube</a></>}</p> : null}
                 </div>
                 <footer className="aulas-cartao-acoes">
                   <div className="acoes-topico">

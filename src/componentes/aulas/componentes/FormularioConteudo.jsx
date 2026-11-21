@@ -7,6 +7,7 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
   const [titulo, setTitulo] = useState(item?.titulo ?? '');
   const [descricao, setDescricao] = useState(item?.descricao ?? '');
   const [ordem, setOrdem] = useState(item?.ordem ?? 1);
+  const [vimeoUrl, setVimeoUrl] = useState(item?.vimeoVideoUrl ?? '');
   const [youtubeUrl, setYoutubeUrl] = useState(item?.youtubeVideoId ? `https://www.youtube.com/watch?v=${item.youtubeVideoId}` : '');
   const [erro, setErro] = useState('');
   const [idTema, setIdTema] = useState(String(item?.idTema ?? ''));
@@ -49,9 +50,16 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
       dados.ordem = Number(ordem);
     }
     if (tipo === 'aula') {
-      if (!youtubeUrl.trim()) { setErro('Informe o link do vídeo no YouTube.'); return; }
-      if (!validarUrlYoutube(youtubeUrl)) { setErro('Informe um link válido do vídeo no YouTube.'); return; }
-      dados.youtubeUrl = youtubeUrl.trim();
+      if (!vimeoUrl.trim() && !youtubeUrl.trim()) { setErro('Informe o link do Vimeo principal ou um vídeo reserva no YouTube.'); return; }
+      if (vimeoUrl.trim()) {
+        try {
+          const url = new URL(vimeoUrl.trim());
+          if (url.protocol !== 'https:' || !['vimeo.com', 'www.vimeo.com', 'player.vimeo.com'].includes(url.hostname.toLowerCase()) || !/\/(\d+)(?:\/|$)/.test(url.pathname)) throw new Error();
+        } catch { setErro('Informe uma URL HTTPS válida de vídeo do Vimeo.'); return; }
+      }
+      if (youtubeUrl.trim() && !validarUrlYoutube(youtubeUrl)) { setErro('Informe um link válido do vídeo reserva no YouTube.'); return; }
+      dados.vimeoUrl = vimeoUrl.trim();
+      dados.youtubeUrl = youtubeUrl.trim() || null;
     }
     setErro('');
     onSalvar(dados);
@@ -84,9 +92,12 @@ export default function FormularioConteudo({ tipo, item, processando, onSalvar, 
           <input id="conteudo-ordem" className="input-field" type="number" min="1" max="2147483647" step="1" value={ordem} onChange={(evento) => setOrdem(evento.target.value)} required />
         </> : null}
         {tipo === 'aula' ? <>
-          <label htmlFor="conteudo-youtube">Link do vídeo no YouTube</label>
-          <input id="conteudo-youtube" className="input-field" type="url" maxLength={2048} value={youtubeUrl} onChange={(evento) => setYoutubeUrl(evento.target.value)} placeholder="https://www.youtube.com/watch?v=..." required />
-          <p className="texto-suave">Use um link HTTPS youtube.com/watch?v= ou youtu.be/. O vídeo será validado ao salvar.</p>
+          <label htmlFor="conteudo-vimeo">Vídeo principal · Vimeo</label>
+          <input id="conteudo-vimeo" className="input-field" type="url" maxLength={2048} value={vimeoUrl} onChange={(evento) => setVimeoUrl(evento.target.value)} placeholder="https://vimeo.com/123456789" required={!item?.youtubeVideoId} />
+          <p className="texto-suave">O player do Vimeo é exibido primeiro. Vídeos não listados podem incluir o hash de privacidade na URL.</p>
+          <label htmlFor="conteudo-youtube">Vídeo reserva · YouTube (opcional)</label>
+          <input id="conteudo-youtube" className="input-field" type="url" maxLength={2048} value={youtubeUrl} onChange={(evento) => setYoutubeUrl(evento.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+          <p className="texto-suave">Se o player do Vimeo falhar, a aula tenta reproduzir este vídeo automaticamente.</p>
           {item ? <p className="texto-suave">Trocar o vídeo remove os progressos anteriores desta aula.</p> : null}
         </> : null}
         <div className="acoes-formulario"><button className="btn btn-primary" type="submit" disabled={preparandoCapa}>{processando ? 'Salvando...' : 'Salvar'}</button></div>

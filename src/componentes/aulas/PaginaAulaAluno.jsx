@@ -41,6 +41,8 @@ function ConteudoAula({ dados }) {
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [concluindo, setConcluindo] = useState(false);
+  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
+  const acaoEmAndamento = useRef(false);
   const [executar] = useState(criarFilaProgresso);
   const ativo = useRef(true);
   const indice = aulas.findIndex((item) => item.id === aula.id);
@@ -70,18 +72,27 @@ function ConteudoAula({ dados }) {
   }, [aula.id, executar, tokenDaAula]);
 
   async function concluir() {
-    if (concluindo) return;
-    setConcluindo(true);
+    if (concluindo || acaoEmAndamento.current) return;
+    acaoEmAndamento.current = true; setConcluindo(true);
     setErro('');
     setMensagem('');
     try {
       const salvo = await executar(() => servico.concluirAula(aula.id, { tokenAutenticacao: tokenDaAula }));
       if (!ativo.current) return;
       setProgresso(salvo);
-      setMensagem('Aula marcada como concluída.');
+      globalThis.dispatchEvent?.(new Event('curso-valido-gamificacao-atualizada'));
+      const recompensa = salvo?.recompensa;
+      if (recompensa) {
+        setMensagem(recompensa.subiuNivel
+          ? `Curso concluído! Você ganhou ${recompensa.xpGanho} XP e subiu para o nível ${recompensa.nivelAtual}.`
+          : `Curso concluído! Você ganhou ${recompensa.xpGanho} XP. Faltam ${recompensa.situacao?.xpParaProximoNivel ?? 0} XP para o próximo nível.`);
+      } else {
+        setMensagem('Aula marcada como concluída.');
+      }
     } catch (falha) {
       if (ativo.current) setErro(falha.message);
     } finally {
+      acaoEmAndamento.current = false;
       if (ativo.current) setConcluindo(false);
     }
   }
@@ -90,12 +101,12 @@ function ConteudoAula({ dados }) {
     <CabecalhoAulas etiqueta={`${curso.titulo} · ${modulo.titulo}`} titulo={aula.titulo} tipo="aula" descricao={`Aula ${aula.ordem} · ${progresso.concluida ? 'Concluída' : 'Aprenda no seu ritmo e retome de onde parou.'}`} />
     <div className="aulas-sala">
       <section className="card aulas-sala-player" aria-label="Vídeo e conteúdo da aula">
-        <PlayerAula videoId={aula.youtubeVideoId} posicaoInicial={dados.progresso.posicaoSegundos} onSalvar={salvar} />
+        <PlayerAula vimeoUrl={aula.vimeoVideoUrl} videoId={aula.youtubeVideoId} posicaoInicial={dados.progresso.posicaoSegundos} onSalvar={salvar} />
         {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
         {mensagem ? <p className="mensagem-sucesso" role="status">{mensagem}</p> : null}
         <h2 className="aulas-sobre-titulo">Sobre esta aula</h2>
         <p className="content-text">{aula.descricao}</p>
-        <p className="texto-suave">A conclusão é manual. Você pode marcar esta aula como concluída quando desejar.</p>
+        <p className="texto-suave">A conclusão é manual. Você pode concluir uma aula a cada 5 minutos.</p>
         <div className="aulas-cartao-acoes"><button className="btn btn-primary" type="button" disabled={progresso.concluida ? true : concluindo} onClick={concluir}>{progresso.concluida ? 'Aula concluída' : concluindo ? 'Concluindo...' : 'Marcar como concluída'}</button></div>
       </section>
       <aside className="card aulas-sala-trilha" aria-labelledby="aulas-trilha-titulo">

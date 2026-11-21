@@ -12,7 +12,7 @@
   aspect-ratio: 16 / 9;
   min-height: 0;
   overflow: hidden;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: #000;
 }
 
@@ -52,7 +52,7 @@
 .pagina-aulas .aulas-apresentacao {
   padding: 32px;
   border: 1px solid var(--color-line);
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: var(--color-surface);
 
 }
@@ -86,7 +86,7 @@
 }
 
 .pagina-aulas .aulas-cartao {
-  @apply m-0 flex flex-col gap-5 rounded-none border border-line bg-surface shadow-panel transition-[border-color,box-shadow];
+  @apply m-0 flex flex-col gap-5 rounded-[var(--radius-panel)] border border-line bg-surface shadow-panel transition-[border-color,box-shadow];
 }
 
 .pagina-aulas .aulas-cartao:hover {
@@ -128,7 +128,7 @@
 }
 
 .pagina-aulas .aulas-indicadores span {
-  @apply rounded-none border border-line bg-brand-50 px-4 py-2 text-sm text-brand-800;
+  @apply rounded-[var(--radius-control)] border border-line bg-brand-50 px-4 py-2 text-sm text-brand-800;
 }
 
 .pagina-aulas .aulas-modulo-cabecalho {
@@ -149,7 +149,7 @@
   width: 48px;
   height: 48px;
   border: 1px solid var(--color-line);
-  border-radius: 0;
+  border-radius: var(--radius-control);
   color: var(--color-brand-700);
   font-size: 20px;
   font-weight: 700;
@@ -189,8 +189,8 @@
 }
 
 .pagina-aulas .card {
-  padding: 28px;
-  border-radius: 0;
+  padding: var(--space-card, 24px);
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-panel);
   min-width: 0;
 }
@@ -234,7 +234,7 @@
 .pagina-aulas nav.acoes-topico {
   padding: 16px 20px;
   border: 1px solid var(--color-line);
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: var(--color-surface);
 }
 
@@ -336,7 +336,7 @@
   min-height: 340px;
   overflow: hidden;
   border: 1px solid var(--color-line);
-  border-radius: 0;
+  border-radius: var(--radius-control);
   box-shadow: var(--shadow-panel);
   background: var(--color-surface);
 }
@@ -371,7 +371,7 @@
   display: inline-flex;
   align-items: center;
   gap: 28px;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   text-decoration: none;
 }
 
@@ -397,7 +397,7 @@
   width: 390px;
   height: 390px;
   border: 1px solid var(--color-brand-100);
-  border-radius: 0;
+  border-radius: var(--radius-control);
   z-index: -1;
 }
 
@@ -433,7 +433,7 @@
   justify-content: center;
   gap: 20px;
   border-color: var(--color-line);
-  border-radius: 0;
+  border-radius: var(--radius-control);
   font-weight: 500;
   font-size: 12px;
   flex-shrink: 0;
@@ -445,11 +445,11 @@
 }
 
 .catalogo-abas {
-  @apply flex flex-wrap gap-1 rounded-none border border-line bg-surface p-1;
+  @apply flex flex-wrap gap-1 rounded-[var(--radius-control)] border border-line bg-surface p-1;
 }
 
 .catalogo-abas button {
-  @apply min-h-11 cursor-pointer rounded-none border-0 bg-transparent px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50;
+  @apply min-h-11 cursor-pointer rounded-[var(--radius-control)] border-0 bg-transparent px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50;
 }
 
 .catalogo-abas button[aria-pressed="true"] {
@@ -491,7 +491,7 @@
 
 .pagina-aulas .catalogo-cursos-grade .aulas-cartao {
   padding: 20px;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   gap: 16px;
 }
 
@@ -500,7 +500,7 @@
   place-items: center;
   margin: -20px -20px 0;
   padding: 12px;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: var(--color-hover);
   color: var(--color-accent);
 }
@@ -621,7 +621,7 @@
   width: 156px;
   height: 156px;
   border: 1px solid var(--color-brand-100);
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: var(--color-hover);
   color: var(--color-accent);
   transform: rotate(-8deg);
@@ -665,7 +665,7 @@
 .pagina-aulas .aulas-conteudo-grade .aulas-cartao {
   gap: 16px;
   padding: 22px;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   overflow: hidden;
 }
 
@@ -709,7 +709,7 @@
 
 .pagina-aulas .aulas-modulo {
   margin-bottom: 18px;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: var(--color-surface);
 }
 
@@ -747,7 +747,7 @@
 
 .pagina-aulas .aulas-linha .btn {
   font-size: 12px;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   text-decoration: none;
 }
 
@@ -778,24 +778,24 @@
   margin-bottom: 8px;
   overflow: hidden;
   border: 0;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: var(--color-line);
   accent-color: var(--color-accent);
 }
 
 .aulas-progresso progress::-webkit-progress-bar {
   background: var(--color-line);
-  border-radius: 0;
+  border-radius: var(--radius-control);
 }
 
 .aulas-progresso progress::-webkit-progress-value {
   background: var(--color-accent);
-  border-radius: 0;
+  border-radius: var(--radius-control);
 }
 
 .aulas-progresso progress::-moz-progress-bar {
   background: var(--color-accent);
-  border-radius: 0;
+  border-radius: var(--radius-control);
 }
 
 .aulas-sala {
@@ -807,12 +807,12 @@
 
 .pagina-aulas .aulas-sala .card {
   margin: 0;
-  border-radius: 0;
+  border-radius: var(--radius-panel);
 }
 
 .pagina-aulas .aulas-sala-player {
   padding: 22px;
-  border-radius: 0;
+  border-radius: var(--radius-control);
 }
 
 .aulas-sobre-titulo {
@@ -861,7 +861,7 @@
   gap: 12px;
   padding: 12px;
   border: 1px solid transparent;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   color: var(--color-brand-700);
   text-decoration: none;
   font-size: 13px;
@@ -892,7 +892,7 @@
 
 .aulas-sala-trilha>.btn {
   display: block;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   font-size: 12px;
   text-decoration: none;
 }
@@ -908,7 +908,7 @@
 }
 
 .pagina-aulas .aulas-editor form.card {
-  border-radius: 0;
+  border-radius: var(--radius-control);
   padding: 32px;
 }
 
@@ -935,7 +935,7 @@
 }
 
 .aulas-editor .input-field {
-  @apply rounded-none bg-surface;
+  @apply rounded-[var(--radius-control)] bg-surface;
 }
 
 .aulas-editor fieldset .texto-suave {
@@ -944,7 +944,7 @@
 }
 
 .pagina-aulas .aulas-editor .acoes-formulario .btn {
-  border-radius: 0;
+  border-radius: var(--radius-control);
   min-width: 150px;
 }
 
@@ -977,7 +977,7 @@
   .aulas-banner-emblema {
     width: 120px;
     height: 120px;
-    border-radius: 0;
+    border-radius: var(--radius-control);
   }
 }
 
@@ -1043,7 +1043,7 @@
   margin-top: 16px;
   padding: 20px;
   border: 1px solid var(--color-line);
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: var(--color-surface);
 }
 
@@ -1116,7 +1116,7 @@
 .aulas-modulo-expansivel>summary:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 6px;
-  border-radius: 0;
+  border-radius: var(--radius-control);
 }
 
 .aulas-modulo-expansivel[open]>summary {
@@ -1176,7 +1176,7 @@
   padding: 0;
   gap: 0;
   overflow: hidden;
-  border-radius: 0;
+  border-radius: var(--radius-control);
 }
 
 .curso-capa {
@@ -1219,7 +1219,7 @@
 
 .curso-matriculado {
   padding: 4px 8px;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   color: var(--color-success);
   background: var(--color-brand-50);
 }
@@ -1318,4 +1318,80 @@
 
 .pagina-aulas .aulas-cursos-grade {
   row-gap: 36px;
+}
+
+@layer components {
+  .pagina-aulas.pagina-catalogo {
+    @apply max-w-[1240px];
+  }
+
+  .pagina-aulas.pagina-catalogo > .catalogo-cabecalho {
+    @apply mx-auto mb-10 flex max-w-3xl flex-col items-center gap-7 border-0 pb-0 text-center;
+  }
+
+  .pagina-aulas.pagina-catalogo > .catalogo-cabecalho .page-header-content {
+    @apply w-full flex-none;
+  }
+
+  .pagina-aulas.pagina-catalogo > .catalogo-cabecalho .page-title {
+    @apply text-4xl font-normal sm:text-5xl;
+  }
+
+  .pagina-aulas.pagina-catalogo > .catalogo-cabecalho .page-actions {
+    @apply mx-auto w-full max-w-[560px] flex-none;
+  }
+
+  .pagina-aulas.pagina-catalogo > .catalogo-cabecalho .barra-pesquisa {
+    @apply max-w-none flex-nowrap gap-2;
+  }
+
+  .pagina-aulas.pagina-catalogo > .catalogo-cabecalho .campo-pesquisa {
+    @apply min-h-14 rounded-lg border-gray-300 bg-white px-4 shadow-sm focus:border-blue-600 focus:ring-blue-100;
+  }
+
+  .pagina-aulas.pagina-catalogo > .catalogo-cabecalho .barra-pesquisa .btn {
+    @apply min-h-14 rounded-lg border-blue-600 bg-blue-600 px-5 text-white hover:bg-blue-700;
+  }
+
+  .pagina-aulas.pagina-catalogo .catalogo-resultados {
+    @apply mx-auto w-full max-w-[1120px];
+  }
+
+  .pagina-aulas.pagina-catalogo .catalogo-secao-cabecalho {
+    @apply justify-center text-center;
+  }
+
+  .pagina-aulas.pagina-catalogo .aulas-filtro-tema {
+    @apply mb-8 mt-7 flex flex-wrap items-center justify-end gap-3;
+  }
+
+  .pagina-aulas.pagina-catalogo .aulas-filtro-tema > label {
+    @apply mb-0 text-sm text-gray-600;
+  }
+
+  .pagina-aulas.pagina-catalogo .aulas-filtro-tema-linha > select {
+    @apply min-h-11 max-w-[280px] rounded-full border-2 border-blue-600 bg-transparent px-5 text-blue-700 shadow-sm;
+  }
+
+  .pagina-aulas.pagina-catalogo .catalogo-contagem {
+    @apply mb-5 text-center text-sm text-gray-600;
+  }
+
+  .pagina-aulas.pagina-catalogo .empty-list {
+    @apply mx-auto max-w-[1120px] rounded-2xl border border-gray-200 bg-white px-6 py-12 text-center shadow-sm;
+  }
+
+  .pagina-aulas.pagina-catalogo .catalogo-cursos-grade .aulas-cartao {
+    @apply rounded-2xl border border-gray-100 bg-white shadow-md transition-shadow hover:shadow-lg;
+  }
+}
+
+@media (max-width: 640px) {
+  .pagina-aulas.pagina-catalogo > .catalogo-cabecalho .barra-pesquisa .btn {
+    @apply px-3;
+  }
+
+  .pagina-aulas.pagina-catalogo .aulas-filtro-tema {
+    @apply justify-center;
+  }
 }

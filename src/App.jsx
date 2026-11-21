@@ -21,6 +21,7 @@ import SolicitarAlteracaoSenha from './paginas/SolicitarAlteracaoSenha';
 import AlterarSenha from './paginas/AlterarSenha';
 import Configuracoes from './paginas/Configuracoes';
 import AlterarSenhaConta from './paginas/AlterarSenhaConta';
+import RankingAlunos from './paginas/RankingAlunos';
 import Administracao from './paginas/Administracao';
 import CadastroConvite from './paginas/CadastroConvite';
 import RotaProtegida from './componentes/autenticacao/RotaProtegida';
@@ -44,6 +45,7 @@ const titulosPaginas = [
   ['/politica-privacidade.html', 'Política de privacidade'],
   ['/configuracoes', 'Configurações'],
   ['/configuracoes/alterar-senha', 'Alterar senha'],
+  ['/ranking', 'Ranking de alunos'],
   ['/administracao', 'Administração'],
   ['/administracao/dashboard', 'Dashboard'],
   ['/administracao/comunicados', 'Comunicados'],
@@ -122,6 +124,7 @@ export default function App() {
             <Route path="/notificacoes" element={<PaginaNotificacoes />} />
             <Route path="/aluno/notificacoes" element={<Navigate to="/notificacoes" replace />} />
             <Route path="/configuracoes/alterar-senha" element={<AlterarSenhaConta />} />
+            <Route path="/ranking" element={<RankingAlunos />} />
           </Route>
           <Route element={<RotaProtegida perfis={['ADMINISTRADOR']} />}>
             <Route path="/administracao/dashboard" element={<Dashboard />} />
