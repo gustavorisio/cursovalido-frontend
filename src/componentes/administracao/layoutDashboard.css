@@ -8,15 +8,16 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 1fr auto;
     grid-template-areas: 'painel-main' 'painel-footer';
-    min-height: 100dvh;
+    min-height: calc(100dvh - 56px);
 }
 
 .layout-dashboard .app-main {
     grid-area: painel-main;
     min-width: 0;
-    width: 100%;
-    max-width: none;
-    padding-inline: clamp(16px, 3vw, 48px);
+    width: min(calc(100% - (2 * var(--space-page))), var(--content-width));
+    max-width: var(--content-width);
+    margin-inline: auto;
+    padding-inline: 0;
 }
 
 .layout-dashboard .container-fluid {

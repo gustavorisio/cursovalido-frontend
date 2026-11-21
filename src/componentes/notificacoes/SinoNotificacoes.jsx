@@ -39,8 +39,8 @@ export default function SinoNotificacoes() {
   }, []);
 
   const rotulo = quantidade ? `Notificações: ${quantidade} ${quantidade === 1 ? 'não lida' : 'não lidas'}` : 'Notificações';
-  return <NavLink className="notificacoes-sino" to="/notificacoes" aria-label={rotulo} title={rotulo}>
-    <span className="notificacoes-sino-icone" aria-hidden="true" />
-    {quantidade > 0 && <span className="notificacoes-contador" aria-hidden="true">{quantidade > 99 ? '99+' : quantidade}</span>}
+  return <NavLink className="inline-flex items-center gap-2 rounded-md px-2 py-2 text-sm text-slate-200 no-underline transition hover:bg-slate-800 hover:text-white" to="/notificacoes" aria-label={rotulo} title={rotulo}>
+    <span>Notificações</span>
+    {quantidade > 0 && <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white">{quantidade > 99 ? '99+' : quantidade}</span>}
   </NavLink>;
 }

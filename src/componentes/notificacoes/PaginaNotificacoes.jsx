@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import CabecalhoPagina from '../comuns/CabecalhoPagina';
+import ControlesPaginacao from '../comuns/ControlesPaginacao';
 import Rodape from '../comuns/Rodape';
 import VoltarAdministracao from '../administracao/VoltarAdministracao';
 import ConfirmacaoModal from '../forum/componentes/ConfirmacaoModal';
@@ -138,7 +139,8 @@ function ConteudoNotificacoes({ administrador }) {
           <p className="notificacoes-conteudo" id={`comunicado-texto-${item.id}`}>{abertos.includes(item.id) ? item.conteudo : `${item.conteudo.slice(0, 180)}${item.conteudo.length > 180 ? '…' : ''}`}</p>
           <div className="notificacoes-acoes"><button className="btn btn-secondary btn-small" aria-expanded={abertos.includes(item.id)} aria-controls={`comunicado-texto-${item.id}`} disabled={lendo !== null || ocupado} onClick={() => ler(item)}>{lendo === item.id ? 'Abrindo...' : abertos.includes(item.id) ? 'Recolher comunicado' : 'Ler comunicado'}</button>{administrador && <><button type="button" className="btn btn-secondary btn-small" onClick={() => iniciarEdicao(item)} disabled={ocupado}>Editar</button><button type="button" className="btn btn-danger btn-small" onClick={() => { setErro(''); setConfirmacao(item); }} disabled={ocupado}>Excluir</button></>}</div>
         </article>)}</div>
-        {dados.totalPaginas > 1 && <nav className="notificacoes-paginacao" aria-label="Páginas de comunicados"><button className="btn btn-secondary" disabled={pagina === 0 || lendo !== null || ocupado} onClick={() => carregar(pagina - 1)}>Anterior</button><span>Página {pagina + 1} de {dados.totalPaginas}</span><button className="btn btn-secondary" disabled={pagina + 1 >= dados.totalPaginas || lendo !== null || ocupado} onClick={() => carregar(pagina + 1)}>Próxima</button></nav>}
+        <ControlesPaginacao pagina={pagina} total={dados.totalPaginas} rotulo="Páginas de comunicados" className="notificacoes-paginacao" desabilitada={lendo !== null || ocupado}
+          onAnterior={() => carregar(pagina - 1)} onProxima={() => carregar(pagina + 1)} />
       </>}
     </section>
   </main>{confirmacao && <ConfirmacaoModal titulo="Excluir comunicado" mensagem={`Deseja excluir “${confirmacao.titulo}”? O comunicado será removido para todos os usuários. Esta ação não pode ser desfeita.`} processando={excluindo} onConfirmar={excluir} onCancelar={() => { if (!envioEmCurso.current) setConfirmacao(null); }} />}<Rodape /></div>;

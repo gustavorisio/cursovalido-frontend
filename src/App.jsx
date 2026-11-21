@@ -107,7 +107,7 @@ export default function App() {
     <BrowserRouter>
       <TituloPagina />
       <div className="min-h-screen bg-page">
-        <AutenticacaoProvedor><RedirecionarTermosAtualizados /><Cabecalho /><Suspense fallback={<p role="status" className="main-content">Carregando página...</p>}><Routes>
+        <AutenticacaoProvedor><RedirecionarTermosAtualizados /><Cabecalho /><div className="min-h-[calc(100vh-56px)] pt-14"><Suspense fallback={<p role="status" className="main-content">Carregando página...</p>}><Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
@@ -161,7 +161,7 @@ export default function App() {
           <Route path="/cursos" element={<InicioCursos />} />
           <Route path="/suporte" element={<PaginaSuporte />} />
           <Route path="/forum" element={<PaginaForum />} />
-        </Routes></Suspense></AutenticacaoProvedor>
+        </Routes></Suspense></div></AutenticacaoProvedor>
       </div>
     </BrowserRouter>
   );
