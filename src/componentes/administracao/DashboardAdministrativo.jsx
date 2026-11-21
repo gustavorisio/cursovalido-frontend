@@ -10,11 +10,11 @@ const indicadoresEnsino = [
   ['alunosAtivos', 'Alunos ativos'], ['alunosEngajados', 'Alunos que concluíram aulas'],
   ['matriculas', 'Matrículas'], ['aulasConcluidas', 'Aulas concluídas'],
   ['cursosConcluidos', 'Cursos concluídos'], ['taxaConclusaoMatriculas', 'Taxa de conclusão das matrículas', '%'],
-  ['nivelMedioAlunos', 'Nível médio dos alunos'],
+  ['nivelMedioAlunos', 'Nível médio dos alunos'], ['comentariosAtivos', 'Comentários ativos no fórum'],
 ];
 const indicadoresPlataforma = [
   ['cursosAtivos', 'Cursos ativos'], ['aulasAtivas', 'Aulas publicadas'],
-  ['professoresAtivos', 'Professores ativos'], ['topicosAtivos', 'Tópicos ativos'],
+  ['professoresAtivos', 'Professores ativos'], ['topicosAtivos', 'Tópicos ativos no fórum'],
 ];
 const indicadoresDiarios = [
   ['matriculas', 'Matrículas realizadas'], ['aulasConcluidas', 'Aulas concluídas'], ['cursosConcluidos', 'Cursos concluídos'],

@@ -55,6 +55,7 @@ const titulosPaginas = [
   ['/administracao/usuarios', 'Usuários'],
   ['/administracao/forum/denuncias', 'Denúncias do fórum'],
   ['/administracao/convites', 'Convites'],
+  ['/administracao/inicio', 'Vídeo da página inicial'],
   ['/administracao/cursos/:idCurso/aulas/:idAula', 'Administrar aula'],
   ['/administracao/cursos/:idCurso/diagnostico', 'Editar avaliação'],
   ['/administracao/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
@@ -106,7 +107,7 @@ export default function App() {
     <BrowserRouter>
       <TituloPagina />
       <div className="min-h-screen bg-page">
-        <AutenticacaoProvedor><RedirecionarTermosAtualizados /><Cabecalho /><Suspense fallback={<p role="status" className="main-content">Carregando página...</p>}><Routes>
+        <AutenticacaoProvedor><RedirecionarTermosAtualizados /><Cabecalho /><div className="min-h-[calc(100vh-56px)] pt-14"><Suspense fallback={<p role="status" className="main-content">Carregando página...</p>}><Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
@@ -135,6 +136,7 @@ export default function App() {
             <Route path="/administracao/usuarios" element={<Administracao key="usuarios" tela="usuarios" />} />
             <Route path="/administracao/forum/denuncias" element={<Administracao key="denuncias" tela="denuncias" />} />
             <Route path="/administracao/convites" element={<Administracao key="convites" tela="convites" />} />
+            <Route path="/administracao/inicio" element={<Administracao key="video" tela="video" />} />
             <Route path="/administracao/cursos" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso/aulas/:idAula" element={<PaginaAulasAdministrador />} />
@@ -159,7 +161,7 @@ export default function App() {
           <Route path="/cursos" element={<InicioCursos />} />
           <Route path="/suporte" element={<PaginaSuporte />} />
           <Route path="/forum" element={<PaginaForum />} />
-        </Routes></Suspense></AutenticacaoProvedor>
+        </Routes></Suspense></div></AutenticacaoProvedor>
       </div>
     </BrowserRouter>
   );

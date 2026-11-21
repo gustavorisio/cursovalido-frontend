@@ -33,7 +33,7 @@
 
 .dashboard-administrativo .small-box {
   padding: 0;
-  border-radius: 0;
+  border-radius: var(--radius-control);
   margin-bottom: 0;
   background: var(--color-surface);
   color: var(--color-brand-950);
@@ -59,7 +59,7 @@
 .dashboard-administrativo .form-select {
   padding: 8px 32px 8px 12px;
   border: 1px solid var(--color-line);
-  border-radius: 0;
+  border-radius: var(--radius-control);
   background: var(--color-surface);
   color: inherit;
 }
@@ -67,7 +67,7 @@
 .dashboard-administrativo .alert {
   padding: 16px;
   border: 1px solid var(--color-danger);
-  border-radius: 0;
+  border-radius: var(--radius-control);
 }
 
 .dashboard-administrativo table {
@@ -161,11 +161,11 @@
 }
 
 .dashboard-administrativo .dashboard-grafico {
-  @apply rounded-none shadow-panel;
+  @apply rounded-[var(--radius-control)] shadow-panel;
 }
 
 .dashboard-administrativo .form-select {
-  @apply min-h-11 rounded-none bg-surface text-sm outline-none focus:border-accent;
+  @apply min-h-11 rounded-[var(--radius-control)] bg-surface text-sm outline-none focus:border-accent;
 }
 
 .dashboard-administrativo th {
@@ -181,13 +181,13 @@
 }
 
 .dashboard-administrativo .dashboard-nota {
-  @apply rounded-none border border-line bg-surface p-4 leading-relaxed;
+  @apply rounded-[var(--radius-control)] border border-line bg-surface p-4 leading-relaxed;
 }
 
 .dashboard-administrativo .dashboard-dia {
   border: 1px solid var(--color-line);
   background: var(--color-surface);
-  border-radius: 0;
+  border-radius: var(--radius-control);
   margin: 0 0 28px;
 }
 
@@ -212,7 +212,7 @@
 
 .dashboard-filtro-data .form-control {
   @apply min-h-11 border border-line bg-page px-3 text-brand-950;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .dashboard-data-consultada {

@@ -71,7 +71,7 @@
 }
 
 .suporte-envio {
-    @apply rounded-none bg-brand-50 p-5;
+    @apply rounded-[var(--radius-control)] bg-brand-50 p-5;
 }
 
 .suporte-envio>p {
