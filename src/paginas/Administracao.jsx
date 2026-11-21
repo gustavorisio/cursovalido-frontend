@@ -1,5 +1,5 @@
 import CabecalhoPagina from '../componentes/comuns/CabecalhoPagina';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import ConfirmacaoModal from '../componentes/forum/componentes/ConfirmacaoModal';
 import Rodape from '../componentes/comuns/Rodape';
@@ -30,6 +30,7 @@ export default function Administracao({ tela = 'geral' }) {
   const [perfil, setPerfil] = useState('PROFESSOR');
   const [mensagem, setMensagem] = useState('');
   const [processando, setProcessando] = useState(false);
+  const emAndamento = useRef(false);
   const [confirmacao, setConfirmacao] = useState(null);
   const [politica, setPolitica] = useState(null);
   const [nomePolitica, setNomePolitica] = useState('');
@@ -55,7 +56,8 @@ export default function Administracao({ tela = 'geral' }) {
       if (permissoes.principal && tela === 'privacidade') {
         tarefas.push(buscarPrivacidadeAtiva().then((atual) => {
           setPolitica(atual);
-          if (atual) { setNomePolitica(atual.nome); setConteudoPolitica(atual.conteudo); }
+          setNomePolitica(atual?.nome ?? '');
+          setConteudoPolitica(atual?.conteudo ?? '');
         }));
       }
       if (tela === 'convites') {
@@ -84,7 +86,10 @@ export default function Administracao({ tela = 'geral' }) {
     setFiltroRestricao(valor);
   }
 
+  // A trava por referencia barra cliques repetidos antes de o botao ser desabilitado na tela.
   async function acionar(acao, sucesso) {
+    if (emAndamento.current) return;
+    emAndamento.current = true;
     setProcessando(true);
     setErro('');
     setMensagem('');
@@ -95,13 +100,14 @@ export default function Administracao({ tela = 'geral' }) {
     } catch (falha) {
       setErro(falha.message);
     } finally {
+      emAndamento.current = false;
       setProcessando(false);
       setConfirmacao(null);
     }
   }
 
   function solicitar(acao, texto, sucesso) {
-    if (processando) return;
+    if (processando || emAndamento.current) return;
     setConfirmacao({ acao, texto, sucesso });
   }
 
@@ -143,9 +149,10 @@ export default function Administracao({ tela = 'geral' }) {
     }
     acionar(() => atualizarVideoInicio(url || null), url ? 'Vídeo de apresentação atualizado.' : 'Vídeo de apresentação removido.');
   }
+
   return <div className="app-container"><main className="main-content administracao">
     {tela !== 'geral' && <VoltarAdministracao />}
-    <CabecalhoPagina etiqueta="Gestão da plataforma" titulo={({ termos: 'Termos de Aceite', privacidade: 'Política de Privacidade', usuarios: 'Moderação de usuários', convites: 'Convites', video: 'Vídeo da página inicial' })[tela] ?? 'Administração'} descricao={`Administrador: ${sessao?.nome}`} />
+    <CabecalhoPagina etiqueta="Gestão da plataforma" titulo={({ termos: 'Termos de Aceite', privacidade: 'Política de Privacidade', usuarios: 'Moderação de usuários', convites: 'Convites', denuncias: 'Denúncias do fórum', video: 'Vídeo da página inicial' })[tela] ?? 'Administração'} descricao={`Administrador: ${sessao?.nome}`} />
     <nav className="administracao-navegacao" aria-label="Ferramentas administrativas">
       <NavLink to="/administracao/usuarios">Usuários</NavLink>
       <NavLink to="/administracao/forum/denuncias">Denúncias do fórum</NavLink>
@@ -186,7 +193,8 @@ export default function Administracao({ tela = 'geral' }) {
           <p className="texto-suave">Versão vigente: {politica?.versao ?? 'Nenhuma versão publicada'}</p>
           <form className="formulario-publico" onSubmit={publicar}>
             <label>Nome do documento<input required maxLength={255} value={nomePolitica} onChange={(evento) => setNomePolitica(evento.target.value)} /></label>
-            <>{!politica && <p className="texto-suave">Nenhum documento foi publicado. Cadastre aqui o conteúdo oficial para liberar o cadastro de usuários.</p>}<p className="texto-suave">A versão será incrementada automaticamente ao publicar.</p></>
+            {!politica && <p className="texto-suave">Nenhum documento foi publicado. Cadastre aqui o conteúdo oficial para liberar o cadastro de usuários.</p>}
+            <p className="texto-suave">A versão será incrementada automaticamente ao publicar.</p>
             <p className="texto-suave">O conteúdo pode ser escrito em texto simples ou HTML básico (títulos, parágrafos e listas).</p>
             <label>Conteúdo<textarea className="input-field" required maxLength={10000} rows={12} value={conteudoPolitica} onChange={(evento) => setConteudoPolitica(evento.target.value)} /></label>
             <button className="btn btn-primary" disabled={processando}>{politica ? 'Publicar nova versão' : 'Publicar documento'}</button>
@@ -213,9 +221,9 @@ export default function Administracao({ tela = 'geral' }) {
               </div>
             </div>)}
           </section>
-          <section className="card configuracoes-conta">
+          {pendentes.length > 0 ? <section className="card configuracoes-conta">
             <h2 className="titulo-detalhe">Cadastros aguardando aprovação</h2>
-            {pendentes.length === 0 ? <p className="texto-suave">Nenhum cadastro pendente.</p> : null}
+            <p className="texto-suave">Cadastros feitos antes da mudança no fluxo de convite. Os novos convites já liberam o acesso ao concluir o cadastro.</p>
             {pendentes.map((item) => <div className="post-heading administracao-registro" key={item.id}>
               <p>{item.nomeCompleto ?? item.email} · {item.email} · {item.perfil}</p>
               <div className="acoes-topico">
@@ -224,7 +232,7 @@ export default function Administracao({ tela = 'geral' }) {
                 <button className="btn btn-danger btn-small" type="button" disabled={processando} onClick={() => solicitar(() => removerPendenciaConvite(item.id), 'Remover esta pendência?', 'Pendência removida.')}>Remover</button>
               </div>
             </div>)}
-          </section>
+          </section> : null}
         </> : null}
       </> : null}
       {tela === 'usuarios' ? <ModeracaoUsuarios usuarios={usuarios ?? []} processando={processando} carregando={carregando} filtroRestricao={filtroRestricao} onFiltrarRestricao={filtrarUsuarios} onExecutar={solicitar} /> : null}
