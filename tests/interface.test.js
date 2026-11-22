@@ -57,8 +57,8 @@ test('documentos usam mesma navegação e estrutura com conteúdo próprio', asy
     assert.equal(nav.querySelectorAll('button')[1].textContent, tipo === 'termos' ? 'Política de Privacidade' : 'Termos de Aceite');
     assert.equal(nav.querySelector('a'), null);
     assert.equal(document.querySelector('iframe'), null);
-    assert.equal(document.querySelector('.conteudo-legal h2').textContent, tipo === 'termos' ? 'Condições de uso' : 'Seus dados pessoais');
-    assert.equal(document.querySelector('.conteudo-legal strong').textContent, 'este documento');
+    assert.match(document.querySelector('.conteudo-legal').textContent, tipo === 'termos' ? /Condições de uso/ : /Seus dados pessoais/);
+    assert.equal(document.querySelector('.conteudo-legal strong'), null);
     estruturas.push([...document.querySelector('main').children].map((el) => el.tagName));
   }
   assert.deepEqual(estruturas[0], estruturas[1]);

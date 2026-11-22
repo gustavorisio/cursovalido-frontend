@@ -73,6 +73,7 @@ export default function DetalheTopico({
               <span className="meta-label">Autor</span>
               <span className="meta-value">{topico.nomeAutor ?? topico.autor?.nome}</span>
             </div>
+            {topico.gamertagAutor && <div className="meta-group"><span className="meta-label">Gamertag</span><span className="meta-value">{topico.gamertagAutor}</span></div>}
             <PerfilAutor perfil={topico.papelAutor ?? topico.perfilAutor ?? topico.perfil ?? topico.nomePerfil ?? topico.autor?.perfil ?? topico.autor?.tipoPerfil} />
             <div className="meta-group">
               <span className="meta-label">Publicado em</span>

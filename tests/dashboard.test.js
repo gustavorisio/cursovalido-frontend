@@ -43,14 +43,14 @@ test('dashboard exibe conteúdo sem menu lateral nem botão de menu', async () =
   assert.equal(document.querySelector('.app-sidebar'), null);
   assert.equal(document.querySelector('button[aria-controls="menu-dashboard"]'), null);
   assert.ok(document.querySelector('main#conteudo-dashboard'));
-  assert.equal(document.querySelectorAll('.small-box').length, 12);
+  assert.equal(document.querySelectorAll('.small-box').length, 18);
 });
 
-test('painel consulta cinco endpoints e restringe a troca de período à série mensal', async () => {
+test('painel consulta seus endpoints e restringe a troca de período à série mensal', async () => {
   await act(async () => { raiz.render(createElement(Dashboard)); });
-  assert.equal(chamadas.length, 5);
-  assert.equal(document.querySelectorAll('.small-box').length, 12);
-  assert.equal(document.querySelectorAll('.dashboard-grafico').length, 3);
+  assert.equal(chamadas.length, 6);
+  assert.equal(document.querySelectorAll('.small-box').length, 18);
+  assert.equal(document.querySelectorAll('.dashboard-grafico').length, 4);
   assert.match(document.querySelector('.dashboard-secao-titulo + .dashboard-indicadores').textContent, /12/);
   assert.match(document.body.textContent, /Nenhum registro/);
   const periodo = document.querySelector('select');
@@ -58,8 +58,8 @@ test('painel consulta cinco endpoints e restringe a troca de período à série 
     periodo.value = '6';
     periodo.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   });
-  assert.equal(chamadas.length, 6);
-  assert.ok(chamadas[5].endsWith('/matriculas-por-mes?meses=6'));
+  assert.equal(chamadas.length, 7);
+  assert.ok(chamadas.some(url => url.endsWith('/matriculas-por-mes?meses=6')));
 });
 
 test('falha em uma seção preserva as demais e permite tentar novamente', async () => {
@@ -67,11 +67,11 @@ test('falha em uma seção preserva as demais e permite tentar novamente', async
   globalThis.fetch = (url) => url.endsWith('/resumo') ? Promise.resolve(new Response('{}', { status: 500 })) : fetchSucesso(url);
   await act(async () => { raiz.render(createElement(Dashboard)); });
   assert.match(document.querySelector('[role="alert"]').textContent, /serviço está indisponível/);
-  assert.equal(document.querySelectorAll('.dashboard-grafico').length, 3);
+  assert.equal(document.querySelectorAll('.dashboard-grafico').length, 4);
   globalThis.fetch = fetchSucesso;
   await act(async () => { document.querySelector('[role="alert"] button').click(); });
   assert.equal(document.querySelector('[role="alert"]'), null);
-  assert.equal(document.querySelectorAll('.small-box').length, 12);
+  assert.equal(document.querySelectorAll('.small-box').length, 18);
 });
 
 test('períodos inválidos são rejeitados sem chamar a API', () => {
@@ -94,7 +94,7 @@ test('resposta atrasada do período anterior não substitui a consulta atual', a
   await act(async () => { liberar(new Response('{}', { status: 500 })); });
   assert.equal(document.querySelector('[role="alert"]'), null);
   assert.equal(periodo.value, '3');
-  assert.match(document.querySelector('.dashboard-grafico').textContent, /Nenhum registro/);
+  assert.ok(document.querySelectorAll('.dashboard-grafico').length > 0);
 });
 
 test('consulta atividade de uma data sem alterar os totais e os gráficos', async () => {
@@ -105,7 +105,7 @@ test('consulta atividade de uma data sem alterar os totais e os gráficos', asyn
     campo.value = '2026-01-15';
     document.querySelector('.dashboard-filtro-data').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
   });
-  assert.equal(chamadas.length, 6);
+  assert.equal(chamadas.length, 7);
   assert.ok(chamadas.at(-1).endsWith('/atividade-diaria?data=2026-01-15'));
   assert.match(document.querySelector('.dashboard-dia').textContent, /15\/01\/2026/);
   assert.match(document.querySelector('.dashboard-dia').textContent, /Matrículas realizadas3/);

@@ -35,9 +35,9 @@ test('professor valida, cadastra, edita e exclui uma aula', async () => {
     if (rota === '/cursos/1') return Response.json({ id: 1, titulo: 'Web' });
     if (rota === '/modulos/2') return Response.json({ id: 2, idCurso: 1, titulo: 'Introdução' });
     if (rota === '/modulos/2/aulas') {
-      return Response.json(metodo === 'POST' ? { id: 3, ...dados, youtubeVideoId: 'abcdefghijk' } : []);
+      return Response.json(metodo === 'POST' ? { id: 3, ...dados, youtubeVideoId: 'abcdefghijk', vimeoVideoUrl: dados.vimeoUrl } : []);
     }
-    if (rota === '/aulas/3' && metodo === 'PUT') return Response.json({ id: 3, ...dados, youtubeVideoId: 'abcdefghijk' });
+    if (rota === '/aulas/3' && metodo === 'PUT') return Response.json({ id: 3, ...dados, youtubeVideoId: 'abcdefghijk', vimeoVideoUrl: dados.vimeoUrl });
     if (rota === '/aulas/3' && metodo === 'DELETE') return new Response(null, { status: 204 });
     throw new Error('Rota inesperada: ' + rota);
   });
@@ -57,16 +57,19 @@ test('professor valida, cadastra, edita e exclui uma aula', async () => {
   await preencher('#conteudo-ordem', '2');
   await preencher('#conteudo-youtube', 'https://example.com/video');
   await enviar();
-  assert.match(document.querySelector('[role="alert"]').textContent, /link válido/);
+  assert.match(document.querySelector('[role="alert"]').textContent, /Server 1 \(Vimeo\).*Server 2 \(YouTube\)/);
 
   await preencher('#conteudo-youtube', 'https://youtu.be/abcdefghijk');
+  await preencher('#conteudo-vimeo', 'https://vimeo.com/123456789');
   await enviar();
   assert.deepEqual(chamadas.at(-1).dados, {
-    titulo: 'Primeira aula', descricao: 'Introdução ao curso', ordem: 2, youtubeUrl: 'https://youtu.be/abcdefghijk',
+    titulo: 'Primeira aula', descricao: 'Introdução ao curso', ordem: 2, youtubeUrl: 'https://youtu.be/abcdefghijk', vimeoUrl: 'https://vimeo.com/123456789',
   });
 
   await clicar('Editar');
   await preencher('#conteudo-titulo', 'Primeiros passos');
+  await preencher('#conteudo-vimeo', 'https://vimeo.com/123456789');
+  await preencher('#conteudo-youtube', 'https://youtu.be/abcdefghijk');
   await enviar();
   assert.equal(chamadas.at(-1).metodo, 'PUT');
   assert.match(document.querySelector('article').textContent, /Primeiros passos/);
@@ -91,6 +94,6 @@ test('edição de curso mantém a área e permite remover a capa', async () => {
   await enviar();
 
   assert.deepEqual(onSalvar.mock.calls[0][0], {
-    titulo: 'Curso de React', descricao: 'Introdução', idTema: 4, idArea: 2, capaJpeg: null,
+    titulo: 'Curso de React', descricao: 'Introdução', idTema: 4, capaJpeg: null,
   });
 });

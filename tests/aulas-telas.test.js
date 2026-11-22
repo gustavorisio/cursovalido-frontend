@@ -68,7 +68,7 @@ async function renderizar(tela, perfil, caminho, rota = caminho) {
     raiz.render(h(contexto.Provider, { value: { autenticado: Boolean(perfil), sessao: { perfil } } },
       h(MemoryRouter, { key: caminho, initialEntries: [caminho] }, h(Routes, null, h(Route, { path: rota, element: h(telas[tela]) })))));
   });
-  assert.ok(document.querySelector('.page-header .page-title'));
+  assert.ok(document.querySelector('main h1'));
   assert.equal(document.querySelector('[role="alert"]'), null);
 }
 
@@ -83,7 +83,7 @@ test('catálogo exibe a capa do curso e recupera uma imagem que falhou', async (
   assert.equal(imagem.width, 550);
   assert.equal(imagem.height, 250);
   await act(() => imagem.dispatchEvent(new dom.window.Event('error')));
-  assert.equal(document.querySelector('.curso-capa').textContent, '');
+  assert.match(document.querySelector('.curso-capa').textContent, /Capa do curso/);
   assert.equal(document.querySelector('.curso-capa img'), null);
 });
 
@@ -96,20 +96,19 @@ for (const [perfil, tela, caminho] of [
   test(`catálogo de ${perfil ?? 'visitante'} compartilha temas, filtra e restaura cursos`, async () => {
     await renderizar(tela, perfil, caminho);
     assert.equal(document.querySelector('.catalogo-temas'), null);
-    assert.equal(document.querySelectorAll('.aulas-cartao').length, 2);
-    assert.ok(document.querySelector('.aulas-cartao .content-text'));
+    assert.equal(document.querySelectorAll('#catalogo-cursos article').length, 2);
+    assert.ok(document.querySelector('#catalogo-cursos article p'));
     assert.equal(document.querySelectorAll('.curso-capa').length, 2);
-    assert.equal(document.querySelector('.aulas-cartao img'), null);
-    assert.equal(document.querySelector('.aulas-cartao .aulas-etiqueta'), null);
+    assert.equal(document.querySelector('#catalogo-cursos article img'), null);
     assert.equal(document.querySelector('.aulas-icone'), null);
     const filtro = document.querySelector('.aulas-filtro-tema select');
     assert.match(filtro.textContent, /Meu tema novo/);
     await act(async () => { filtro.value = '9'; filtro.dispatchEvent(new dom.window.Event('change', { bubbles: true })); });
-    assert.equal(document.querySelectorAll('.aulas-cartao').length, 1);
-    assert.match(document.querySelector('.aulas-cartao').textContent, /SQL/);
+    assert.equal(document.querySelectorAll('#catalogo-cursos article').length, 1);
+    assert.match(document.querySelector('#catalogo-cursos article').textContent, /SQL/);
     assert.equal(document.querySelector('.aulas-icone'), null);
     await act(async () => { filtro.value = ''; filtro.dispatchEvent(new dom.window.Event('change', { bubbles: true })); });
-    assert.equal(document.querySelectorAll('.aulas-cartao').length, 2);
+    assert.equal(document.querySelectorAll('#catalogo-cursos article').length, 2);
   });
 }
 
@@ -224,7 +223,7 @@ for (const [perfil, tela, caminho, botao, endpoint] of [
       tema.value = '9'; tema.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
     });
     await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
-    assert.deepEqual(enviados, { titulo: cursos[0].titulo, descricao: cursos[0].descricao, idTema: 9, idArea: 8, capaJpeg: null });
+    assert.deepEqual(enviados, { titulo: cursos[0].titulo, descricao: cursos[0].descricao, idTema: 9, capaJpeg: null });
     assert.equal(document.querySelector('.aulas-editor'), null);
   });
 }
@@ -251,9 +250,9 @@ test('administrador exclui curso somente depois da confirmação', async () => {
 
 test('o catálogo mantém somente a busca e os temas cadastrados como filtros', async () => {
   await renderizar('PaginaCatalogo', 'ALUNO', '/aluno/cursos?area=8', '/aluno/cursos');
-  assert.equal(document.querySelectorAll('.aulas-cartao').length, 2);
+    assert.equal(document.querySelectorAll('#catalogo-cursos article').length, 2);
   assert.equal(document.querySelectorAll('select').length, 1);
-  assert.match(document.querySelector('select').textContent, /Todos os temas/);
+  assert.match(document.querySelector('select').textContent, /Sem tema/);
 });
 
 test('questionário de módulo exibe correção e permite refazer', async () => {
@@ -329,7 +328,7 @@ test('catálogo e meus cursos mostram no máximo nove cursos por página', async
     ['PaginaAulasAdministrador', 'ADMINISTRADOR', '/administracao/cursos'],
   ]) {
     await renderizar(tela, perfil, caminho);
-    const lista = () => document.querySelector('.aulas-cursos-grade');
+    const lista = () => document.querySelector('#catalogo-cursos [class*="grid-cols-"], .aulas-cursos-grade');
     assert.equal(lista().children.length, 9);
     const proxima = () => [...document.querySelectorAll('.paginacao-lista button')].find(b => b.textContent === 'Próxima');
     await act(() => proxima().click());
