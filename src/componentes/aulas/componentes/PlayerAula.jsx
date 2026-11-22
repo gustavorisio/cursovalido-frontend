@@ -146,6 +146,10 @@ export default function PlayerAula({ videoId, vimeoUrl, posicaoInicial = 0, onSa
   }, [videoId, vimeoUrl, inicio, tentativa, usarReserva, onSalvar]);
 
   return <>
+    <div className="acoes-topico" role="group" aria-label="Escolher servidor do vídeo">
+      <button className={!usarReserva ? 'btn btn-primary btn-small' : 'btn btn-secondary btn-small'} type="button" aria-pressed={!usarReserva} onClick={() => { setErro(''); setPronto(false); setUsarReserva(false); }}>Server 1 · Vimeo</button>
+      <button className={usarReserva ? 'btn btn-primary btn-small' : 'btn btn-secondary btn-small'} type="button" aria-pressed={usarReserva} onClick={() => { setErro(''); setPronto(false); setUsarReserva(true); }}>Server 2 · YouTube</button>
+    </div>
     {erro ? <div className="mensagem-erro" role="alert">
       <p>{erro}</p>
       <button className="btn btn-secondary" type="button" onClick={() => { setErro(''); setPronto(false); setUsarReserva(!vimeoUrl); setTentativa((valor) => valor + 1); }}>Tentar carregar novamente</button>

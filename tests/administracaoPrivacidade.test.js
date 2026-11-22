@@ -25,10 +25,10 @@ afterEach(async () => {
 });
 function dados(principal = true) {
   return [
-    { id: 1, nome: 'Principal', email: 'principal@example.com', perfil: 'ADMINISTRADOR', ativo: true, podeModerar: false, podeExcluir: false, suspensoes: [] },
-    { id: 2, nome: 'Professor', email: 'professor@example.com', perfil: 'PROFESSOR', ativo: true, podeModerar: true, podeExcluir: principal, suspensoes: [] },
-    { id: 3, nome: 'Outro administrador', email: 'admin@example.com', perfil: 'ADMINISTRADOR', ativo: true, podeModerar: principal, podeExcluir: principal, suspensoes: [] },
-    { id: 4, nome: 'Estudante', email: 'e*******@gmail.com', perfil: 'ALUNO', ativo: true, podeModerar: true, podeExcluir: false, suspensoes: [] },
+    { id: 1, nome: 'Principal', gamertag: 'CV-AAAA2345BBBB', email: 'principal@example.com', perfil: 'ADMINISTRADOR', ativo: true, podeModerar: false, podeExcluir: false, suspensoes: [] },
+    { id: 2, nome: 'Professor', gamertag: 'CV-CCCC2345DDDD', email: 'professor@example.com', perfil: 'PROFESSOR', ativo: true, podeModerar: true, podeExcluir: principal, suspensoes: [] },
+    { id: 3, nome: 'Outro administrador', gamertag: 'CV-EEEE2345FFFF', email: 'admin@example.com', perfil: 'ADMINISTRADOR', ativo: true, podeModerar: principal, podeExcluir: principal, suspensoes: [] },
+    { id: 4, nome: 'Estudante', gamertag: 'CV-GGGG2345HHHH', email: 'estudante@gmail.com', perfil: 'ALUNO', ativo: true, podeModerar: true, podeExcluir: false, suspensoes: [] },
   ];
 }
 async function renderizar(principal = true) {
@@ -58,8 +58,8 @@ test('principal confirma exclusao da equipe, sem oferecer autoexclusao nem exclu
   assert.equal(botao(artigo('Principal'), 'Excluir conta'), undefined);
   assert.equal(botao(artigo('Estudante'), 'Excluir conta'), undefined);
   assert.ok(botao(artigo('Outro administrador'), 'Excluir conta'));
-  assert.match(artigo('Estudante').textContent, /e\*{7}@gmail.com/);
-  assert.match(artigo('Professor').textContent, /professor@example.com/);
+  assert.match(artigo('Estudante').textContent, /CV-GGGG2345HHHH/);
+  assert.doesNotMatch(artigo('Professor').textContent, /professor@example.com/);
   await act(async () => botao(artigo('Professor'), 'Excluir conta').click());
   assert.equal(exclusoes.length, 0);
   assert.match(document.querySelector('[role="dialog"]').textContent, /histórico|preservados/);
@@ -77,7 +77,7 @@ test('administrador comum nao recebe opcao para excluir membros da equipe', asyn
   globalThis.fetch = async url => Response.json(String(url).endsWith('/permissoes') ? { principal: false } : dados(false));
   await renderizar(false);
   assert.equal([...document.querySelectorAll('button')].filter(item => item.textContent === 'Excluir conta').length, 0);
-  assert.match(document.body.textContent, /e\*{7}@gmail.com/);
+  assert.match(document.body.textContent, /CV-GGGG2345HHHH/);
 });
 
 test('falha ao excluir mantem o usuario na lista e informa o erro', async () => {

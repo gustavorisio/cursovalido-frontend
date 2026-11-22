@@ -526,7 +526,7 @@
 .dados-usuario label { display: grid; gap: 8px; }
 @media (max-width: 640px) { .dados-usuario-grade { grid-template-columns: minmax(0, 1fr); } }
 
-.campo-senha { display: grid; gap: 8px; }
+.campo-senha { display: grid; align-content: start; gap: 8px; }
 .campo-senha-controle { position: relative; height: 48px; min-width: 0; }
 .formulario-publico .campo-senha-controle input { padding-right: 88px; }
 .alternar-senha { position: absolute; top: 0; right: 0; bottom: 0; width: 82px; display: grid; place-items: center; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--color-brand-700); cursor: pointer; font-size: 14px; }
