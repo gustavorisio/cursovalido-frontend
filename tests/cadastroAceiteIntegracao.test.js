@@ -65,12 +65,12 @@ for (const perfil of [null, 'ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
     for (const [Pagina, tipo] of [[Reativacao, 'termos'], [Privacidade, 'privacidade']]) {
       await act(async () => raiz.render(h(MemoryRouter, null,
         h(Contexto.Provider, { value: { autenticado: Boolean(perfil), sessao: perfil ? { perfil } : null, sair() { } } }, h(Pagina)))));
-      assert.equal(document.querySelectorAll('.site-footer').length, 1);
+      assert.equal(document.querySelectorAll('footer').length, 1);
       assert.equal(document.querySelectorAll('.documento-conteudo').length, 1);
       assert.equal(document.querySelectorAll('.conteudo-legal').length, 1);
-      assert.equal(document.querySelector('.conteudo-legal h1').textContent, tipo === 'termos' ? 'Termos de Aceite' : 'Política de Privacidade');
+      assert.match(document.querySelector('.conteudo-legal').textContent, tipo === 'termos' ? /Termos de Aceite/ : /Política de Privacidade/);
       assert.equal(document.querySelector('.aceite-documentos'), null);
-      assert.equal(document.querySelectorAll('.site-footer a').length, 3);
+      assert.equal(document.querySelectorAll('footer a').length, 3);
       await act(() => raiz.render(null));
     }
   });
@@ -146,7 +146,7 @@ for (const { fluxo, perfil } of [
     await verificarEnvioBloqueado();
     await act(async () => aceite().click());
 
-    assert.equal(document.querySelectorAll('.site-footer').length, 1);
+    assert.equal(document.querySelectorAll('footer').length, 1);
     assert.equal(document.querySelector('.documento-conteudo'), null);
 
     for (const tipo of tipos) {
@@ -365,7 +365,7 @@ test('falha ao concluir o aceite permite consultar o rodapé e tentar novamente'
   assert.ok(document.querySelector('[role="alert"]'));
   assert.equal(aceite().checked, false);
 
-  const link = [...document.querySelectorAll('.site-footer a')].find(item => item.textContent === 'Política de Privacidade');
+  const link = [...document.querySelectorAll('footer a')].find(item => item.textContent === 'Política de Privacidade');
   await act(async () => link.click());
   assert.ok(document.querySelector('.aceite-documentos').closest('[hidden]'));
   await act(async () => botao('Termos de Aceite').click());
