@@ -59,8 +59,9 @@ test('publica e edita um tópico a partir da listagem do fórum', async () => {
 
   const item = document.querySelector('.topic-list-item');
   assert.match(item.textContent, /Dúvida sobre React/);
-  assert.match(item.textContent, /#1a3b5c7d/);
+  assert.doesNotMatch(item.textContent, /Gamertag|#1a3b5c7d/);
   await act(async () => item.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
+  assert.match(document.querySelector('.detalhe-topico .meta-detalhe').textContent, /#1a3b5c7d/);
   await clicar('Editar tópico');
   await preencher('[aria-label="Título da postagem"]', 'Dúvida resolvida');
   await clicar('Salvar alterações');
