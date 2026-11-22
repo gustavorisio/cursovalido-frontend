@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage && node scripts/verificar-cobertura.mjs"
   },
   "dependencies": {
     "@coreui/react": "^5.13.1",
