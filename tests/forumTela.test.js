@@ -9,7 +9,7 @@ const { renderizar } = prepararTela(async (carregar) => {
 });
 
 const sessao = { perfil: 'ADMINISTRADOR', idUsuario: 5 };
-const topico = { id: 12, idAutor: 5, titulo: 'Dúvida sobre React', descricao: 'Como uso o estado?', criadoEm: '2026-04-10' };
+const topico = { id: 12, idAutor: 5, gamertagAutor: '#1a3b5c7d', titulo: 'Dúvida sobre React', descricao: 'Como uso o estado?', criadoEm: '2026-04-10' };
 
 function prepararApi(lista = [topico]) {
   let topicos = lista;
@@ -29,7 +29,7 @@ function prepararApi(lista = [topico]) {
       return Response.json(atualizado);
     }
     if (rota === '/forum/topicos/12/comentarios') {
-      if (metodo === 'POST') comentarios = [{ id: 20, idAutor: 5, ...dados, criadoEm: '2026-04-11' }];
+      if (metodo === 'POST') comentarios = [{ id: 20, idAutor: 5, gamertagAutor: '#8e6f4g2h', ...dados, criadoEm: '2026-04-11' }];
       return Response.json(comentarios);
     }
     if (rota === '/forum/comentarios/20') {
@@ -59,6 +59,7 @@ test('publica e edita um tópico a partir da listagem do fórum', async () => {
 
   const item = document.querySelector('.topic-list-item');
   assert.match(item.textContent, /Dúvida sobre React/);
+  assert.match(item.textContent, /#1a3b5c7d/);
   await act(async () => item.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
   await clicar('Editar tópico');
   await preencher('[aria-label="Título da postagem"]', 'Dúvida resolvida');
@@ -80,6 +81,7 @@ test('publica, edita e apaga uma resposta do próprio usuário', async () => {
   await preencher('textarea', 'Use o hook useState.');
   await clicar('Responder');
   assert.match(document.querySelector('.comment-card').textContent, /useState/);
+  assert.match(document.querySelector('.comment-card').textContent, /#8e6f4g2h/);
 
   await clicar('Editar');
   assert.equal(document.querySelectorAll('.comment-card textarea').length, 1);
