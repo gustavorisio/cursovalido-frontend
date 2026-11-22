@@ -82,7 +82,7 @@ test('aula retoma o vídeo, salva a posição e permite marcar a conclusão', as
   assert.equal(opcoesPlayer.playerVars.start, 10);
   assert.equal(opcoesPlayer.videoId, aula.youtubeVideoId);
   await act(async () => opcoesPlayer.events.onReady({ target: { getIframe: () => iframe } }));
-  assert.equal(iframe.title, 'Vídeo da aula');
+  assert.equal(iframe.title, 'Vídeo da aula no YouTube');
 
   segundos = 42.5;
   await act(async () => {
