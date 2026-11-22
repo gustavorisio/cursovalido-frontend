@@ -1,3 +1,4 @@
+import { censurarConteudo } from '../../../servicos/filtroConteudo';
 import PerfilAutor from './PerfilAutor';
 import { useRef, useState } from 'react';
 import ConfirmacaoModal from './ConfirmacaoModal';
@@ -72,7 +73,7 @@ export default function ListaComentarios({ comentarios, podeExcluir, podeEditar,
             {autenticado && idUsuario != null && comentario.ativo !== false && (comentario.idAutor ?? comentario.autor?.id ?? comentario.autor?.idUsuario) != null && Number(comentario.idAutor ?? comentario.autor?.id ?? comentario.autor?.idUsuario) !== Number(idUsuario) && <button className="btn btn-secondary btn-small" type="button" onClick={() => setDenunciaAberta(denunciaAberta === comentario.id ? null : comentario.id)} aria-expanded={denunciaAberta === comentario.id}>Denunciar</button>}
           </div>
           <p className={`content-text ${comentario.ativo === false ? 'texto-suave' : ''}`}>
-            {comentario.ativo === false ? 'Esta mensagem foi excluída.' : comentario.conteudo}
+            {comentario.ativo === false ? 'Esta mensagem foi excluída.' : censurarConteudo(comentario.conteudo)}
           </p>
           {denunciaAberta === comentario.id && <FormularioDenuncia aoEnviar={(dados) => onDenunciar('COMENTARIO', comentario.id, dados)} aoCancelar={() => setDenunciaAberta(null)} desabilitado={desabilitado} />}
           </>}

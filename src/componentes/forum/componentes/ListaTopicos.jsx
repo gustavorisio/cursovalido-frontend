@@ -1,3 +1,4 @@
+import { censurarConteudo } from '../../../servicos/filtroConteudo';
 import PerfilAutor from './PerfilAutor';
 import { perfilDoUsuario } from '../hooks/useForum';
 
@@ -25,7 +26,7 @@ export default function ListaTopicos({ topicos, usuarios, onSelecionar }) {
           onClick={() => onSelecionar(topico)}
         >
           <div className="topic-summary">
-            <h3 className="topic-title" title={topico.titulo}>{topico.titulo}</h3>
+            <h3 className="topic-title" title={censurarConteudo(topico.titulo)}>{censurarConteudo(topico.titulo)}</h3>
           </div>
           <div className="topic-meta">
             <div className="meta-group">

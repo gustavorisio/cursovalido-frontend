@@ -1,3 +1,4 @@
+import { censurarConteudo } from '../../../servicos/filtroConteudo';
 import PerfilAutor from './PerfilAutor';
 import { Link } from 'react-router-dom';
 import { useRef, useState } from 'react';
@@ -67,7 +68,7 @@ export default function DetalheTopico({
 
       <div className="card">
         <div className="post-heading">
-          <h3 className="topic-title titulo-detalhe">{topico.titulo}</h3>
+          <h3 className="topic-title titulo-detalhe">{censurarConteudo(topico.titulo)}</h3>
           <div className="topic-meta meta-detalhe">
             <div className="meta-group">
               <span className="meta-label">Autor</span>
@@ -101,7 +102,7 @@ export default function DetalheTopico({
           )}
           {autenticado && idUsuario != null && (topico.idAutor ?? topico.autor?.id ?? topico.autor?.idUsuario) != null && Number(topico.idAutor ?? topico.autor?.id ?? topico.autor?.idUsuario) !== Number(idUsuario) && <button className="btn btn-secondary btn-small" type="button" onClick={() => setDenunciaAberta((aberta) => !aberta)} aria-expanded={denunciaAberta}>Denunciar tópico</button>}
         </div>
-        <p className="content-text">{topico.descricao}</p>
+        <p className="content-text">{censurarConteudo(topico.descricao)}</p>
         {denunciaAberta && <FormularioDenuncia aoEnviar={(dados) => onDenunciar('TOPICO', topico.id, dados)} aoCancelar={() => setDenunciaAberta(false)} desabilitado={desabilitado} />}
         {topico.fechado && <p className="aviso-fechado">Este tópico está fechado para novas respostas.</p>}
       </div>
