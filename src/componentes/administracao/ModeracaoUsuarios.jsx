@@ -5,7 +5,7 @@ import { aplicarSuspensao, revogarSuspensao, excluirUsuarioAdministrativo } from
 
 const FILTROS = [[null, 'Todos os usuários'], [true, 'Com restrição'], [false, 'Sem restrição']];
 
-const ESCOPOS = { CONTA: 'Acesso à conta', FORUM: 'Acesso ao fórum', TOPICOS: 'Acesso a tópicos e comentários', COMENTARIOS: 'Acesso a tópicos e comentários' };
+const ESCOPOS = { CONTA: 'Acesso à conta', FORUM: 'Acesso ao fórum' };
 
 export default function ModeracaoUsuarios({ usuarios, processando, carregando = false, onExecutar, filtroRestricao = null, onFiltrarRestricao }) {
   const ocupado = processando || carregando;
@@ -47,7 +47,7 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
   }
 
   const termo = busca.trim().toLowerCase();
-  const resultados = termo ? usuarios.filter((usuario) => `${usuario.nome} ${usuario.perfil}`.toLowerCase().includes(termo)) : [];
+  const resultados = termo ? usuarios.filter((usuario) => `${usuario.nome} ${usuario.gamertag} ${usuario.perfil}`.toLowerCase().includes(termo)) : [];
   const equipe = usuarios.filter((usuario) => ['PROFESSOR', 'ADMINISTRADOR'].includes(usuario.perfil));
   const alunos = usuarios.filter((usuario) => usuario.perfil === 'ALUNO');
   const grupos = termo ? [{ titulo: 'Resultados da busca', lista: resultados, vazio: 'Nenhum usuário encontrado.' }] : [
@@ -57,9 +57,9 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
 
   return <section className="card configuracoes-conta moderacao-usuarios">
     <h2 className="titulo-detalhe">Moderação de usuários</h2>
-    <p className="texto-suave">Restrinja a conta inteira ou apenas ações do fórum. Restrições temporárias expiram automaticamente; permanentes podem ser revogadas.</p>
+    <p className="texto-suave">Restrinja o acesso à conta inteira ou ao fórum. Restrições temporárias expiram automaticamente; permanentes podem ser revogadas.</p>
     <div className="administracao-resumo"><span><strong>{usuarios.length}</strong> contas</span><span><strong>{equipe.length}</strong> membros da equipe</span><span><strong>{usuarios.filter((usuario) => usuario.suspensoes.length > 0).length}</strong> com restrições</span></div>
-    <p className="texto-suave">Por privacidade, os e-mails aparecem parcialmente e os nomes exibem apenas o primeiro nome.</p>
+    <p className="texto-suave">Use o nome completo ou a gamertag para localizar uma conta.</p>
     {onFiltrarRestricao && <div className="acoes-topico" role="group" aria-label="Filtrar usuários por restrição">
       {FILTROS.map(([valor, rotulo]) => <button key={rotulo} className={filtroRestricao === valor ? 'btn btn-primary' : 'btn btn-secondary'} type="button"
         aria-pressed={filtroRestricao === valor} disabled={ocupado} onClick={() => {
@@ -68,13 +68,13 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
           onFiltrarRestricao(valor);
         }}>{rotulo}</button>)}
     </div>}
-    <PesquisaPagina valor={busca} onAlterar={setBusca} rotulo="Buscar usuário" placeholder="Nome ou perfil" />
-    {!termo ? <p className="texto-suave">Digite um nome ou perfil para encontrar um usuário.</p> : null}
+    <PesquisaPagina valor={busca} onAlterar={setBusca} rotulo="Buscar usuário" placeholder="Nome ou gamertag" />
+    {!termo ? <p className="texto-suave">Digite um nome ou gamertag para encontrar um usuário.</p> : null}
     {podeAplicarRestricao ? <form className="formulario-publico moderacao-formulario" onSubmit={solicitar}>
       <h3>Restringir {selecionado.nome}</h3>
       {erro ? <p className="mensagem-erro" role="alert">{erro}</p> : null}
       <fieldset disabled={ocupado}>
-        <label>Restrição<select value={escopo} onChange={(evento) => setEscopo(evento.target.value)}>{Object.entries(ESCOPOS).filter(([valor]) => valor !== 'COMENTARIOS').map(([valor, texto]) => <option key={valor} value={valor}>{texto}</option>)}</select></label>
+        <label>Restrição<select value={escopo} onChange={(evento) => setEscopo(evento.target.value)}>{Object.entries(ESCOPOS).map(([valor, texto]) => <option key={valor} value={valor}>{texto}</option>)}</select></label>
         <label>Motivo<textarea className="input-field" required maxLength={1000} value={motivo} onChange={(evento) => setMotivo(evento.target.value)} /></label>
         <label className="checkbox"><input type="checkbox" checked={permanente} onChange={(evento) => setPermanente(evento.target.checked)} />Permanente, até revogação</label>
         {permanente ? null : <label>Término da restrição<input type="datetime-local" required value={expiraEm} onChange={(evento) => setExpiraEm(evento.target.value)} /></label>}
@@ -92,7 +92,7 @@ export default function ModeracaoUsuarios({ usuarios, processando, carregando = 
           {lista.length === 0 ? <p className="texto-suave">{vazio}</p> : null}
           {usuariosDaPagina.map((usuario) => <article key={usuario.id} className="moderacao-usuario">
             <div className="post-heading">
-              <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">{usuario.email}</p><div className="administracao-badges"><span>{usuario.root ? 'ROOT' : usuario.perfil}</span><span className={usuario.ativo ? 'status-ativo' : ''}>{usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</span></div></div>
+              <div><h3 className="topic-title">{usuario.nome}</h3><p className="texto-suave">Gamertag: <strong>{usuario.gamertag}</strong></p><div className="administracao-badges"><span>{usuario.root ? 'ROOT' : usuario.perfil}</span><span className={usuario.ativo ? 'status-ativo' : ''}>{usuario.ativo ? 'Conta ativa' : 'Conta inativa'}</span></div></div>
               <div className="acoes-topico">
                 {usuario.podeModerar && usuario.suspensoes.length === 0 ? <button className="btn btn-secondary btn-small" type="button" disabled={ocupado} onClick={() => { setSelecionado(usuario.id); setMotivo(''); setErro(''); }}>Aplicar restrição</button> : null}
                 {usuario.podeExcluir ? <button className="btn btn-danger btn-small" type="button" disabled={ocupado} onClick={() => excluir(usuario)}>Excluir conta</button> : null}

@@ -17,7 +17,7 @@ export default function Cabecalho() {
     ...(autenticado ? [{ label: 'Ranking', path: '/ranking' }] : []),
     ...(administrador ? [{ label: 'Administração', path: '/administracao' }] : []),
   ];
-  const nomes = { CONTA: 'Acesso à conta', FORUM: 'Acesso ao fórum', TOPICOS: 'Acesso a tópicos e comentários', COMENTARIOS: 'Acesso a tópicos e comentários' };
+  const nomes = { CONTA: 'Acesso à conta', FORUM: 'Acesso ao fórum' };
 
   useEffect(() => {
     let ativo = true;
