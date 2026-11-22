@@ -10,7 +10,6 @@ import FormularioTopico from './componentes/FormularioTopico';
 import ListaTopicos from './componentes/ListaTopicos';
 import Rodape from '../comuns/Rodape';
 import { perfilDoUsuario, useForum } from './hooks/useForum';
-import { contemTermoOfensivo, MENSAGEM_CONTEUDO_OFENSIVO } from '../../servicos/filtroConteudo';
 import { useAcaoUnica } from '../../contextos/useAcaoUnica';
 
 export default function PaginaForum() {
@@ -42,7 +41,6 @@ function ForumAutenticado() {
     if (processando) return;
     forum.limparMensagem(); setErroTela('');
     if (!titulo.trim() || !descricao.trim()) { setErroTela('Preencha o título e a descrição.'); return; }
-    if (contemTermoOfensivo(titulo, descricao)) { setErroTela(MENSAGEM_CONTEUDO_OFENSIVO); return; }
     const criado = await executar(() => forum.salvarTopico(titulo, descricao));
     if (criado) { setTitulo(''); setDescricao(''); setTela('lista'); }
   }
@@ -52,7 +50,6 @@ function ForumAutenticado() {
     if (processando) return;
     forum.limparMensagem(); setErroTela('');
     if (!titulo.trim() || !descricao.trim()) { setErroTela('Preencha o título e a descrição.'); return; }
-    if (contemTermoOfensivo(titulo, descricao)) { setErroTela(MENSAGEM_CONTEUDO_OFENSIVO); return; }
     const atualizado = await executar(() => forum.editarTopico(forum.topicoSelecionado.id, titulo, descricao));
     if (atualizado) {
       setTitulo(''); setDescricao(''); setTela('detalhe');
@@ -64,7 +61,6 @@ function ForumAutenticado() {
     if (processando) return;
     forum.limparMensagem(); setErroTela('');
     if (!texto.trim()) { setErroTela('Preencha o comentário.'); return; }
-    if (contemTermoOfensivo(texto)) { setErroTela(MENSAGEM_CONTEUDO_OFENSIVO); return; }
     const sucesso = await executar(() => (comentarioEditando
       ? forum.editarComentario(comentarioEditando, texto)
       : forum.salvarComentario(texto)));
