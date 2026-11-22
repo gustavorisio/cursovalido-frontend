@@ -192,3 +192,63 @@ test('alerta sobre o intervalo de comentários sem apagar a resposta', async () 
   assert.match(document.querySelector('[role="alert"]').textContent, /20 segundos/);
   assert.equal(document.querySelector('textarea').value, 'Resposta preservada');
 });
+
+test('aluno edita seu tópico mas não pode fechar ou arquivar', async () => {
+  prepararApi();
+  await renderizar(Forum, { sessao: { perfil: 'ALUNO', idUsuario: 5 } });
+  await act(async () => document.querySelector('.topic-list-item').click());
+  assert.ok(botao('Editar tópico'));
+  assert.equal(botao('Fechar tópico'), undefined);
+  assert.equal(botao('Arquivar tópico'), undefined);
+  await clicar('Editar tópico');
+  assert.ok(botao('Salvar alterações'));
+});
+
+test('respostas paginadas carregam somente a página escolhida', async () => {
+  const respostas = Array.from({ length: 21 }, (_, indice) => ({ id: indice + 1, idAutor: 8, nomeAutor: 'Autor', conteudo: `Resposta ${indice + 1}`, ativo: true }));
+  const chamadas = simularApi(({ rota, busca }) => {
+    if (rota === '/autenticacao/restricoes' || rota === '/forum/users') return Response.json([]);
+    if (rota === '/forum/topicos') return Response.json([topico]);
+    if (rota === '/forum/topicos/12/comentarios') {
+      const pagina = Number(busca.get('page'));
+      assert.equal(busca.get('size'), '20');
+      return Response.json({ itens: respostas.slice(pagina * 20, (pagina + 1) * 20), pagina, totalPaginas: 2, totalElementos: 21 });
+    }
+    throw new Error('Rota inesperada: ' + rota);
+  });
+  await renderizar(Forum, { sessao });
+  await act(async () => document.querySelector('.topic-list-item').click());
+  assert.equal(document.querySelectorAll('.comment-card').length, 20);
+  assert.match(document.querySelector('.titulo-respostas').textContent, /21/);
+  const navegacao = () => document.querySelector('[aria-label="Páginas de respostas"]');
+  await clicar('Próxima', navegacao());
+  assert.equal(document.querySelectorAll('.comment-card').length, 1);
+  assert.match(document.querySelector('.comment-card').textContent, /Resposta 21/);
+  assert.match(navegacao().textContent, /Página 2 de 2/);
+  await clicar('Anterior', navegacao());
+  assert.equal(document.querySelectorAll('.comment-card').length, 20);
+  assert.deepEqual(chamadas.filter(item => item.rota.endsWith('/comentarios')).map(item => item.busca.get('page')), ['0', '1', '0']);
+});
+
+test('nova resposta abre a última página sem carregar todas as anteriores', async () => {
+  let publicou = false;
+  simularApi(({ rota, busca, metodo }) => {
+    if (rota === '/autenticacao/restricoes' || rota === '/forum/users') return Response.json([]);
+    if (rota === '/forum/topicos') return Response.json([topico]);
+    if (rota === '/forum/topicos/12/comentarios') {
+      if (metodo === 'POST') { publicou = true; return Response.json({ id: 21 }); }
+      const pagina = Number(busca.get('page'));
+      const itens = pagina === 1 ? [{ id: 21, idAutor: 5, conteudo: 'Resposta nova' }]
+        : Array.from({ length: 20 }, (_, indice) => ({ id: indice + 1, idAutor: 8, conteudo: `Antiga ${indice}` }));
+      return Response.json({ itens, pagina, totalPaginas: publicou ? 2 : 1, totalElementos: publicou ? 21 : 20 });
+    }
+    throw new Error('Rota inesperada: ' + rota);
+  });
+  await renderizar(Forum, { sessao });
+  await act(async () => document.querySelector('.topic-list-item').click());
+  await preencher('textarea', 'Resposta nova');
+  await clicar('Responder');
+  assert.equal(document.querySelectorAll('.comment-card').length, 1);
+  assert.match(document.querySelector('.comment-card').textContent, /Resposta nova/);
+  assert.match(document.querySelector('[aria-label="Páginas de respostas"]').textContent, /Página 2 de 2/);
+});

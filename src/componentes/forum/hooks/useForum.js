@@ -41,6 +41,11 @@ export function useForum() {
   const [totalPaginas, setTotalPaginas] = useState(1);
   const [topicoSelecionado, setTopicoSelecionado] = useState(null);
   const [comentarios, setComentarios] = useState([]);
+  const [paginaComentarios, setPaginaComentarios] = useState(0);
+  const [totalPaginasComentarios, setTotalPaginasComentarios] = useState(0);
+  const [totalComentarios, setTotalComentarios] = useState(0);
+  const [carregandoComentarios, setCarregandoComentarios] = useState(false);
+  const consultaComentarios = useRef(0);
   const [usuarios, setUsuarios] = useState([]);
   const [mensagemErro, setMensagemErro] = useState('');
   const [mensagemSucesso, setMensagemSucesso] = useState('');
@@ -83,16 +88,35 @@ export function useForum() {
     setMensagemSucesso('');
   }
 
-  async function carregarComentarios(idTopico) {
+  async function carregarComentarios(idTopico, numeroPagina = 0) {
     if (comentariosBloqueados) return;
-    try { setComentarios(await buscarComentarios(idTopico) || []); } catch (erro) { tratarErro(erro); }
+    const consulta = ++consultaComentarios.current;
+    setCarregandoComentarios(true);
+    try {
+      const resposta = await buscarComentarios(idTopico, numeroPagina);
+      if (consulta !== consultaComentarios.current) return;
+      const itens = Array.isArray(resposta) ? resposta : resposta?.itens ?? [];
+      setComentarios(itens);
+      setPaginaComentarios(resposta?.pagina ?? numeroPagina);
+      setTotalPaginasComentarios(resposta?.totalPaginas ?? 1);
+      setTotalComentarios(resposta?.totalElementos ?? itens.length);
+    } catch (erro) {
+      if (consulta === consultaComentarios.current) tratarErro(erro);
+    } finally {
+      if (consulta === consultaComentarios.current) setCarregandoComentarios(false);
+    }
   }
 
   async function selecionarTopico(topico) {
     if (topicosBloqueados) return;
     setTopicoSelecionado(topico);
-    setComentarios([]);
+    setComentarios([]); setPaginaComentarios(0); setTotalPaginasComentarios(0); setTotalComentarios(0);
     await carregarComentarios(topico.id);
+  }
+
+  async function mudarPaginaComentarios(numeroPagina) {
+    if (!topicoSelecionado || carregandoComentarios || numeroPagina < 0 || numeroPagina >= totalPaginasComentarios) return;
+    await carregarComentarios(topicoSelecionado.id, numeroPagina);
   }
 
   async function salvarTopico(titulo, descricao) {
@@ -106,7 +130,7 @@ export function useForum() {
     limparMensagem();
     if (!autenticado || comentariosBloqueados) { setMensagemErro(!autenticado ? 'Entre na sua conta para comentar.' : 'Sua conta está impedida de comentar. Consulte o aviso de restrição ou fale com o Suporte.'); return false; }
     if (!topicoSelecionado || topicoSelecionado.fechado) { setMensagemErro('Este tópico não está disponível para novos comentários. Escolha outro tópico.'); return false; }
-    try { await criarComentario(topicoSelecionado.id, texto); setMensagemSucesso('Comentário publicado. Aguarde 20 segundos para enviar outro comentário.'); await carregarComentarios(topicoSelecionado.id); return true; }
+    try { await criarComentario(topicoSelecionado.id, texto); setMensagemSucesso('Comentário publicado. Aguarde 20 segundos para enviar outro comentário.'); await carregarComentarios(topicoSelecionado.id, Math.floor(totalComentarios / 20)); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
@@ -122,7 +146,7 @@ export function useForum() {
     return ehAutor(comentario);
   }
   function ehAdministrador() { return autenticado && ['ADMINISTRADOR', 'ADMIN', 'ROLE_ADMIN'].includes(sessao?.perfil); }
-  function podeGerenciarTopico(topico) { return !topicosBloqueados && (ehAdministrador() || ehAutor(topico)); }
+  function podeGerenciarTopico(topico) { return !topicosBloqueados && (ehAdministrador() || (sessao?.perfil === 'PROFESSOR' && ehAutor(topico))); }
   function podeExcluirComentario(comentario) { return !comentariosBloqueados && (ehAdministrador() || ehAutor(comentario)); }
 
   async function editarTopico(idTopico, titulo, descricao) {
@@ -145,7 +169,7 @@ export function useForum() {
   async function editarComentario(comentario, conteudo) {
     limparMensagem();
     if (!podeEditarComentario(comentario)) { setMensagemErro('Você só pode editar os seus comentários quando sua conta tem permissão para participar.'); return false; }
-    try { await atualizarComentario(comentario.id, { conteudo }); setMensagemSucesso('Comentário atualizado.'); await carregarComentarios(topicoSelecionado.id); return true; }
+    try { await atualizarComentario(comentario.id, { conteudo }); setMensagemSucesso('Comentário atualizado.'); await carregarComentarios(topicoSelecionado.id, paginaComentarios); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
@@ -166,7 +190,7 @@ export function useForum() {
   async function excluirComentarioSelecionado(comentario) {
     limparMensagem();
     if (!podeExcluirComentario(comentario)) { setMensagemErro('Você não tem permissão para excluir este comentário.'); return false; }
-    try { await apagarComentario(comentario.id); setMensagemSucesso('Comentário excluído.'); await carregarComentarios(topicoSelecionado.id); return true; }
+    try { await apagarComentario(comentario.id); setMensagemSucesso('Comentário excluído.'); await carregarComentarios(topicoSelecionado.id, paginaComentarios); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
@@ -183,6 +207,7 @@ export function useForum() {
 
   return {
     meusTopicos, setMeusTopicos, topicosBloqueados, comentariosBloqueados,
+    paginaComentarios, totalPaginasComentarios, totalComentarios, carregandoComentarios, mudarPaginaComentarios,
     autenticado, sessao, topicos, usuarios, pagina, totalPaginas, carregando, topicoSelecionado, comentarios, mensagemErro, mensagemSucesso,
     limparMensagem, carregarTopicos, selecionarTopico, salvarTopico, salvarComentario,
     editarTopico, editarComentario, fecharTopicoSelecionado, arquivarTopicoSelecionado,

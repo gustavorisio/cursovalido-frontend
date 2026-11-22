@@ -1,3 +1,4 @@
+import ControlesPaginacao from '../../comuns/ControlesPaginacao';
 import { censurarConteudo } from '../../../servicos/filtroConteudo';
 import PerfilAutor from './PerfilAutor';
 import { Link } from 'react-router-dom';
@@ -43,6 +44,11 @@ export default function DetalheTopico({
   , desabilitado = false
   , idUsuario = null
   , onDenunciar
+  , paginaComentarios = 0
+  , totalPaginasComentarios = 1
+  , totalComentarios = comentarios.length
+  , carregandoComentarios = false
+  , onMudarPaginaComentarios
 }) {
   const [confirmacao, setConfirmacao] = useState('');
   const [denunciaAberta, setDenunciaAberta] = useState(false);
@@ -81,19 +87,19 @@ export default function DetalheTopico({
               <span className="meta-value">{formatarData(topico.criadoEm)}</span>
             </div>
           </div>
-          {podeGerenciarTopico(topico) && (
+          {(podeGerenciarTopico(topico) || podeEditarTopico(topico)) && (
             <div className="acoes-topico">
               {podeEditarTopico(topico) && (
                 <button className="btn btn-secondary btn-small" type="button" onClick={() => onEditarTopico(topico)}>
                   Editar tópico
                 </button>
               )}
-              {!topico.fechado && (
+              {podeGerenciarTopico(topico) && !topico.fechado && (
                 <button className="btn btn-secondary btn-small" type="button" onClick={() => setConfirmacao('fechar')}>
                   Fechar tópico
                 </button>
               )}
-              {!topico.arquivado && (
+              {podeGerenciarTopico(topico) && !topico.arquivado && (
                 <button className="btn btn-secondary btn-small" type="button" onClick={() => setConfirmacao('arquivar')}>
                   Arquivar tópico
                 </button>
@@ -107,7 +113,7 @@ export default function DetalheTopico({
         {topico.fechado && <p className="aviso-fechado">Este tópico está fechado para novas respostas.</p>}
       </div>
 
-      <h4 className="titulo-respostas">Respostas ({comentarios.length})</h4>
+      <h4 className="titulo-respostas">Respostas ({totalComentarios})</h4>
       <ListaComentarios
         comentarios={comentarios}
         podeExcluir={podeExcluirComentario}
@@ -119,11 +125,17 @@ export default function DetalheTopico({
         onMudarComentario={onMudarComentario}
         onSalvarEdicao={onEnviarComentario}
         onCancelarEdicao={onCancelarEdicaoComentario}
-        desabilitado={desabilitado}
+        desabilitado={desabilitado || carregandoComentarios}
         autenticado={autenticado}
         idUsuario={idUsuario}
         onDenunciar={onDenunciar}
       />
+
+      <ControlesPaginacao pagina={paginaComentarios} total={totalPaginasComentarios} rotulo="Páginas de respostas"
+        desabilitada={desabilitado || carregandoComentarios}
+        onAnterior={() => onMudarPaginaComentarios(paginaComentarios - 1)}
+        onProxima={() => onMudarPaginaComentarios(paginaComentarios + 1)} />
+      {carregandoComentarios && <p className="texto-suave" role="status">Carregando respostas...</p>}
 
       {!comentarioEditando && (!autenticado ? <p className="card">Faça login para responder e participar. <Link to="/login">Entrar</Link></p> : comentariosBloqueados ? <p className="mensagem-erro" role="status">{mensagemBloqueio || 'Você está temporária ou permanentemente impedido de enviar comentários. Consulte a restrição no cabeçalho.'}</p> : !topico.fechado ? (
         <FormularioComentario
