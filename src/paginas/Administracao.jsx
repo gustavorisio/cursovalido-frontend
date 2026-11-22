@@ -15,6 +15,7 @@ import { buscarPermissoesAdministrativas, buscarUsuariosAdministrativos } from '
 import { atualizarVideoInicio, buscarVideoInicio } from '../servicos/servicoVideoInicio';
 import { useAutenticacao } from '../contextos/useAutenticacao';
 import { validarDocumento } from '../servicos/validacoesFormulario';
+import { textoSimples } from '../componentes/comuns/ConteudoLegal';
 
 
 export default function Administracao({ tela = 'geral' }) {
@@ -50,14 +51,14 @@ export default function Administracao({ tela = 'geral' }) {
           const atual = politicas[0] ?? null;
           setPolitica(atual);
           setNomePolitica(atual?.nome ?? '');
-          setConteudoPolitica(atual?.conteudo ?? '');
+          setConteudoPolitica(textoSimples(atual?.conteudo ?? ''));
         }));
       }
       if (permissoes.principal && tela === 'privacidade') {
         tarefas.push(buscarPrivacidadeAtiva().then((atual) => {
           setPolitica(atual);
           setNomePolitica(atual?.nome ?? '');
-          setConteudoPolitica(atual?.conteudo ?? '');
+          setConteudoPolitica(textoSimples(atual?.conteudo ?? ''));
         }));
       }
       if (tela === 'convites') {
