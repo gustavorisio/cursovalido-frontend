@@ -57,6 +57,10 @@ function ConteudoNotificacoes({ administrador }) {
   async function publicar(evento) {
     evento.preventDefault();
     if (envioEmCurso.current) return;
+    if (!editando && (dados?.totalElementos ?? 0) >= 30) {
+      setErro('O limite de 30 comunicados foi atingido. Exclua um comunicado antes de publicar outro.');
+      return;
+    }
     envioEmCurso.current = true;
     setPublicando(true); setErro(''); setMensagem('');
     try {
@@ -64,7 +68,7 @@ function ConteudoNotificacoes({ administrador }) {
       else await publicarComunicado({ titulo, conteudo });
       if (!montado.current) return;
       setTitulo(''); setConteudo(''); setEditando(null);
-      setMensagem(editando ? 'Comunicado atualizado.' : 'Comunicado publicado para todos os usuários.');
+      setMensagem(editando ? 'Comunicado atualizado.' : 'Comunicado publicado para todos os usuários. Aguarde 30 segundos para criar outro.');
       carregar(editando ? pagina : 0);
     } catch (falha) { if (montado.current) setErro(falha.message); }
     finally { envioEmCurso.current = false; if (montado.current) setPublicando(false); }
@@ -122,6 +126,7 @@ function ConteudoNotificacoes({ administrador }) {
     {mensagem && <p className="mensagem-sucesso" role="status">{mensagem}</p>}
     {administrador && <section className="card" aria-labelledby="novo-comunicado-titulo">
       <h2 id="novo-comunicado-titulo" className="notificacoes-titulo">{editando ? 'Editar comunicado' : 'Novo comunicado'}</h2>
+      <p className="texto-suave">Máximo de 30 comunicados no total. Cada administrador pode criar um comunicado a cada 30 segundos.</p>
       <form className="notificacoes-formulario" onSubmit={publicar}>
         <div><label htmlFor="comunicado-titulo">Título</label><input ref={campoTitulo} className="input-field" id="comunicado-titulo" required maxLength={255} value={titulo} onChange={evento => setTitulo(evento.target.value)} disabled={ocupado} /></div>
         <div><label htmlFor="comunicado-conteudo">Conteúdo</label><textarea className="input-field" id="comunicado-conteudo" rows={7} required maxLength={LIMITE_CONTEUDO_COMUNICADO} value={conteudo} onChange={evento => setConteudo(evento.target.value)} disabled={ocupado} aria-describedby="comunicado-limite" /><p id="comunicado-limite" className="texto-suave">{conteudo.length.toLocaleString('pt-BR')} / 5.000 caracteres</p></div>
