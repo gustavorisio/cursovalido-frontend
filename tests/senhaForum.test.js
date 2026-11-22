@@ -119,11 +119,12 @@ test('comentário excluído mantém o cartão, oculta conteúdo e ações', asyn
   assert.equal(document.querySelectorAll('button').length, 0);
 });
 
-test('dados da conta exibem data e hora do último aceite e a versão aceita', async () => {
-  const dados = { id: 7, nomeCompleto: 'Aluno', email: 'aluno@example.com', dataHoraAceite: '2026-11-14T15:42:30', versaoTermos: '2.1' };
+test('dados da conta exibem gamertag, data e hora do último aceite e a versão aceita', async () => {
+  const dados = { id: 7, nomeCompleto: 'Aluno', email: 'aluno@example.com', gamertag: 'CV-ABCD2345EFGH', dataHoraAceite: '2026-11-14T15:42:30', versaoTermos: '2.1' };
   globalThis.fetch = async () => Response.json(dados);
   await act(async () => raiz.render(h(contexto.Provider, { value: { sessao: { idUsuario: 7 } } }, h(DadosUsuario))));
   const campos = Object.fromEntries([...document.querySelectorAll('dl > div')].map(div => [div.querySelector('dt').textContent, div.querySelector('dd').textContent]));
+  assert.equal(campos.Gamertag, 'CV-ABCD2345EFGH');
   assert.match(campos['Último aceite dos termos'], /14\/11\/2026/);
   assert.match(campos['Último aceite dos termos'], /15:42:30/);
   assert.equal(campos['Versão dos termos aceitos'], '2.1');
@@ -131,9 +132,10 @@ test('dados da conta exibem data e hora do último aceite e a versão aceita', a
 
 for (const perfil of ['ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
   test(`dados da conta de ${perfil} exibem matrícula somente para aluno`, async () => {
-    globalThis.fetch = async () => Response.json({ id: 7, nomeCompleto: 'Usuário', email: 'usuario@example.com', perfil, matricula: '000123' });
+    globalThis.fetch = async () => Response.json({ id: 7, nomeCompleto: 'Usuário', email: 'usuario@example.com', gamertag: 'CV-ABCD2345EFGH', perfil, matricula: '000123' });
     await act(async () => raiz.render(h(contexto.Provider, { value: { sessao: { idUsuario: 7, perfil } } }, h(DadosUsuario))));
     const campos = Object.fromEntries([...document.querySelectorAll('dl > div')].map(div => [div.querySelector('dt').textContent, div.querySelector('dd').textContent]));
+    assert.equal(campos.Gamertag, 'CV-ABCD2345EFGH');
     assert.equal(campos['Matrícula'], perfil === 'ALUNO' ? '000123' : undefined);
   });
 }

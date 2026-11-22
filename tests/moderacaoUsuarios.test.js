@@ -10,11 +10,11 @@ const { renderizar } = prepararTela(async (carregar) => {
 });
 
 const aluno = {
-  id: 8, nome: 'Ana Silva', email: 'a***@example.com', perfil: 'ALUNO',
+  id: 8, nome: 'Ana Silva', gamertag: 'CV-ABCD2345EFGH', email: 'a@example.com', perfil: 'ALUNO',
   ativo: true, podeModerar: true, podeExcluir: true, suspensoes: [],
 };
 const professora = {
-  id: 9, nome: 'Beatriz Souza', email: 'beatriz@example.com', perfil: 'PROFESSOR',
+  id: 9, nome: 'Beatriz Souza', gamertag: 'CV-JKLM6789NPQR', email: 'beatriz@example.com', perfil: 'PROFESSOR',
   ativo: true, suspensoes: [],
 };
 
@@ -28,6 +28,14 @@ test('filtra usuários pelo nome e informa quando não encontra resultados', asy
 
   await preencher('input[type="search"]', 'Carlos');
   assert.match(document.body.textContent, /Nenhum usuário encontrado/);
+});
+
+test('encontra por gamertag e nao expoe e-mail na lista', async () => {
+  await renderizar(ModeracaoUsuarios, { props: { usuarios: [aluno, professora] } });
+  assert.doesNotMatch(document.querySelector('.moderacao-usuario').textContent, /@example\.com/);
+  await preencher('input[type="search"]', 'CV-ABCD2345EFGH');
+  assert.equal(document.querySelectorAll('.moderacao-usuario').length, 1);
+  assert.match(document.querySelector('.moderacao-usuario').textContent, /Ana Silva/);
 });
 
 test('valida o motivo e a data antes de aplicar uma restrição permanente', async () => {
@@ -47,11 +55,11 @@ test('valida o motivo e a data antes de aplicar uma restrição permanente', asy
   assert.equal(onExecutar.mock.calls.length, 0);
 
   await act(async () => document.querySelector('input[type="checkbox"]').click());
-  await preencher('select', 'TOPICOS');
+  await preencher('select', 'FORUM');
   await enviar('.moderacao-formulario');
   assert.match(onExecutar.mock.calls[0][1], /Ana Silva/);
   assert.equal(chamadas[0].rota, '/administracao/usuarios/8/suspensoes');
-  assert.deepEqual(chamadas[0].dados, { escopo: 'TOPICOS', motivo: 'Publicações repetidas', expiraEm: null });
+  assert.deepEqual(chamadas[0].dados, { escopo: 'FORUM', motivo: 'Publicações repetidas', expiraEm: null });
   assert.equal(document.querySelector('.moderacao-formulario'), null);
 });
 
