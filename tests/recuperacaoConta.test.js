@@ -57,7 +57,7 @@ test('redefinição valida as senhas e permite corrigir uma falha da API', async
   await renderizar(AlterarSenha, { url: '/redefinir?token=abc123' });
   await preencher('input[type="password"]:first-of-type', 'fraca');
   await enviar();
-  assert.match(document.querySelector('[role="alert"]').textContent, /pelo menos uma letra maiúscula/);
+  assert.match(document.querySelector('[role="alert"]').textContent, /pelo menos 8 caracteres/);
 
   await preencher('.formulario-publico > :nth-child(1) input', 'NovaSenha!');
   await preencher('.formulario-publico > :nth-child(2) input', 'OutraSenha!');

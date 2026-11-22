@@ -4,22 +4,23 @@ import { MENSAGEM_SENHA, REGRAS_SENHA, mensagemSenha, problemasSenha, senhaValid
 import { LIMITES, validarCadastro, validarCodigo, validarEmail, validarLogin, validarNome, validarNovaSenha } from '../src/servicos/validacoesAutenticacao.js';
 
 const cadastroValido = {
-  nomeCompleto: 'Ana Souza', email: 'ana@example.com', senha: 'Senha@1', confirmacaoSenha: 'Senha@1',
+  nomeCompleto: 'Ana Souza', email: 'ana@example.com', senha: 'Senha@12', confirmacaoSenha: 'Senha@12',
   declarouMaiorIdade: true, versaoTermos: '1.0', aceitouTermosLgpd: true,
 };
 
 test('senha sem caractere especial informa exatamente a regra que falta', () => {
   assert.equal(mensagemSenha('SenhaForte1'), 'A senha deve ter pelo menos um caractere especial, como ! ou @.');
   assert.deepEqual(problemasSenha('senha'), [
+    'A senha deve ter pelo menos 8 caracteres.',
     'A senha deve ter pelo menos uma letra maiúscula.',
     'A senha deve ter pelo menos um caractere especial, como ! ou @.',
   ]);
-  assert.equal(mensagemSenha('SENHA!'), 'A senha deve ter pelo menos uma letra minúscula.');
-  assert.equal(mensagemSenha('Aa!' + 'a'.repeat(70)), 'A senha deve ter no máximo 72 caracteres. Use uma senha mais curta.');
-  assert.equal(mensagemSenha('Senha@1'), '');
+  assert.equal(mensagemSenha('SENHA123!'), 'A senha deve ter pelo menos uma letra minúscula.');
+  assert.equal(mensagemSenha('Aa!' + 'a'.repeat(70)), 'A senha deve ter no máximo 72 bytes em UTF-8. Use uma senha mais curta.');
+  assert.equal(mensagemSenha('Senha@12'), '');
   assert.equal(senhaValida(), false);
-  assert.equal(REGRAS_SENHA.length, 4);
-  assert.match(MENSAGEM_SENHA, /72 caracteres/);
+  assert.equal(REGRAS_SENHA.length, 5);
+  assert.match(MENSAGEM_SENHA, /72 bytes em UTF-8/);
 });
 
 test('limites seguem os do servidor', () => {
@@ -36,7 +37,7 @@ test('limites seguem os do servidor', () => {
 test('login e código de verificação são conferidos antes do envio', () => {
   assert.equal(validarLogin('', 'x'), 'Informe seu e-mail.');
   assert.equal(validarLogin('ana@example.com', ''), 'Informe sua senha.');
-  assert.equal(validarLogin('ana@example.com', 'á'.repeat(37)), 'A senha deve ter no máximo 72 caracteres.');
+  assert.equal(validarLogin('ana@example.com', 'á'.repeat(37)), 'A senha deve ter no máximo 72 bytes em UTF-8.');
   assert.equal(validarLogin('ana@example.com', 'qualquer'), '');
   assert.equal(validarCodigo(''), 'Informe o código enviado ao seu e-mail.');
   assert.equal(validarCodigo('12a456'), 'O código deve ter exatamente 6 números.');
@@ -47,10 +48,10 @@ test('login e código de verificação são conferidos antes do envio', () => {
 test('nova senha verifica política antes da confirmação', () => {
   assert.equal(validarNovaSenha('', ''), 'Informe uma senha.');
   assert.equal(validarNovaSenha('', '', { rotulo: 'a nova senha' }), 'Informe a nova senha.');
-  assert.equal(validarNovaSenha('Senha1', 'Senha1'), 'A senha deve ter pelo menos um caractere especial, como ! ou @.');
-  assert.equal(validarNovaSenha('Senha@1', ''), 'Confirme a senha.');
-  assert.equal(validarNovaSenha('Senha@1', 'Senha@2'), 'A confirmação deve ser igual à senha.');
-  assert.equal(validarNovaSenha('Senha@1', 'Senha@1'), '');
+  assert.equal(validarNovaSenha('Senha1', 'Senha1'), 'A senha deve ter pelo menos 8 caracteres.');
+  assert.equal(validarNovaSenha('Senha@12', ''), 'Confirme a senha.');
+  assert.equal(validarNovaSenha('Senha@12', 'Senha@13'), 'A confirmação deve ser igual à senha.');
+  assert.equal(validarNovaSenha('Senha@12', 'Senha@12'), '');
 });
 
 test('cadastro aponta o primeiro problema na ordem dos campos', () => {
@@ -58,7 +59,7 @@ test('cadastro aponta o primeiro problema na ordem dos campos', () => {
   const casos = [
     [{ nomeCompleto: '' }, 'Informe seu nome completo.'],
     [{ email: 'invalido' }, /e-mail válido/],
-    [{ senha: 'Senha1', confirmacaoSenha: 'Senha1' }, /caractere especial/],
+    [{ senha: 'Senha1', confirmacaoSenha: 'Senha1' }, /pelo menos 8 caracteres/],
     [{ confirmacaoSenha: 'Outra@1' }, 'A confirmação deve ser igual à senha.'],
     [{ declarouMaiorIdade: false }, 'Confirme que você tem 18 anos ou mais.'],
     [{ versaoTermos: '' }, /documentos ainda não foi carregada/],

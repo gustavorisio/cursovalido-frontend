@@ -88,9 +88,8 @@ test('aceite abre ambos os documentos e permite aceitar sem rolagem', async () =
   for (const titulo of ['Termos de Aceite', 'Política de Privacidade']) {
     const texto = document.querySelector('[role=region]');
     assert.equal(texto.getAttribute('aria-label'), titulo);
-    assert.ok(texto.querySelector('h2'));
-    assert.ok(texto.querySelector('p strong'));
-    assert.doesNotMatch(texto.textContent, /<\/?(?:h2|p|strong)>/);
+    assert.match(texto.textContent, /Texto da política de privacidade|Texto dos termos de aceite/);
+    assert.equal(texto.querySelector('h2, p, strong'), null);
     assert.equal(document.activeElement, texto);
     assert.ok(document.querySelector('dialog.leitura-documento[open]'));
     const aceitar = document.querySelector('.leitura-documento .btn-primary');
@@ -127,7 +126,7 @@ test('termos de outra versão não podem ser aceitos', async () => {
   assert.equal(document.querySelector('.leitura-documento .btn-primary').disabled, true);
 });
 
-test('HTML legal preserva a formatação sem executar código nem aplicar estilos publicados', async () => {
+test('conteúdo legal converte HTML para texto puro sem executar código', async () => {
   globalThis.fetch = async () => Response.json([{
     versao: '1.0',
     conteudo: '<!doctype html><html><head><title>Metadados</title><style>body { display: none }</style></head><body><h1 onclick="alert(1)">Termos</h1><p style="display:none">Leia &amp; aceite.</p><ul><li>Primeira regra</li></ul><script>alert("código oculto")</script><iframe src="https://example.com"></iframe><a href="javascript:alert(1)">Link inválido</a><a href="https://example.com" target="_blank">Link válido</a></body></html>'
@@ -135,14 +134,10 @@ test('HTML legal preserva a formatação sem executar código nem aplicar estilo
   await act(() => raiz.render(createElement(AceiteDocumentos, { versaoTermos: '1.0', aceito: false, onAlterar() { } })));
   await act(async () => document.querySelector('input').click());
   const texto = document.querySelector('[role=region]');
-  assert.equal(texto.querySelector('h1').textContent, 'Termos');
-  assert.equal(texto.querySelector('p').textContent, 'Leia & aceite.');
-  assert.equal(texto.querySelector('ul li').textContent, 'Primeira regra');
-  assert.equal(texto.querySelector('script, style, iframe, [onclick], [style], [target]'), null);
+  assert.match(texto.textContent, /Termos\s+Leia & aceite\.\s+Primeira regra/);
+  assert.equal(texto.querySelector('h1, p, ul, li, script, style, iframe, a'), null);
   assert.doesNotMatch(texto.textContent, /Metadados|código oculto|display: none/);
-  const links = texto.querySelectorAll('a');
-  assert.equal(links[0].hasAttribute('href'), false);
-  assert.equal(links[1].getAttribute('href'), 'https://example.com');
+  assert.doesNotMatch(texto.innerHTML, /href=|onclick=|style=/);
   assert.equal(document.querySelector('.leitura-documento .btn-primary').disabled, false);
 });
 

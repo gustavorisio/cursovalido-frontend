@@ -60,11 +60,10 @@ async function preencher(id, valor) {
 for (const perfil of [null, 'ALUNO', 'PROFESSOR', 'ADMINISTRADOR']) {
   test(`sino de notificações aparece para contas autenticadas: ${perfil ?? 'visitante'}`, async () => {
     await renderizar(perfil, true);
-    assert.equal(Boolean(document.querySelector('.notificacoes-sino')), Boolean(perfil));
+    assert.equal(Boolean(document.querySelector('a[href="/notificacoes"]')), Boolean(perfil));
     assert.equal(chamadas.some(item => item.rota.endsWith('/nao-lidas')), Boolean(perfil));
     if (perfil) {
-      assert.match(document.querySelector('.notificacoes-sino').getAttribute('aria-label'), /1 não lida/);
-      assert.equal(document.querySelector('.notificacoes-sino').getAttribute('href'), '/notificacoes');
+      assert.match(document.querySelector('a[href="/notificacoes"]').getAttribute('aria-label'), /1 não lida/);
     }
   });
 }
