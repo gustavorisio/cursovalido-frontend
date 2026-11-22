@@ -19,7 +19,7 @@ function Questionario({ idCurso, idModulo }) {
   const carga = useCarregamento(carregar);
   return <LayoutAulas>
     <Link className="btn btn-link" to={`/aluno/cursos/${idCurso}`}>Voltar ao curso</Link>
-    <CabecalhoAulas etiqueta={idModulo ? 'Confira seu entendimento' : 'Avaliação do curso'} titulo={carga.dados?.titulo ?? (idModulo ? 'Questionário do módulo' : 'Avaliação do curso')} descricao="Responda às perguntas e confira sua pontuação." />
+    <CabecalhoAulas etiqueta={idModulo ? 'Confira seu entendimento' : 'Avaliação do curso'} titulo={carga.dados?.titulo ?? (idModulo ? 'Questionário do módulo' : 'Avaliação do curso')} descricao="Responda às perguntas e tente novamente até acertar todas. A porcentagem de acertos será exibida a cada tentativa." />
     <EstadoCarregamento carga={carga} />
     {!carga.carregando && !carga.erro && (carga.dados ? <ResponderQuestionario dados={carga.dados} idCurso={idCurso} idModulo={idModulo} onRecarregar={carga.tentarNovamente} /> : <p className="card empty-list">Esta avaliação ainda não está disponível. Continue explorando as aulas do curso.</p>)}
   </LayoutAulas>;
@@ -43,15 +43,27 @@ function ResponderQuestionario({ dados, idCurso, idModulo, onRecarregar }) {
     finally { acaoEmAndamento.current = false; setProcessando(false); }
   }
 
-  if (resultado) return <section className="card avaliacao-resultado" aria-labelledby="resultado-titulo">
+  if (resultado?.percentual === 100) return <section className="card avaliacao-resultado" aria-labelledby="resultado-titulo">
     <span className="aulas-etiqueta">Resultado da avaliação</span><h2 id="resultado-titulo">{resultado.acertos} de {resultado.total} respostas corretas</h2>
     <p className="avaliacao-percentual">{resultado.percentual}%</p>
     <h3>Entenda suas respostas</h3>
-    <ol className="avaliacao-correcoes">{resultado.correcoes.map((item) => <li key={item.pergunta}><strong>{dados.perguntas[item.pergunta].enunciado}</strong><span className={item.acertou ? 'avaliacao-acerto' : 'avaliacao-revisar'}>{item.acertou ? 'Resposta correta' : 'Resposta incorreta'}</span><p>Resposta: {dados.perguntas[item.pergunta].alternativas[item.alternativaCorreta]}</p><p className="texto-suave">{item.explicacao}</p></li>)}</ol>
+    <ol className="avaliacao-correcoes">{resultado.correcoes.map((item) => <li key={item.pergunta}><strong>{dados.perguntas[item.pergunta].enunciado}</strong><span className={item.acertou ? 'avaliacao-acerto' : 'avaliacao-revisar'}>{item.acertou ? 'Resposta correta' : 'Resposta incorreta'}</span><p>Resposta: {dados.perguntas[item.pergunta].alternativas[item.alternativaCorreta]}</p></li>)}</ol>
     <div className="acoes-topico"><Link className="btn btn-primary" to={`/aluno/cursos/${idCurso}`}>Ver meu plano de estudos</Link><button className="btn btn-secondary" type="button" onClick={() => { setResultado(null); setRespostas(dados.perguntas.map(() => null)); }}>Refazer avaliação</button></div>
   </section>;
 
   return <form className="card avaliacao-formulario" onSubmit={enviar}>
+    {resultado && <section className="avaliacao-tentativa" aria-label="Revisão da tentativa">
+      <p className="avaliacao-percentual" role="status">{resultado.percentual}%</p>
+      <p className="mensagem-erro" role="alert">Você ainda não acertou todas as perguntas. Leia as explicações e tente novamente.</p>
+      <ol className="avaliacao-correcoes">{resultado.correcoes.filter((item) => !item.acertou).map((item) => <li key={item.pergunta}>
+        <strong>{dados.perguntas[item.pergunta].enunciado}</strong>
+        <p>Explicação da resposta incorreta</p><p className="texto-suave">{item.explicacao}</p>
+      </li>)}</ol>
+      <button className="btn btn-secondary" type="button" disabled={processando} onClick={() => {
+        setRespostas((anteriores) => anteriores.map((resposta, indice) => resultado.correcoes.find((item) => item.pergunta === indice)?.acertou ? resposta : null));
+        setResultado(null);
+      }}>Refazer avaliação</button>
+    </section>}
     {erro && <div className="mensagem-erro" role="alert">{erro} <button className="btn btn-link" type="button" onClick={onRecarregar}>Recarregar avaliação</button></div>}
     <fieldset disabled={processando}><legend>{dados.perguntas.length} perguntas · escolha uma resposta em cada uma</legend>
       {dados.perguntas.map((pergunta, indice) => <fieldset className="avaliacao-pergunta" key={indice}><legend>{indice + 1}. {pergunta.enunciado}</legend>{pergunta.alternativas.map((texto, opcao) => <label className="avaliacao-opcao" key={opcao}><input type="radio" name={`pergunta-${indice}`} value={opcao} checked={respostas[indice] === opcao} onChange={() => setRespostas((anteriores) => anteriores.map((r, i) => i === indice ? opcao : r))} required /><span>{texto}</span></label>)}</fieldset>)}

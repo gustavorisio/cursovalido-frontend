@@ -239,3 +239,32 @@ test('aluno não recebe ações de edição ou exclusão', async () => {
   assert.equal(botao('Editar'), undefined);
   assert.equal(botao('Excluir'), undefined);
 });
+
+test('limite de 30 comunicados impede nova publicação e mantém edição disponível', async () => {
+  const consultar = globalThis.fetch;
+  globalThis.fetch = async (url, opcoes) => opcoes?.method ? consultar(url, opcoes)
+    : Response.json({ ...pagina, totalElementos: 30 });
+  await renderizar('ADMINISTRADOR');
+  await preencher('comunicado-titulo', 'Novo');
+  await preencher('comunicado-conteudo', 'Texto preservado');
+  await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
+  assert.match(document.querySelector('[role="alert"]').textContent, /30 comunicados/);
+  assert.equal(chamadas.some(item => item.opcoes.method === 'POST'), false);
+  assert.equal(document.getElementById('comunicado-conteudo').value, 'Texto preservado');
+  await act(() => botao('Editar').click());
+  await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
+  assert.ok(chamadas.some(item => item.opcoes.method === 'PUT'));
+});
+
+test('aviso de 30 segundos retornado pelo servidor preserva o rascunho', async () => {
+  const consultar = globalThis.fetch;
+  globalThis.fetch = async (url, opcoes) => opcoes?.method === 'POST'
+    ? Response.json({ codigo: 'OPERACAO_RECUSADA', mensagem: 'Aguarde 30 segundos entre a criação de comunicados.' }, { status: 429 })
+    : consultar(url, opcoes);
+  await renderizar('ADMINISTRADOR');
+  await preencher('comunicado-titulo', 'Novo');
+  await preencher('comunicado-conteudo', 'Texto preservado');
+  await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
+  assert.match(document.querySelector('[role="alert"]').textContent, /30 segundos/);
+  assert.equal(document.getElementById('comunicado-conteudo').value, 'Texto preservado');
+});

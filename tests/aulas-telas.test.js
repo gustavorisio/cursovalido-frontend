@@ -255,12 +255,16 @@ test('o catálogo mantém somente a busca e os temas cadastrados como filtros', 
   assert.match(document.querySelector('select').textContent, /Sem tema/);
 });
 
-test('questionário de módulo exibe correção e permite refazer', async () => {
+test('questionário mostra porcentagem em cada tentativa sem revelar gabarito ao errar', async () => {
   const fetchSucesso = globalThis.fetch;
   let enviados;
+  let tentativas = 0;
   globalThis.fetch = async (url, opcoes) => {
     if (url.endsWith('/questionario/respostas')) {
       enviados = JSON.parse(opcoes.body);
+      tentativas++;
+      if (tentativas > 1) return Response.json({ acertos: 1, total: 1, percentual: 100,
+        correcoes: [{ pergunta: 0, acertou: true, alternativaCorreta: 0, explicacao: null }], revisoes: [] });
       return new Response(JSON.stringify({ acertos: 0, total: 1, percentual: 0, correcoes: [{ pergunta: 0, acertou: false, alternativaCorreta: 0, explicacao: 'Entenda o conceito.' }], revisoes: [{ idAula: 4, titulo: 'Introdução', idModulo: 3 }] }), { status: 200 });
     }
     return fetchSucesso(url, opcoes);
@@ -270,10 +274,17 @@ test('questionário de módulo exibe correção e permite refazer', async () => 
   await act(async () => document.querySelector('input[value="1"]').click());
   await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
   assert.deepEqual(enviados, { versao: 1, respostas: [1] });
-  assert.match(document.querySelector('.avaliacao-resultado').textContent, /Resposta incorreta/);
+  assert.equal(document.querySelector('.avaliacao-resultado'), null);
+  assert.equal(document.querySelector('.avaliacao-percentual').textContent, '0%');
+  assert.match(document.querySelector('.avaliacao-tentativa').textContent, /Explicação da resposta incorreta/);
+  assert.match(document.querySelector('.avaliacao-tentativa').textContent, /Entenda o conceito/);
+  assert.doesNotMatch(document.querySelector('.avaliacao-tentativa').textContent, /Resposta: Correta/);
   assert.equal(document.querySelector('.plano-revisoes'), null);
   await act(async () => [...document.querySelectorAll('button')].find((el) => el.textContent === 'Refazer avaliação').click());
   assert.equal(document.querySelector('input:checked'), null);
+  await act(async () => document.querySelector('input[value="0"]').click());
+  await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
+  assert.match(document.querySelector('.avaliacao-resultado').textContent, /100%/);
 });
 
 test('plano do curso apresenta avaliação e questionários com links corretos', async () => {
@@ -299,6 +310,7 @@ for (const [perfil, raizRota] of [['PROFESSOR', 'professor'], ['ADMINISTRADOR', 
       return fetchSucesso(url, opcoes);
     };
     await renderizar('PaginaEditorQuestionario', perfil, `/${raizRota}/cursos/1/diagnostico`, `/${raizRota}/cursos/:idCurso/diagnostico`);
+    assert.equal(document.querySelector('label[for="explicacao-0"]').textContent, 'Explicação da resposta incorreta');
     assert.equal(document.querySelector('#revisao-0'), null);
     await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
     assert.equal(enviados.publicado, true);
