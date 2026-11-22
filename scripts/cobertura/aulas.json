@@ -1,0 +1,22 @@
+[
+  [
+    "src/componentes/aulas/componentes/PlayerAula.jsx",
+    50,
+    58
+  ],
+  [
+    "src/componentes/aulas/componentes/TabelaRankingAlunos.jsx",
+    50,
+    100
+  ],
+  [
+    "src/componentes/comuns/VideoApresentacaoInicio.jsx",
+    50,
+    100
+  ],
+  [
+    "src/paginas/RankingAlunos.jsx",
+    50,
+    100
+  ]
+]
