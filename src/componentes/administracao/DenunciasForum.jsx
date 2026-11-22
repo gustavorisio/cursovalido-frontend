@@ -11,6 +11,7 @@ export default function DenunciasForum() {
   const [carregando, setCarregando] = useState(false);
   const [processando, setProcessando] = useState(null);
   const [observacoes, setObservacoes] = useState({});
+  const [restricoes, setRestricoes] = useState({});
 
   const carregar = useCallback(async () => {
     setCarregando(true); setErro('');
@@ -26,9 +27,20 @@ export default function DenunciasForum() {
   async function decidir(denuncia, procedente, removerConteudo) {
     const observacao = observacoes[denuncia.id]?.trim();
     if (!observacao) { setErro('Informe uma observação para registrar a decisão.'); return; }
+    const restricao = restricoes[denuncia.id] ?? {};
+    let expiraEm = null;
+    if (procedente && restricao.aplicar) {
+      if (!restricao.permanente) {
+        const data = new Date(restricao.expiraEm);
+        if (!Number.isFinite(data.getTime()) || data.getTime() <= Date.now()) { setErro('Informe uma data de término futura para a restrição.'); return; }
+        expiraEm = data.toISOString();
+      }
+    }
     setProcessando(denuncia.id); setErro('');
     try {
-      await decidirDenunciaForum(denuncia.id, { procedente, removerConteudo, observacao });
+      await decidirDenunciaForum(denuncia.id, { procedente, removerConteudo, observacao,
+        aplicarRestricao: Boolean(procedente && restricao.aplicar),
+        escopoRestricao: restricao.escopo ?? 'FORUM', expiraEm });
       await carregar();
     } catch (falha) { setErro(falha.message || 'Não foi possível decidir esta denúncia.'); }
     finally { setProcessando(null); }
@@ -54,6 +66,17 @@ export default function DenunciasForum() {
           <label className="block text-sm font-medium">Observação da moderação (obrigatória)
             <textarea className="input-field mt-1 w-full" maxLength={1000} rows={2} value={observacoes[denuncia.id] ?? ''} onChange={(evento) => setObservacoes((atual) => ({ ...atual, [denuncia.id]: evento.target.value }))} />
           </label>
+          <fieldset className="space-y-3" disabled={Boolean(processando)}>
+            <legend className="font-semibold">Restrição ao autor (opcional)</legend>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(restricoes[denuncia.id]?.aplicar)} onChange={(evento) => setRestricoes((atual) => ({ ...atual, [denuncia.id]: { ...atual[denuncia.id], aplicar: evento.target.checked } }))} />Aplicar restrição se a denúncia for procedente</label>
+            {restricoes[denuncia.id]?.aplicar && <div className="space-y-3">
+              <label className="block text-sm font-medium">Restrição
+                <select className="input-field mt-1" value={restricoes[denuncia.id]?.escopo ?? 'FORUM'} onChange={(evento) => setRestricoes((atual) => ({ ...atual, [denuncia.id]: { ...atual[denuncia.id], escopo: evento.target.value } }))}><option value="FORUM">Acesso ao fórum</option><option value="CONTA">Acesso à conta</option></select>
+              </label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={Boolean(restricoes[denuncia.id]?.permanente)} onChange={(evento) => setRestricoes((atual) => ({ ...atual, [denuncia.id]: { ...atual[denuncia.id], permanente: evento.target.checked } }))} />Permanente, até revogação</label>
+              {!restricoes[denuncia.id]?.permanente && <label className="block text-sm font-medium">Término da restrição<input className="input-field mt-1" type="datetime-local" required value={restricoes[denuncia.id]?.expiraEm ?? ''} onChange={(evento) => setRestricoes((atual) => ({ ...atual, [denuncia.id]: { ...atual[denuncia.id], expiraEm: evento.target.value } }))} /></label>}
+            </div>}
+          </fieldset>
           <div className="flex flex-wrap gap-2">
             <button className="btn btn-danger btn-small" type="button" disabled={Boolean(processando)} onClick={() => decidir(denuncia, true, true)}>Aprovar denúncia</button>
             <button className="btn btn-secondary btn-small" type="button" disabled={Boolean(processando)} onClick={() => decidir(denuncia, false, false)}>Recusar denúncia</button>
