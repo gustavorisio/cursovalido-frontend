@@ -1,3 +1,5 @@
+import { censurarConteudo } from '../../../servicos/filtroConteudo';
+
 export default function FormularioComentario({ texto, onMudarTexto, onEnviar, onCancelar, modoEdicao = false, desabilitado = false }) {
   return (
     <div className={`card formulario-comentario ${modoEdicao ? 'm-0 border-0 p-0 shadow-none' : ''}`}>
@@ -9,7 +11,9 @@ export default function FormularioComentario({ texto, onMudarTexto, onEnviar, on
         value={texto}
         maxLength={5000}
         onChange={(evento) => onMudarTexto(evento.target.value)}
+        onBlur={() => onMudarTexto(censurarConteudo(texto))}
       />
+      <p className="texto-suave">Palavras ofensivas serão substituídas por ***. Aguarde 20 segundos entre novos comentários.</p>
       <div className="rodape-formulario">
         <span className={`contador ${texto.length >= 5000 ? 'limite' : ''}`}>
           {texto.length}/5000{texto.length >= 5000 && <span role="status"> · Limite máximo alcançado</span>}

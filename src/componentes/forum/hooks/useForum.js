@@ -98,7 +98,7 @@ export function useForum() {
   async function salvarTopico(titulo, descricao) {
     limparMensagem();
     if (!autenticado || topicosBloqueados) { setMensagemErro(!autenticado ? 'Entre na sua conta para publicar um tópico.' : 'Sua conta está impedida de publicar tópicos. Consulte o aviso de restrição ou fale com o Suporte.'); return null; }
-    try { const novo = await criarTopico({ titulo, descricao }); setMensagemSucesso('Tópico publicado.'); await carregarTopicos(0); return novo; }
+    try { const novo = await criarTopico({ titulo, descricao }); setMensagemSucesso('Tópico publicado. Aguarde 3 minutos para criar outro tópico.'); await carregarTopicos(0); return novo; }
     catch (erro) { tratarErro(erro); return null; }
   }
 
@@ -106,7 +106,7 @@ export function useForum() {
     limparMensagem();
     if (!autenticado || comentariosBloqueados) { setMensagemErro(!autenticado ? 'Entre na sua conta para comentar.' : 'Sua conta está impedida de comentar. Consulte o aviso de restrição ou fale com o Suporte.'); return false; }
     if (!topicoSelecionado || topicoSelecionado.fechado) { setMensagemErro('Este tópico não está disponível para novos comentários. Escolha outro tópico.'); return false; }
-    try { await criarComentario(topicoSelecionado.id, texto); setMensagemSucesso('Comentário publicado.'); await carregarComentarios(topicoSelecionado.id); return true; }
+    try { await criarComentario(topicoSelecionado.id, texto); setMensagemSucesso('Comentário publicado. Aguarde 20 segundos para enviar outro comentário.'); await carregarComentarios(topicoSelecionado.id); return true; }
     catch (erro) { tratarErro(erro); return false; }
   }
 
@@ -132,7 +132,7 @@ export function useForum() {
     try {
       const resposta = await atualizarTopico(idTopico, { titulo, descricao });
       setMensagemSucesso('Tópico atualizado.');
-      const atualizado = { ...atual, ...(resposta || {}), titulo, descricao };
+      const atualizado = { ...atual, ...(resposta || {}), titulo: resposta?.titulo ?? titulo, descricao: resposta?.descricao ?? descricao };
       setTopicos((itens) => itens.map((item) => Number(item.id) === Number(idTopico) ? atualizado : item));
       setTopicoSelecionado((item) => item && Number(item.id) === Number(idTopico) ? atualizado : item);
       await carregarTopicos(pagina);

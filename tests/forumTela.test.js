@@ -145,3 +145,50 @@ test('restrição expirada libera o fórum até uma nova suspensão', async () =
   assert.equal(botao('Novo tópico').disabled, true);
 });
 
+
+test('oculta ofensas ao sair do campo e na exibição de tópicos antigos', async () => {
+  prepararApi([{ ...topico, titulo: 'idiota', descricao: 'pau no cu' }]);
+  await renderizar(Forum, { sessao });
+  assert.equal(document.querySelector('.topic-title').textContent, '***');
+  await act(async () => document.querySelector('.topic-list-item').click());
+  assert.equal(document.querySelector('.content-text').textContent, '***');
+  await preencher('textarea', 'Isso é lixo, fodace e foda-se.');
+  await act(async () => document.querySelector('textarea').dispatchEvent(new window.FocusEvent('focusout', { bubbles: true })));
+  assert.equal(document.querySelector('textarea').value, 'Isso é ***, *** e ***.');
+});
+
+test('alerta sobre o intervalo de tópicos sem apagar o texto digitado', async () => {
+  simularApi(({ rota, metodo }) => {
+    if (rota === '/autenticacao/restricoes' || rota === '/forum/users') return Response.json([]);
+    if (rota === '/forum/topicos' && metodo === 'GET') return Response.json([]);
+    if (rota === '/forum/topicos' && metodo === 'POST') return Response.json({
+      codigo: 'OPERACAO_RECUSADA', mensagem: 'Aguarde 3 minutos antes de criar outro tópico.',
+    }, { status: 429 });
+    throw new Error('Rota inesperada: ' + rota);
+  });
+  await renderizar(Forum, { sessao });
+  await clicar('Novo tópico');
+  await preencher('[aria-label="Título da postagem"]', 'Título preservado');
+  await preencher('textarea', 'Descrição preservada');
+  await clicar('Publicar');
+  assert.match(document.querySelector('[role="alert"]').textContent, /3 minutos/);
+  assert.equal(document.querySelector('textarea').value, 'Descrição preservada');
+});
+
+test('alerta sobre o intervalo de comentários sem apagar a resposta', async () => {
+  simularApi(({ rota, metodo }) => {
+    if (rota === '/autenticacao/restricoes' || rota === '/forum/users') return Response.json([]);
+    if (rota === '/forum/topicos') return Response.json([topico]);
+    if (rota === '/forum/topicos/12/comentarios' && metodo === 'GET') return Response.json([]);
+    if (rota === '/forum/topicos/12/comentarios' && metodo === 'POST') return Response.json({
+      codigo: 'OPERACAO_RECUSADA', mensagem: 'Aguarde 20 segundos entre comentários.',
+    }, { status: 429 });
+    throw new Error('Rota inesperada: ' + rota);
+  });
+  await renderizar(Forum, { sessao });
+  await act(async () => document.querySelector('.topic-list-item').click());
+  await preencher('textarea', 'Resposta preservada');
+  await clicar('Responder');
+  assert.match(document.querySelector('[role="alert"]').textContent, /20 segundos/);
+  assert.equal(document.querySelector('textarea').value, 'Resposta preservada');
+});
