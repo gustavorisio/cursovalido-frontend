@@ -165,7 +165,7 @@ test('fórum confirma cada alteração e preserva orientação quando o servidor
       return opcoes.method === 'DELETE' ? new Response(null, { status: 204 }) : Response.json(topico);
     }
     if (url.endsWith('/users') || url.endsWith('/restricoes')) return Response.json([]);
-    if (url.endsWith('/comentarios')) return Response.json([comentario]);
+    if (new URL(url).pathname.endsWith('/comentarios')) return Response.json({ itens: [comentario], pagina: 0, totalPaginas: 1, totalElementos: 1 });
     return Response.json({ content: [topico], totalPages: 1 });
   };
   function Harness() { forum = useForum(); return h('div', { role: 'status' }, forum.mensagemSucesso); }
@@ -175,9 +175,9 @@ test('fórum confirma cada alteração e preserva orientação quando o servidor
     assert.equal(forum.mensagemErro, '');
     assert.equal(document.querySelector('[role=status]').textContent, mensagem);
   };
-  await verificar(() => forum.salvarTopico('Java', 'Dúvida'), 'Tópico publicado.');
+  await verificar(() => forum.salvarTopico('Java', 'Dúvida'), 'Tópico publicado. Aguarde 3 minutos para criar outro tópico.');
   await act(() => forum.selecionarTopico(topico));
-  await verificar(() => forum.salvarComentario('Resposta'), 'Comentário publicado.');
+  await verificar(() => forum.salvarComentario('Resposta'), 'Comentário publicado. Aguarde 20 segundos para enviar outro comentário.');
   await verificar(() => forum.editarTopico(1, 'Java atualizado', 'Descrição'), 'Tópico atualizado.');
   await verificar(() => forum.editarComentario(comentario, 'Correção'), 'Comentário atualizado.');
   await verificar(() => forum.excluirComentarioSelecionado(comentario), 'Comentário excluído.');
