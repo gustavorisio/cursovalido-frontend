@@ -20,6 +20,11 @@ export function cadastrarUsuario(dados) {
 }
 
 
+export function buscarHistoricoDocumentos(tipo) {
+  const caminho = tipo === 'privacidade' ? '/politicas/privacidade/historico' : '/politicas/historico';
+  return requisitar(caminho, { semAutenticacao: true, cache: 'no-store' });
+}
+
 export function buscarPoliticasAtivas() {
   return requisitar('/politicas/ativas', { semAutenticacao: true });
 }

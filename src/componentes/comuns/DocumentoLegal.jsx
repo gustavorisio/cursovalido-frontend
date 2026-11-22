@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react';
 import Rodape from './Rodape';
+import HistoricoDocumentos from './HistoricoDocumentos';
 import ConteudoLegal from './ConteudoLegal';
 import { buscarPoliticaAtiva, buscarPrivacidadeAtiva } from '../../servicos/servicoAutenticacao';
 
 export default function DocumentoLegal({ tipo, versao, dataPublicacao, conteudo, carregando, erro, onVoltar, onRecarregar, exibirConteudo = true, children }) {
+  const [historicoAberto, setHistoricoAberto] = useState(false);
   const [alternativo, setAlternativo] = useState(null);
   const [buscando, setBuscando] = useState(false);
   const [falha, setFalha] = useState('');
@@ -38,5 +40,7 @@ export default function DocumentoLegal({ tipo, versao, dataPublicacao, conteudo,
     {(erro || falha) && <div className="mensagem-erro" role="alert">{erro || falha}<div><button className="btn btn-secondary" type="button" disabled={carregando || buscando} onClick={falha ? () => selecionarDocumento(exibido === 'privacidade' ? 'termos' : 'privacidade') : onRecarregar}>Buscar novamente</button></div></div>}
     {children && <div hidden={exibido !== tipo}>{children}</div>}
     {!carregando && !buscando && (exibirConteudo || exibido !== tipo) && documento.conteudo && <div className="documento-conteudo" role="region" aria-label={titulo}><ConteudoLegal conteudo={documento.conteudo} /></div>}
-  </main><Rodape onDocumento={selecionarDocumento} /></div>;
+  </main><Rodape onDocumento={selecionarDocumento} onHistorico={() => setHistoricoAberto(true)} />
+    {historicoAberto && <HistoricoDocumentos key={exibido} tipo={exibido} onFechar={() => setHistoricoAberto(false)} />}
+  </div>;
 }
