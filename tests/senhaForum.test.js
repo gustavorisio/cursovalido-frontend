@@ -232,6 +232,6 @@ test('visitante recebe somente a negativa no fórum e não consulta tópicos', a
   globalThis.fetch = async url => { chamadas.push(url); return Response.json([]); };
   await act(() => raiz.render(h(contexto.Provider, { value: { autenticado: false, sessao: null } },
     h(MemoryRouter, null, h(PaginaForum)))));
-  assert.equal(document.querySelector('main').textContent.trim(), 'Você não tem permissão.');
+  assert.match(document.querySelector('main').textContent, /Para acessar o fórum e participar das discussões, entre na sua conta/);
   assert.deepEqual(chamadas, []);
 });
