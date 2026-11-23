@@ -2,7 +2,7 @@ import { useAutenticacao } from '../../contextos/useAutenticacao';
 import CabecalhoPagina from '../comuns/CabecalhoPagina';
 import ControlesPaginacao from '../comuns/ControlesPaginacao';
 import PesquisaPagina from '../comuns/PesquisaPagina';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import './forum.css';
 import DetalheTopico from './componentes/DetalheTopico';
@@ -14,15 +14,17 @@ import { useAcaoUnica } from '../../contextos/useAcaoUnica';
 
 export default function PaginaForum() {
   const { autenticado } = useAutenticacao();
-  if (autenticado) return <ForumAutenticado />;
+  const { idTopico } = useParams();
+  if (autenticado) return <ForumAutenticado key={idTopico ?? 'lista'} idTopico={idTopico} />;
   return <div className="app-container"><main className="main-content"><div className="mensagem-erro" role="alert"><p className="m-0">Para acessar o fórum e participar das discussões, entre na sua conta.</p><Link className="btn btn-primary mt-4 inline-flex" to="/login">Entrar</Link></div></main><Rodape /></div>;
 }
 
-function ForumAutenticado() {
-  const forum = useForum();
+function ForumAutenticado({ idTopico }) {
+  const navigate = useNavigate();
+  const forum = useForum(idTopico);
   const criacaoBloqueada = forum.topicosBloqueados;
   const respostaBloqueada = forum.comentariosBloqueados;
-  const [tela, setTela] = useState('lista');
+  const [tela, setTela] = useState(idTopico ? 'detalhe' : 'lista');
   const [termo, setTermo] = useState('');
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -71,7 +73,7 @@ function ForumAutenticado() {
     setTitulo(forum.topicoSelecionado.titulo); setDescricao(forum.topicoSelecionado.descricao); setTela('edicao');
   }
 
-  function selecionar(topico) { forum.selecionarTopico(topico); setTela('detalhe'); }
+  function voltarParaLista() { navigate('/forum'); }
 
   return <div className="app-container pagina-forum"><main className="main-content">
     {(forum.mensagemErro || erroTela) && <div className="card aviso-erro" role="alert">{forum.mensagemErro || erroTela}<button className="btn btn-link" type="button" onClick={() => { forum.limparMensagem(); setErroTela(''); }}>Fechar</button></div>}
@@ -86,7 +88,7 @@ function ForumAutenticado() {
         <button type="button" className="btn btn-secondary" aria-pressed={forum.meusTopicos} disabled={forum.carregando} onClick={() => forum.setMeusTopicos(true)}>Meus tópicos</button>
       </div>}
       <div className="forum-colunas"><section className="forum-topicos" aria-label="Tópicos do fórum">
-        {forum.carregando ? <div className="card empty-list">Carregando tópicos...</div> : <ListaTopicos topicos={forum.topicos} usuarios={forum.usuarios} onSelecionar={selecionar} />}
+        {forum.carregando ? <div className="card empty-list">Carregando tópicos...</div> : <ListaTopicos topicos={forum.topicos} usuarios={forum.usuarios} />}
         <ControlesPaginacao pagina={forum.pagina} total={forum.totalPaginas} rotulo="Páginas do fórum" desabilitada={forum.carregando}
           onAnterior={() => forum.carregarTopicos(forum.pagina - 1)} onProxima={() => forum.carregarTopicos(forum.pagina + 1)} />
       </section><aside className="forum-regras" aria-labelledby="forum-regras-titulo">
@@ -107,6 +109,7 @@ function ForumAutenticado() {
         </aside></div>
     </>}
     {(tela === 'criacao' || tela === 'edicao') && <FormularioTopico titulo={titulo} descricao={descricao} onMudarTitulo={setTitulo} onMudarDescricao={setDescricao} onPublicar={tela === 'criacao' ? publicar : editarTopico} onCancelar={() => setTela(tela === 'edicao' ? 'detalhe' : 'lista')} modoEdicao={tela === 'edicao'} desabilitado={processando ? true : criacaoBloqueada} />}
-    {tela === 'detalhe' && forum.topicoSelecionado && <DetalheTopico autenticado={forum.autenticado} idUsuario={forum.sessao?.idUsuario ?? forum.sessao?.id} onDenunciar={forum.denunciarConteudo} topico={{ ...forum.topicoSelecionado, perfilAutor: forum.topicoSelecionado.perfilAutor ?? perfilDoUsuario(forum.usuarios.find((usuario) => Number(usuario.id) === Number(forum.topicoSelecionado.idAutor))) }} paginaComentarios={forum.paginaComentarios} totalPaginasComentarios={forum.totalPaginasComentarios} totalComentarios={forum.totalComentarios} carregandoComentarios={forum.carregandoComentarios} onMudarPaginaComentarios={(pagina) => { setComentarioEditando(null); setTexto(''); return forum.mudarPaginaComentarios(pagina); }} comentarios={forum.comentarios.map((comentario) => ({ ...comentario, perfilAutor: comentario.perfilAutor ?? perfilDoUsuario(forum.usuarios.find((usuario) => Number(usuario.id) === Number(comentario.idAutor))) }))} podeGerenciarTopico={forum.podeGerenciarTopico} podeEditarTopico={forum.podeEditarTopico} podeEditarComentario={forum.podeEditarComentario} podeExcluirComentario={forum.podeExcluirComentario} onFechar={forum.fecharTopicoSelecionado} onArquivar={async (topico) => { if (await forum.arquivarTopicoSelecionado(topico)) setTela('lista'); }} onEditarTopico={abrirEdicao} onExcluirComentario={forum.excluirComentarioSelecionado} onEditarComentario={(comentario) => { setComentarioEditando(comentario); setTexto(comentario.conteudo); }} textoComentario={texto} onMudarComentario={setTexto} onEnviarComentario={enviarComentario} comentarioEditando={comentarioEditando} onCancelarEdicaoComentario={() => { setComentarioEditando(null); setTexto(''); }} onVoltar={() => setTela('lista')} desabilitado={processando} comentariosBloqueados={respostaBloqueada} />}
+    {tela === 'detalhe' && !forum.topicoSelecionado && <div className="card empty-list">{forum.carregandoTopico ? 'Carregando tópico...' : 'Tópico indisponível.'}<button className="btn btn-link" type="button" onClick={voltarParaLista}>Voltar para a lista</button></div>}
+    {tela === 'detalhe' && forum.topicoSelecionado && <DetalheTopico autenticado={forum.autenticado} idUsuario={forum.sessao?.idUsuario ?? forum.sessao?.id} onDenunciar={forum.denunciarConteudo} topico={{ ...forum.topicoSelecionado, perfilAutor: forum.topicoSelecionado.perfilAutor ?? perfilDoUsuario(forum.usuarios.find((usuario) => Number(usuario.id) === Number(forum.topicoSelecionado.idAutor))) }} paginaComentarios={forum.paginaComentarios} totalPaginasComentarios={forum.totalPaginasComentarios} totalComentarios={forum.totalComentarios} carregandoComentarios={forum.carregandoComentarios} onMudarPaginaComentarios={(pagina) => { setComentarioEditando(null); setTexto(''); return forum.mudarPaginaComentarios(pagina); }} comentarios={forum.comentarios.map((comentario) => ({ ...comentario, perfilAutor: comentario.perfilAutor ?? perfilDoUsuario(forum.usuarios.find((usuario) => Number(usuario.id) === Number(comentario.idAutor))) }))} podeGerenciarTopico={forum.podeGerenciarTopico} podeEditarTopico={forum.podeEditarTopico} podeEditarComentario={forum.podeEditarComentario} podeExcluirComentario={forum.podeExcluirComentario} onFechar={forum.fecharTopicoSelecionado} onArquivar={async (topico) => { if (await forum.arquivarTopicoSelecionado(topico)) voltarParaLista(); }} onEditarTopico={abrirEdicao} onExcluirComentario={forum.excluirComentarioSelecionado} onEditarComentario={(comentario) => { setComentarioEditando(comentario); setTexto(comentario.conteudo); }} textoComentario={texto} onMudarComentario={setTexto} onEnviarComentario={enviarComentario} comentarioEditando={comentarioEditando} onCancelarEdicaoComentario={() => { setComentarioEditando(null); setTexto(''); }} onVoltar={voltarParaLista} desabilitado={processando} comentariosBloqueados={respostaBloqueada} />}
   </main><Rodape /></div>;
 }

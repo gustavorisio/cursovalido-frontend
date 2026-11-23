@@ -2,10 +2,9 @@ import { test, beforeAll, beforeEach, afterEach } from 'vitest';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { createElement as h, act } from 'react';
-import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-let contexto, telas, dom, raiz;
+let contexto, telas, dom, raiz, createRoot;
 const fetchOriginal = globalThis.fetch;
 const cursos = [
   { id: 1, titulo: 'React para web', descricao: 'Interfaces com React.', idTema: 8, nomeTema: 'Desenvolvimento', idArea: 8 },
@@ -18,9 +17,13 @@ const aulas = [
 ];
 
 const avaliacaoAluno = { id: 1, titulo: 'Avaliação do curso', versao: 1, perguntas: [{ enunciado: 'Qual alternativa?', alternativas: ['Correta', 'Incorreta'] }], resultado: null };
-const avaliacaoGestor = { ...avaliacaoAluno, publicado: true, perguntas: [{ ...avaliacaoAluno.perguntas[0], alternativaCorreta: 0, explicacao: 'Entenda o conceito.', idAulaRevisao: 4 }] };
+const avaliacaoGestor = { ...avaliacaoAluno, publicado: true, perguntas: [{ ...avaliacaoAluno.perguntas[0], alternativaCorreta: 0, explicacoes: ['', 'Entenda o conceito.'], idAulaRevisao: 4 }] };
 
 beforeAll(async () => {
+  const inicial = new JSDOM();
+  globalThis.window = inicial.window; globalThis.document = inicial.window.document;
+  ({ createRoot } = await import('react-dom/client'));
+  inicial.window.close(); delete globalThis.window; delete globalThis.document;
   contexto = (await import('/src/contextos/contextoBaseAutenticacao.js')).AutenticacaoContexto;
   telas = {};
   const modulos = import.meta.glob('/src/componentes/aulas/*.jsx');
@@ -171,7 +174,7 @@ test('plano ao final dos módulos mantém avaliação e resultados', async () =>
   }) : consultar(url, opcoes);
   await renderizar('PaginaCursoAluno', 'ALUNO', '/aluno/cursos/1', '/aluno/cursos/:idCurso');
   const plano = document.querySelector('.plano-estudos');
-  assert.equal(plano.querySelector('a[href="/aluno/cursos/1/diagnostico"]').textContent, 'Responder');
+  assert.equal(plano.querySelector('a[href="/aluno/cursos/1/diagnostico"]'), null);
   assert.equal(plano.querySelector('a[href="/aluno/cursos/1/modulos/3/questionario"]').textContent, 'Ver resultado e refazer');
   assert.match(plano.textContent, /75% de acertos na última tentativa/);
   assert.equal(plano.querySelector('.plano-revisoes'), null);
@@ -271,18 +274,24 @@ test('questionário mostra porcentagem em cada tentativa sem revelar gabarito ao
   };
   await renderizar('PaginaQuestionarioAluno', 'ALUNO', '/aluno/cursos/1/modulos/3/questionario', '/aluno/cursos/:idCurso/modulos/:idModulo/questionario');
   assert.equal(document.querySelector('.avaliacao-correcoes'), null);
+  assert.equal(document.querySelector('progress[aria-label="Perguntas respondidas"]').value, 0);
   await act(async () => document.querySelector('input[value="1"]').click());
   await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
   assert.deepEqual(enviados, { versao: 1, respostas: [1] });
+  assert.equal(document.querySelector('.avaliacao-pergunta'), null, 'a revisão fica separada das perguntas');
   assert.equal(document.querySelector('.avaliacao-resultado'), null);
   assert.equal(document.querySelector('.avaliacao-percentual').textContent, '0%');
   assert.match(document.querySelector('.avaliacao-tentativa').textContent, /Explicação da resposta incorreta/);
   assert.match(document.querySelector('.avaliacao-tentativa').textContent, /Entenda o conceito/);
+  assert.match(document.querySelector('[aria-label="Resposta incorreta selecionada"]').textContent, /Incorreta/);
   assert.doesNotMatch(document.querySelector('.avaliacao-tentativa').textContent, /Resposta: Correta/);
   assert.equal(document.querySelector('.plano-revisoes'), null);
   await act(async () => [...document.querySelectorAll('button')].find((el) => el.textContent === 'Refazer avaliação').click());
   assert.equal(document.querySelector('input:checked'), null);
+  assert.equal(document.querySelector('.avaliacao-opcao-incorreta'), null);
+  assert.equal(document.querySelector('progress[aria-label="Perguntas respondidas"]').value, 0);
   await act(async () => document.querySelector('input[value="0"]').click());
+  assert.equal(document.querySelector('progress[aria-label="Perguntas respondidas"]').value, 1);
   await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
   assert.match(document.querySelector('.avaliacao-resultado').textContent, /100%/);
 });
@@ -291,40 +300,41 @@ test('plano do curso apresenta avaliação e questionários com links corretos',
   const fetchSucesso = globalThis.fetch;
   globalThis.fetch = async (url, opcoes) => url.endsWith('/plano') ? new Response(JSON.stringify({ avaliacoes: [{ idModulo: null, titulo: 'Avaliação do curso', percentual: 50 }, { idModulo: 3, titulo: 'Módulo 1', percentual: null }], revisoes: [{ idAula: 4, titulo: 'Introdução' }] }), { status: 200 }) : fetchSucesso(url, opcoes);
   await renderizar('PaginaCursoAluno', 'ALUNO', '/aluno/cursos/1', '/aluno/cursos/:idCurso');
-  assert.ok(document.querySelector('a[href="/aluno/cursos/1/diagnostico"]'));
+  assert.equal(document.querySelector('a[href="/aluno/cursos/1/diagnostico"]'), null);
   assert.ok(document.querySelector('a[href="/aluno/cursos/1/modulos/3/questionario"]'));
-  assert.match(document.querySelector('.plano-estudos').textContent, /50% de acertos/);
-  assert.match(document.querySelector('.plano-avaliacoes').textContent, /Já assistiu todos os modulos\?/);
+  assert.doesNotMatch(document.querySelector('.plano-estudos').textContent, /50% de acertos/);
+  assert.match(document.querySelector('.plano-avaliacoes').textContent, /Responda às perguntas deste módulo/);
   assert.equal(document.querySelector('.plano-revisoes-painel'), null);
 });
 
 for (const [perfil, raizRota] of [['PROFESSOR', 'professor'], ['ADMINISTRADOR', 'administracao']]) {
-  test(`${perfil} edita e publica avaliação do curso sem vincular aula`, async () => {
+  test(`${perfil} edita e publica questionário do módulo com explicação por alternativa`, async () => {
     const fetchSucesso = globalThis.fetch;
     let enviados;
     globalThis.fetch = async (url, opcoes) => {
-      if (url.endsWith(`/${raizRota}/cursos/1/diagnostico`) && opcoes.method === 'PUT') {
+      if (url.endsWith(`/${raizRota}/cursos/1/modulos/3/questionario`) && opcoes.method === 'PUT') {
         enviados = JSON.parse(opcoes.body);
         return new Response(JSON.stringify({ ...enviados, versao: 2 }), { status: 200 });
       }
       return fetchSucesso(url, opcoes);
     };
-    await renderizar('PaginaEditorQuestionario', perfil, `/${raizRota}/cursos/1/diagnostico`, `/${raizRota}/cursos/:idCurso/diagnostico`);
-    assert.equal(document.querySelector('label[for="explicacao-0"]').textContent, 'Explicação da resposta incorreta');
+    await renderizar('PaginaEditorQuestionario', perfil, `/${raizRota}/cursos/1/modulos/3/questionario`, `/${raizRota}/cursos/:idCurso/modulos/:idModulo/questionario`);
+    assert.equal(document.querySelector('label[for="explicacao-0-1"]').textContent, 'Explicação da resposta incorreta — alternativa 2');
     assert.equal(document.querySelector('#revisao-0'), null);
     await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
     assert.equal(enviados.publicado, true);
     assert.equal(Object.hasOwn(enviados.perguntas[0], 'idAulaRevisao'), false);
     assert.equal(enviados.perguntas[0].alternativaCorreta, 0);
+    assert.deepEqual(enviados.perguntas[0].explicacoes, ['', 'Entenda o conceito.']);
     assert.match(document.querySelector('[role="status"]').textContent, /Versão 2/);
   });
 }
 
-test('editor da avaliação do curso permite adicionar no máximo dez perguntas', async () => {
-  await renderizar('PaginaEditorQuestionario', 'PROFESSOR', '/professor/cursos/1/diagnostico', '/professor/cursos/:idCurso/diagnostico');
+test('editor do módulo permite adicionar no máximo trinta perguntas', async () => {
+  await renderizar('PaginaEditorQuestionario', 'PROFESSOR', '/professor/cursos/1/modulos/3/questionario', '/professor/cursos/:idCurso/modulos/:idModulo/questionario');
   const adicionar = [...document.querySelectorAll('button')].find((botao) => botao.textContent === 'Adicionar pergunta');
-  for (let indice = 1; indice <= 10; indice++) await act(() => adicionar.click());
-  assert.equal(document.querySelectorAll('.editor-pergunta').length, 10);
+  for (let indice = 1; indice <= 30; indice++) await act(() => adicionar.click());
+  assert.equal(document.querySelectorAll('.editor-pergunta').length, 30);
   assert.equal(adicionar.disabled, true);
 });
 
@@ -348,4 +358,38 @@ test('catálogo e meus cursos mostram no máximo nove cursos por página', async
     assert.match(lista().firstElementChild.textContent, /Curso 10/);
     assert.equal(proxima().disabled, true);
   }
+});
+
+
+test('editor mantém explicação alinhada ao adicionar, remover e trocar a alternativa correta', async () => {
+  const anterior = globalThis.fetch;
+  let enviados;
+  globalThis.fetch = async (url, opcoes) => opcoes?.method === 'PUT'
+    ? (enviados = JSON.parse(opcoes.body), Response.json({ ...enviados, versao: 2 })) : anterior(url, opcoes);
+  await renderizar('PaginaEditorQuestionario', 'PROFESSOR', '/professor/cursos/1/modulos/3/questionario', '/professor/cursos/:idCurso/modulos/:idModulo/questionario');
+  const clicar = async texto => act(() => [...document.querySelectorAll('button')].find(b => b.textContent === texto).click());
+  const preencher = async (seletor, valor) => {
+    const campo = document.querySelector(seletor);
+    await act(() => {
+      Object.getOwnPropertyDescriptor(Object.getPrototypeOf(campo), 'value').set.call(campo, valor);
+      campo.dispatchEvent(new window.Event('input', { bubbles: true }));
+    });
+  };
+  const enviar = () => act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
+  await clicar('Adicionar alternativa');
+  await preencher('#alternativa-0-2', 'Terceira alternativa');
+  await enviar();
+  assert.equal(enviados, undefined);
+  assert.match(document.querySelector('[role="alert"]').textContent, /explicações/);
+  await preencher('#explicacao-0-2', 'Motivo específico da terceira alternativa');
+  await enviar();
+  assert.deepEqual(enviados.perguntas[0].explicacoes, ['', 'Entenda o conceito.', 'Motivo específico da terceira alternativa']);
+  await clicar('Remover última alternativa');
+  await act(() => document.querySelectorAll('input[name="correta-0"]')[1].click());
+  assert.equal(document.querySelector('#explicacao-0-1'), null);
+  await preencher('#explicacao-0-0', 'Motivo da primeira alternativa');
+  await enviar();
+  assert.equal(enviados.perguntas[0].alternativaCorreta, 1);
+  assert.deepEqual(enviados.perguntas[0].explicacoes, ['Motivo da primeira alternativa', 'Entenda o conceito.']);
+  assert.equal(enviados.perguntas[0].alternativas.length, 2);
 });

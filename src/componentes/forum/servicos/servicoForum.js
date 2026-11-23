@@ -18,6 +18,10 @@ export function buscarTopicosPesquisa(busca, size = TAMANHO_PAGINA_PADRAO) {
   return buscarTopicos(0, size, busca);
 }
 
+export function buscarTopico(idTopico) {
+  return requisitar(`/forum/topicos/${encodeURIComponent(idTopico)}`);
+}
+
 export function buscarComentarios(idTopico, pagina = 0) {
   return requisitar(`/forum/topicos/${idTopico}/comentarios?page=${pagina}&size=20`);
 }

@@ -96,7 +96,7 @@ export default function PaginaSuporte() {
         <aside className="forum-regras" aria-labelledby="suporte-orientacoes"><h2 id="suporte-orientacoes">Antes de enviar</h2>
           <ul><li>Para contestar um banimento, explique por que acredita que houve um erro.</li>
             <li>Para recuperar a conta, informe os dados que usava na plataforma.</li>
-            <li>É permitido enviar uma solicitação a cada 24 horas por IP ou e-mail. Guarde o protocolo para acompanhar seu contato.</li></ul>
+            <li>É permitido enviar uma solicitação a cada 1 hora por IP ou e-mail. Guarde o protocolo para acompanhar seu contato.</li></ul>
           <p>Esqueceu sua senha? <Link to="/solicitar-alteracao-senha">Redefinir senha</Link>.</p>
           <p>A equipe analisará seu caso. O envio não altera automaticamente o acesso à conta.</p>
         </aside>
