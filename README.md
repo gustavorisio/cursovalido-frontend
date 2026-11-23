@@ -1,8 +1,12 @@
 # Curso Válido - Front-end
 
-Interface web do **Curso Válido**, plataforma de aprendizagem na área de tecnologia desenvolvida como Projeto Final de Curso (PFC) do Bacharelado em Engenharia de Software da Universidade de Mogi das Cruzes (UMC).
+Interface web do **Curso Válido**, plataforma gratuita de apoio à aprendizagem autônoma de tecnologia e programação por adultos iniciantes. O projeto é o Trabalho de Conclusão de Curso do Bacharelado em Engenharia de Software da Universidade de Mogi das Cruzes (UMC).
 
-A aplicação reúne cursos, aulas, acompanhamento de progresso, fórum, suporte e áreas específicas para alunos, professores e administradores.
+Quem aprende por conta própria costuma recorrer a videoaulas gratuitas, mas precisa definir sozinho o que estudar, em que ordem avançar e como verificar se compreendeu o conteúdo. Sugestões de vídeos podem desviar a atenção, aulas de autores diferentes nem sempre formam um percurso, e a visualização passiva oferece pouca prática e retorno sobre o aprendizado.
+
+O Curso Válido reúne cursos, módulos e aulas em sequência, registra a reprodução e a conclusão das aulas e oferece questionários com correção e explicações. O player permite alternar entre Vimeo e YouTube; o plano de estudos mostra os resultados das avaliações; XP, níveis, ranking e fórum apoiam a continuidade dos estudos e a troca de dúvidas.
+
+Este repositório contém a interface React e os clientes HTTP da plataforma. A API do back-end aplica as regras de negócio, controla o acesso, persiste os dados e realiza as integrações com os serviços externos.
 
 - [Repositório do front-end](https://github.com/gustavorisio/cursovalido-frontend)
 - [Repositório do back-end](https://github.com/gustavorisio/cursovalido-backend)
@@ -11,10 +15,10 @@ A aplicação reúne cursos, aulas, acompanhamento de progresso, fórum, suporte
 
 ### Cadastro e conta
 
-- Cadastro de alunos com validação de formulário, CPF, data de nascimento, declaração de maioridade e aceite dos documentos legais.
-- Confirmação de e-mail, login em duas etapas com código enviado por e-mail e recuperação e redefinição de senha.
+- Cadastro de alunos com nome, e-mail e senha, declaração de maioridade (18 anos ou mais) e aceite dos documentos legais. O formulário atual não coleta CPF nem data de nascimento.
+- Confirmação de e-mail, login com código enviado por e-mail quando o segundo fator está habilitado, recuperação e redefinição de senha. O segundo fator é obrigatório para professores e administradores e opcional para alunos.
 - Cadastro por convite para professores e administradores, com confirmação de e-mail e aprovação administrativa.
-- Consulta e download dos dados pessoais, revogação do aceite dos termos e exclusão da conta mediante código enviado por e-mail.
+- Consulta e exportação dos dados pessoais, histórico e revogação do aceite dos termos e solicitação de exclusão da conta mediante código enviado por e-mail. A autoexclusão não está disponível para contas administrativas.
 - Controle de sessão e proteção de rotas conforme os perfis `ALUNO`, `PROFESSOR` e `ADMINISTRADOR`.
 
 ### Cursos e aulas
@@ -22,10 +26,11 @@ A aplicação reúne cursos, aulas, acompanhamento de progresso, fórum, suporte
 - Catálogo público e área do aluno com matrícula gratuita e consulta dos cursos em que está matriculado.
 - Organização em cursos, módulos e aulas, com pesquisa de conteúdo.
 - Área do professor para cadastrar, editar e excluir cursos, módulos e aulas.
-- Cadastro de aulas por link HTTPS do YouTube e reprodução pela YouTube IFrame Player API.
-- Salvamento da posição de reprodução e retomada da aula a partir do progresso registrado.
-- Conclusão manual pelo botão **Marcar como concluída**.
-- Área administrativa para consulta de cursos e aulas, edição, arquivamento e reabertura de aulas.
+- Cadastro de aulas com vídeo Vimeo como servidor principal e YouTube como reserva. O player permite alternar entre os provedores e retomar a aula da posição salva.
+- Salvamento periódico da posição de reprodução e retomada da aula a partir do progresso registrado.
+- Conclusão manual da aula pelo botão **Marcar como concluída**, com atualização do progresso do curso. A conclusão registrada não comprova, por si só, tempo assistido ou aprendizagem.
+- Área administrativa para consultar, editar, arquivar e reabrir cursos e aulas.
+- Questionários por módulo, com correção automática, explicações por questão, resultados e novas tentativas. O plano de estudos apresenta as avaliações disponíveis e o percentual de acertos da tentativa mais recente. Acertos de 100% podem conceder XP uma única vez por questionário; o aluno acompanha níveis e ranking.
 
 ### Fórum
 
@@ -47,7 +52,7 @@ A aplicação reúne cursos, aulas, acompanhamento de progresso, fórum, suporte
 - Consulta de usuários e aplicação ou revogação de suspensões. A exclusão administrativa de contas de alunos, professores e outros administradores é exclusiva do root; a conta root continua protegida contra exclusão.
 - Convites e aprovação de cadastros da equipe pelo administrador principal.
 - Gestão dos termos de uso e da política de privacidade pelo administrador principal.
-- Publicação de comunicados para todos os alunos, com título de até 255 caracteres e conteúdo de até 5.000 caracteres.
+- Publicação de comunicados para os alunos, com título de até 255 caracteres e conteúdo de até 5.000 caracteres. Administradores podem editar e excluir comunicados.
 
 ### Notificações de comunicados
 
@@ -57,10 +62,9 @@ A aplicação reúne cursos, aulas, acompanhamento de progresso, fórum, suporte
 - Abrir **Ler comunicado** registra a leitura no servidor somente para o aluno autenticado. Consultar a lista não marca automaticamente todos os comunicados como lidos.
 - Os comunicados são gerais e permanecem disponíveis para alunos que ingressarem posteriormente. Esta versão não envia e-mails nem notificações do navegador.
 - A API do backend utiliza `GET/POST /api/administracao/comunicados`, `PUT/DELETE /api/administracao/comunicados/{id}`, `GET /api/aluno/notificacoes`, `GET /api/aluno/notificacoes/nao-lidas` e `PUT /api/aluno/notificacoes/{id}/lida`. As listas aceitam `page` e `size` (de 1 a 50) e retornam `itens`, `pagina`, `totalPaginas`, `totalElementos` e `naoLidas`.
-- A migração Flyway `V6__comunicados_e_leituras.sql`, no repositório backend, cria as tabelas de comunicados e leituras individuais.
 - Ícone [Bell do Bootstrap Icons v1.13.1](https://icons.getbootstrap.com/icons/bell/), usado localmente sob licença MIT, incluída em `public/imagens/LICENCA-bootstrap-icons.txt`.
 
-As operações dependem da API do back-end, responsável por validar permissões, persistir os dados e executar integrações como envio de e-mails e consulta cadastral. Este repositório contém a interface e os clientes HTTP desses serviços.
+As operações dependem da API do back-end, responsável por validar permissões, persistir os dados e executar integrações como envio de e-mails pelo Resend e validação dos vídeos pelas APIs do Vimeo e do YouTube. As credenciais dessas integrações ficam no ambiente do backend, não no frontend.
 
 ## Tecnologias
 
@@ -70,8 +74,8 @@ As operações dependem da API do back-end, responsável por validar permissões
 | React Router DOM 7 | Navegação da SPA e organização de rotas |
 | Vite 8 | Servidor de desenvolvimento e build |
 | Tailwind CSS 4 e CSS próprio | Estilização da interface |
-| AdminLTE 4 | Estilos da área administrativa |
-| Chart.js 4 | Gráficos do dashboard |
+| CoreUI React 5 | Componentes da área administrativa |
+| CoreUI React Chart.js | Gráficos do dashboard |
 | Fetch API | Comunicação HTTP com o back-end |
 | ESLint 10 | Análise estática do código |
 | Vitest, Istanbul e jsdom | Testes automatizados e cobertura |
@@ -84,7 +88,7 @@ As operações dependem da API do back-end, responsável por validar permissões
 - **npm**, normalmente incluído na instalação do Node.js, para instalar as dependências e executar os scripts.
 - **Git**, para clonar o repositório pelos comandos abaixo. Também é possível baixar e extrair o ZIP do projeto pelo GitHub.
 - **Navegador atualizado**, para acessar a interface.
-- Acesso à internet para instalar as dependências, utilizar as integrações e carregar os vídeos do YouTube.
+- Acesso à internet para instalar as dependências, utilizar as integrações e carregar os vídeos do Vimeo e do YouTube.
 
 Confira as instalações no terminal:
 
@@ -94,16 +98,16 @@ npm --version
 git --version
 ```
 
-React, Vite, Tailwind CSS, AdminLTE, Chart.js e as demais bibliotecas são instalados localmente pelo npm a partir do `package.json`. Não precisam de instalação global.
+React, Vite, Tailwind CSS, CoreUI, Chart.js e as demais bibliotecas são instalados localmente pelo npm a partir do `package.json`. Não precisam de instalação global.
 
 ### Requisitos da plataforma completa
 
 Para utilizar os fluxos integrados, mantenha o back-end em execução e configure a API conforme a próxima seção. Segundo a arquitetura descrita na monografia, o ambiente do back-end utiliza:
 
 - **JDK 21** para executar a aplicação Java com Spring Boot.
-- **Maven**, ou o Maven Wrapper quando disponibilizado pelo repositório, para construir e executar o back-end.
+- **Maven** para construir e executar o back-end.
 - **PostgreSQL**, com banco e credenciais configurados; as migrações são gerenciadas pelo Flyway no back-end.
-- Configuração das integrações **Resend** (e-mails de confirmação, login, recuperação e suporte), **CPF.CNPJ** (verificação cadastral) e **YouTube Data API** (validação dos vídeos).
+- Configuração no backend das integrações **Resend** (e-mails de confirmação, login, recuperação e suporte), **Vimeo** (validação do proprietário dos vídeos) e **YouTube Data API** (validação e reserva dos vídeos). As credenciais dos serviços externos são mantidas no backend.
 
 Esses requisitos pertencem ao servidor. Se você utilizar uma API já hospedada, não precisa instalar Java, Maven ou PostgreSQL na máquina do front-end. As credenciais dos serviços externos devem ser configuradas no back-end.
 
@@ -171,16 +175,16 @@ npm run preview
 
 | Área | Rotas |
 | --- | --- |
-| Conteúdo público | `/`, `/cursos`, `/forum`, `/suporte` |
+| Conteúdo público | `/`, `/cursos`, `/forum`, `/forum/:idTopico`, `/suporte` |
 | Autenticação | `/login`, `/cadastro`, `/convites/cadastro`, `/confirmacao-email` |
 | Recuperação de senha | `/solicitar-alteracao-senha`, `/redefinir-senha` |
 | Documentos legais | `/termos`, `/termos-aceite`, `/privacidade` |
-| Conta autenticada | `/configuracoes` |
-| Aluno | `/aluno/cursos`, `/aluno/cursos/:idCurso`, `/aluno/cursos/:idCurso/aulas/:idAula` |
-| Professor | `/professor/cursos`, `/professor/cursos/:idCurso/modulos`, `/professor/cursos/:idCurso/modulos/:idModulo/aulas` |
-| Administração | `/administracao`, `/administracao/dashboard`, `/administracao/usuarios`, `/administracao/convites`, `/administracao/cursos`, `/administracao/termos`, `/administracao/privacidade` |
+| Conta autenticada | `/configuracoes`, `/configuracoes/alterar-senha`, `/notificacoes`, `/ranking` |
+| Aluno | `/aluno/cursos`, `/aluno/cursos/:idCurso`, `/aluno/cursos/:idCurso/aulas/:idAula`, `/aluno/cursos/:idCurso/modulos/:idModulo/questionario` |
+| Professor | `/professor/cursos`, `/professor/cursos/:idCurso/modulos`, `/professor/cursos/:idCurso/modulos/:idModulo/aulas`, `/professor/cursos/:idCurso/modulos/:idModulo/questionario` |
+| Administração | `/administracao`, `/administracao/dashboard`, `/administracao/comunicados`, `/administracao/termos`, `/administracao/privacidade`, `/administracao/usuarios`, `/administracao/forum/denuncias`, `/administracao/convites`, `/administracao/inicio`, `/administracao/cursos` |
 
-As rotas de aluno, professor e administração exigem o perfil correspondente.
+As rotas de conta autenticada exigem login. As rotas de aluno, professor e administração exigem o perfil correspondente. A rota `/aluno/notificacoes` redireciona para `/notificacoes`.
 
 ## Estrutura do projeto
 
