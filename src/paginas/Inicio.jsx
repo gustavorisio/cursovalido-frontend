@@ -36,7 +36,7 @@ export default function Inicio() {
           </article>
           <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="m-0 text-lg font-semibold text-slate-800">Gamificação para acompanhar sua evolução</h3>
-            <p className="mb-0 mt-2 text-sm leading-6 text-slate-600">Ao concluir todas as aulas ativas de um curso, você ganha XP uma vez: 100 pontos mais 10 por aula, até 500 por curso. Acumule pontos para avançar de nível e acompanhar seu percurso; XP não é nota ou certificado.</p>
+            <p className="mb-0 mt-2 text-sm leading-6 text-slate-600">Você ganha XP apenas ao acertar 100% das questões de um questionário, uma única vez por questionário. Refazer a avaliação não acumula novas recompensas. Acumule pontos para avançar de nível e acompanhar seu percurso; XP não é nota ou certificado.</p>
           </article>
         </div>
       </section>
