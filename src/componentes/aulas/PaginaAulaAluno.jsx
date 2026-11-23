@@ -80,15 +80,7 @@ function ConteudoAula({ dados }) {
       const salvo = await executar(() => servico.concluirAula(aula.id, { tokenAutenticacao: tokenDaAula }));
       if (!ativo.current) return;
       setProgresso(salvo);
-      globalThis.dispatchEvent?.(new Event('curso-valido-gamificacao-atualizada'));
-      const recompensa = salvo?.recompensa;
-      if (recompensa) {
-        setMensagem(recompensa.subiuNivel
-          ? `Curso concluído! Você ganhou ${recompensa.xpGanho} XP e subiu para o nível ${recompensa.nivelAtual}.`
-          : `Curso concluído! Você ganhou ${recompensa.xpGanho} XP. Faltam ${recompensa.situacao?.xpParaProximoNivel ?? 0} XP para o próximo nível.`);
-      } else {
-        setMensagem('Aula marcada como concluída.');
-      }
+      setMensagem('Aula marcada como concluída.');
     } catch (falha) {
       if (ativo.current) setErro(falha.message);
     } finally {
