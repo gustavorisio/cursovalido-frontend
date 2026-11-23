@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useAcaoUnica } from '../../../contextos/useAcaoUnica';
+import { useState } from 'react';
 import { salvarTema, excluirTema } from '../servicos/servicoTemas';
 import ConfirmacaoModal from '../../forum/componentes/ConfirmacaoModal';
 
@@ -6,30 +7,39 @@ export default function GerenciarTemas({ temas, onAtualizar }) {
   const [nome, setNome] = useState('');
   const [editando, setEditando] = useState(null);
   const [excluindo, setExcluindo] = useState(null);
-  const [processando, setProcessando] = useState(false);
-  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
-  const acaoEmAndamento = useRef(false);
+  const [executar, processando] = useAcaoUnica();
   const [erro, setErro] = useState('');
 
   async function salvar() {
-    if (processando || acaoEmAndamento.current || !nome.trim()) return;
-    acaoEmAndamento.current = true; setProcessando(true); setErro('');
-    try {
-      await salvarTema(editando, nome.trim());
-      setNome(''); setEditando(null); onAtualizar();
-    } catch (falha) { setErro(falha.message); }
-    finally { acaoEmAndamento.current = false; setProcessando(false); }
+    if (!nome.trim()) return;
+    await executar(async () => {
+      setErro('');
+      try {
+        await salvarTema(editando, nome.trim());
+        setNome('');
+        setEditando(null);
+        onAtualizar();
+      } catch (falha) {
+        setErro(falha.message);
+      }
+    });
   }
 
   async function excluir() {
-    if (processando || acaoEmAndamento.current) return;
-    acaoEmAndamento.current = true; setProcessando(true); setErro('');
-    try {
-      await excluirTema(excluindo.id);
-      if (editando === excluindo.id) { setEditando(null); setNome(''); }
-      setExcluindo(null); onAtualizar(excluindo.id);
-    } catch (falha) { setErro(falha.message); }
-    finally { acaoEmAndamento.current = false; setProcessando(false); }
+    await executar(async () => {
+      setErro('');
+      try {
+        await excluirTema(excluindo.id);
+        if (editando === excluindo.id) {
+          setEditando(null);
+          setNome('');
+        }
+        setExcluindo(null);
+        onAtualizar(excluindo.id);
+      } catch (falha) {
+        setErro(falha.message);
+      }
+    });
   }
 
   return <div className="aulas-gestao-temas">

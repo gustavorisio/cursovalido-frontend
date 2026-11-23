@@ -1,4 +1,4 @@
-// Ocultação na interface; o servidor também filtra antes de salvar e devolver o conteúdo.
+// Oculta ofensas na interface e mantém a filtragem no servidor.
 const TERMOS = [
   'porra', 'porras', 'caralho', 'caralhos', 'carai', 'caraio', 'krl', 'merda', 'merdas', 'bosta', 'bostas', 'cacete', 'foda', 'fodase', 'foder', 'fode',
   'fodeu', 'fodido', 'fodida', 'fuder', 'fudido', 'fudida', 'fdp', 'pqp', 'vsf', 'vtnc', 'tnc', 'puta', 'puto',

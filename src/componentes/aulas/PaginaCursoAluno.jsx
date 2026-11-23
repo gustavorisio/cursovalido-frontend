@@ -41,10 +41,6 @@ function CursoAluno({ idCurso }) {
   return <LayoutAulas className="pagina-detalhe-curso">
     <EstadoCarregamento carga={carga} />
     {carga.carregando ? null : carga.erro ? null : carga.dados ? <>
-      <nav aria-label="Trilha de navegação" className="!-mx-[var(--space-page)] flex min-h-12 items-center gap-3 bg-[#e9e9e9] px-[var(--space-page)] text-sm text-slate-600">
-        <Link to="/" className="text-slate-600 no-underline hover:text-blue-700">Início</Link>
-        <Link to="/aluno/cursos" className="text-slate-600 no-underline hover:text-blue-700">Cursos</Link><span className="truncate font-medium text-slate-700" aria-current="page">{carga.dados.curso.titulo}</span>
-      </nav>
       <section className="card curso-visao-geral mx-auto mb-8 mt-0 w-full max-w-[1240px] bg-white p-6 sm:p-8" aria-labelledby="curso-titulo">
         <div className="mx-auto grid w-full max-w-[1240px] grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="min-w-0">

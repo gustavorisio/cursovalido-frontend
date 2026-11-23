@@ -43,7 +43,6 @@ function ConsultaAulas({ idCurso, idAula }) {
   const [editando, setEditando] = useState(null);
   const [confirmacao, setConfirmacao] = useState(null);
   const [processando, setProcessando] = useState(false);
-  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
   const acaoEmAndamento = useRef(false);
   const [erroAcao, setErroAcao] = useState('');
   const [mensagem, setMensagem] = useState('');

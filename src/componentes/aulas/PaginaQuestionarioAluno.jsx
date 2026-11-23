@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
+import { useAcaoUnica } from '../../contextos/useAcaoUnica';
+import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAutenticacao } from '../../contextos/useAutenticacao';
 import LayoutAulas from './componentes/LayoutAulas';
@@ -28,19 +29,24 @@ function Questionario({ idCurso, idModulo }) {
 function ResponderQuestionario({ dados, idCurso, idModulo, onRecarregar }) {
   const [respostas, setRespostas] = useState(dados.perguntas.map(() => null));
   const [resultado, setResultado] = useState(dados.resultado);
-  const [processando, setProcessando] = useState(false);
-  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
-  const acaoEmAndamento = useRef(false);
+  const [executar, processando] = useAcaoUnica();
   const [erro, setErro] = useState('');
 
-  async function enviar(e) {
-    e.preventDefault();
-    if (processando || acaoEmAndamento.current) return;
-    if (respostas.some((r) => r == null)) { setErro('Responda todas as perguntas antes de enviar.'); return; }
-    acaoEmAndamento.current = true; setProcessando(true); setErro('');
-    try { setResultado(await responderQuestionario(idCurso, idModulo, dados.versao, respostas)); }
-    catch (falha) { setErro(falha.message); }
-    finally { acaoEmAndamento.current = false; setProcessando(false); }
+  async function enviar(evento) {
+    evento.preventDefault();
+    if (respostas.some((resposta) => resposta == null)) {
+      setErro('Responda todas as perguntas antes de enviar.');
+      return;
+    }
+    await executar(async () => {
+      setErro('');
+      try {
+        const tentativa = await responderQuestionario(idCurso, idModulo, dados.versao, respostas);
+        setResultado(tentativa);
+      } catch (falha) {
+        setErro(falha.message);
+      }
+    });
   }
 
   const total = dados.perguntas.length;

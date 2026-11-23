@@ -53,7 +53,6 @@ export default function DetalheTopico({
   const [confirmacao, setConfirmacao] = useState('');
   const [denunciaAberta, setDenunciaAberta] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
-  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
   const acaoEmAndamento = useRef(false);
 
   async function confirmarAcao() {

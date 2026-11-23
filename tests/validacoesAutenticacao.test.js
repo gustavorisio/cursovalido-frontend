@@ -20,7 +20,7 @@ test('senha sem caractere especial informa exatamente a regra que falta', () => 
   assert.equal(mensagemSenha('Senha@12'), '');
   assert.equal(senhaValida(), false);
   assert.equal(REGRAS_SENHA.length, 5);
-  assert.match(MENSAGEM_SENHA, /72 bytes em UTF-8/);
+  assert.doesNotMatch(MENSAGEM_SENHA, /bytes|UTF-8/);
 });
 
 test('limites seguem os do servidor', () => {

@@ -119,8 +119,9 @@ test('campo de senha lista as regras e marca as atendidas', async () => {
   }
   await renderizar(Campo);
   const itens = [...document.querySelectorAll('.regras-senha li')];
-  assert.equal(itens.length, 5);
-  assert.deepEqual(itens.map((item) => item.className), ['regra-pendente', 'regra-atendida', 'regra-pendente', 'regra-atendida', 'regra-pendente']);
+  assert.equal(itens.length, 4);
+  assert.deepEqual(itens.map((item) => item.className), ['regra-pendente', 'regra-pendente', 'regra-atendida', 'regra-pendente']);
+  assert.doesNotMatch(document.querySelector('.regras-senha').textContent, /bytes|UTF-8/);
   assert.equal(document.querySelector('input').getAttribute('aria-describedby'), document.querySelector('.regras-senha').id);
 });
 

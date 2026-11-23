@@ -436,7 +436,7 @@
     @apply flex flex-wrap gap-2;
   }
 }
-/* Administração: navegação, ferramentas e listas de usuários. */
+/* Navegação e ferramentas administrativas. */
 @layer components {
   .administracao { max-width: 1240px; }
   .exclusao-conta { margin-top: 32px; padding-top: 24px;  }
@@ -565,7 +565,7 @@
 
 
 
-/* Padrao visual: fundo branco com bordas finas douradas em todas as paginas. */
+/* Fundo branco e bordas douradas. */
 @layer components {
   .card,
   .painel-autenticacao,
@@ -601,7 +601,7 @@
 .regras-senha .regra-pendente { color: var(--color-muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
-/* Camada comum de acabamento para as telas existentes do LMS. */
+/* Estilos compartilhados pelas páginas. */
 @layer base {
   :root {
     --space-page: clamp(16px, 4vw, 48px);
@@ -630,8 +630,7 @@
     align-items: stretch;
     gap: var(--space-section);
   }
-  /* As páginas compartilham um único ritmo vertical. O espaçamento fica no
-     contêiner, evitando combinações diferentes de margens por tela. */
+  /* Define o espaçamento vertical no contêiner principal. */
   .main-content > * { margin-block: 0 !important; }
   .page-header {
     display: flex;

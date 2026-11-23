@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
+import { useAcaoUnica } from '../../contextos/useAcaoUnica';
+import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAutenticacao } from '../../contextos/useAutenticacao';
 import LayoutAulas from './componentes/LayoutAulas';
@@ -36,29 +37,42 @@ function FormularioQuestionario({ dados, perfil, idCurso, idModulo }) {
   const limitePerguntas = 30;
   const [publicado, setPublicado] = useState(dados.questionario?.publicado ?? false);
   const [perguntas, setPerguntas] = useState(dados.questionario?.perguntas.map((p) => ({ ...p, explicacoes: p.explicacoes ?? p.alternativas.map(() => '') })) ?? [novaPergunta()]);
-  const [processando, setProcessando] = useState(false);
-  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
-  const acaoEmAndamento = useRef(false);
+  const [executar, processando] = useAcaoUnica();
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
 
   function alterar(indice, campo, valor) {
     setPerguntas((lista) => lista.map((p, i) => i === indice ? { ...p, [campo]: valor } : p));
   }
-  async function salvar(e) {
-    e.preventDefault();
-    if (processando || acaoEmAndamento.current) return;
+  async function salvar(evento) {
+    evento.preventDefault();
     if (perguntas.length > limitePerguntas) {
       setErro(`Você pode salvar no máximo ${limitePerguntas} perguntas.`);
       return;
     }
-    if (!titulo.trim() || perguntas.some((p) => !p.enunciado.trim() || p.alternativas.some((a, i) => !a.trim() || (i !== p.alternativaCorreta && !p.explicacoes[i]?.trim())))) { setErro('Preencha as perguntas, alternativas e explicações.'); return; }
-    acaoEmAndamento.current = true; setProcessando(true); setErro(''); setMensagem('');
-    try {
-      const salvo = await salvarQuestionario(perfil, idCurso, idModulo, { titulo: titulo.trim(), publicado, perguntas: perguntas.map(({ enunciado, alternativas, alternativaCorreta, explicacoes }) => ({ enunciado, alternativas, alternativaCorreta, explicacoes })) });
-      setMensagem(`Avaliação salva como ${salvo.publicado ? 'publicada' : 'rascunho'}. Versão ${salvo.versao}.`);
-    } catch (falha) { setErro(falha.message); }
-    finally { acaoEmAndamento.current = false; setProcessando(false); }
+    const perguntaIncompleta = perguntas.some((pergunta) =>
+      !pergunta.enunciado.trim() || pergunta.alternativas.some((alternativa, indice) =>
+        !alternativa.trim() || (indice !== pergunta.alternativaCorreta && !pergunta.explicacoes[indice]?.trim())));
+    if (!titulo.trim() || perguntaIncompleta) {
+      setErro('Preencha as perguntas, alternativas e explicações.');
+      return;
+    }
+    await executar(async () => {
+      setErro('');
+      setMensagem('');
+      try {
+        const salvo = await salvarQuestionario(perfil, idCurso, idModulo, {
+          titulo: titulo.trim(),
+          publicado,
+          perguntas: perguntas.map(({ enunciado, alternativas, alternativaCorreta, explicacoes }) => ({
+            enunciado, alternativas, alternativaCorreta, explicacoes,
+          })),
+        });
+        setMensagem(`Avaliação salva como ${salvo.publicado ? 'publicada' : 'rascunho'}. Versão ${salvo.versao}.`);
+      } catch (falha) {
+        setErro(falha.message);
+      }
+    });
   }
   return <form className="card editor-questionario" onSubmit={salvar}><h2>{dados.modulo?.titulo ?? dados.curso.titulo}</h2><p className="texto-suave">Até {limitePerguntas} perguntas, com 2 a 6 alternativas. Cada alteração salva cria uma nova versão; os alunos precisarão responder novamente para atualizar o resultado.</p>{erro && <p className="mensagem-erro" role="alert">{erro}</p>}{mensagem && <p className="mensagem-sucesso" role="status">{mensagem}</p>}<fieldset disabled={processando}><label htmlFor="questionario-titulo">Título da avaliação</label><input className="input-field" id="questionario-titulo" value={titulo} maxLength={255} required onChange={(e) => setTitulo(e.target.value)} />
     {perguntas.map((p, indice) => <fieldset className="editor-pergunta" key={indice}><legend>Pergunta {indice + 1}</legend>
