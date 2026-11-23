@@ -262,11 +262,15 @@ test('questionário mostra porcentagem em cada tentativa sem revelar gabarito ao
   const fetchSucesso = globalThis.fetch;
   let enviados;
   let tentativas = 0;
+  let atualizacoesXp = 0;
+  const aoAtualizarXp = () => atualizacoesXp++;
+  window.addEventListener('curso-valido-gamificacao-atualizada', aoAtualizarXp);
   globalThis.fetch = async (url, opcoes) => {
     if (url.endsWith('/questionario/respostas')) {
       enviados = JSON.parse(opcoes.body);
       tentativas++;
       if (tentativas > 1) return Response.json({ acertos: 1, total: 1, percentual: 100,
+        recompensa: tentativas === 2 ? { xpGanho: 100, subiuNivel: true, nivelAtual: 2 } : null,
         correcoes: [{ pergunta: 0, acertou: true, alternativaCorreta: 0, explicacao: null }], revisoes: [] });
       return new Response(JSON.stringify({ acertos: 0, total: 1, percentual: 0, correcoes: [{ pergunta: 0, acertou: false, alternativaCorreta: 0, explicacao: 'Entenda o conceito.' }], revisoes: [{ idAula: 4, titulo: 'Introdução', idModulo: 3 }] }), { status: 200 });
     }
@@ -294,6 +298,14 @@ test('questionário mostra porcentagem em cada tentativa sem revelar gabarito ao
   assert.equal(document.querySelector('progress[aria-label="Perguntas respondidas"]').value, 1);
   await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
   assert.match(document.querySelector('.avaliacao-resultado').textContent, /100%/);
+  assert.match(document.querySelector('.avaliacao-recompensa').textContent, /\+100 XP/);
+  assert.equal(atualizacoesXp, 1);
+  await act(async () => [...document.querySelectorAll('button')].find((el) => el.textContent === 'Refazer avaliação').click());
+  await act(async () => document.querySelector('input[value="0"]').click());
+  await act(async () => document.querySelector('form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true })));
+  assert.equal(document.querySelector('.avaliacao-recompensa'), null);
+  assert.equal(atualizacoesXp, 1);
+  window.removeEventListener('curso-valido-gamificacao-atualizada', aoAtualizarXp);
 });
 
 test('plano do curso apresenta avaliação e questionários com links corretos', async () => {

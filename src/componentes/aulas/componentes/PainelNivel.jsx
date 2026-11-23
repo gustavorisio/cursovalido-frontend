@@ -6,7 +6,7 @@ export function DetalhesNivel({ situacao }) {
   return <>
     <div className="painel-nivel-topo">
       <strong>Nível {situacao.nivel}</strong>
-      <span>{Number(situacao.xpTotal).toLocaleString('pt-BR')} XP acumulados · {situacao.cursosConcluidos} {situacao.cursosConcluidos === 1 ? 'curso concluído' : 'cursos concluídos'}</span>
+      <span>{Number(situacao.xpTotal).toLocaleString('pt-BR')} XP acumulados · {situacao.questionariosConcluidos ?? 0} {situacao.questionariosConcluidos === 1 ? 'questionário concluído' : 'questionários concluídos'}</span>
     </div>
     <div className="painel-nivel-barra" role="progressbar" aria-label="Progresso no nível atual" aria-valuemin={0} aria-valuemax={situacao.metaNivel} aria-valuenow={situacao.xpNivel}>
       <span style={{ width: `${percentual}%` }} />
@@ -34,6 +34,6 @@ export default function PainelNivel({ atualizacao = 0 }) {
   return <section className="painel-nivel" aria-labelledby="painel-nivel-titulo">
     <span className="aulas-etiqueta" id="painel-nivel-titulo">Sua evolução</span>
     <DetalhesNivel situacao={situacao} />
-    <p>Conclua todas as aulas de um curso para ganhar XP. A cada nível, a meta de XP para o próximo aumenta.</p>
+    <p>Acerte 100% de um questionário para ganhar XP uma única vez. A cada nível, a meta de XP para o próximo aumenta.</p>
   </section>;
 }

@@ -67,6 +67,7 @@
 .avaliacao-explicacao { padding: 16px 18px; border-left: 3px solid var(--color-warning); border-radius: 0 8px 8px 0; background: var(--color-warning-soft); }
 .avaliacao-explicacao strong { color: var(--color-warning); font-size: 13px; font-weight: 600; }
 .avaliacao-explicacao p { margin: 8px 0 0; color: var(--color-brand-950); font-size: 14px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pagina-questionario .avaliacao-recompensa { margin: 0; padding: 16px 20px; border: 1px solid var(--color-success); border-radius: 12px; background: var(--color-success-soft); color: var(--color-success); font-size: 14px; line-height: 1.7; }
 .avaliacao-resposta-certa { margin: 0; padding: 14px 16px; border-radius: 8px; background: var(--color-success-soft); color: var(--color-success); font-size: 14px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
 .pagina-questionario .avaliacao-acoes { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding-block: 4px 16px; }
 .avaliacao-acoes p { flex: 1 1 240px; margin: 0; color: var(--color-muted); font-size: 13px; line-height: 1.7; }

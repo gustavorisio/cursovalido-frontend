@@ -64,6 +64,7 @@ function ResponderQuestionario({ dados, idCurso, idModulo, onRecarregar }) {
       <div className="avaliacao-nota"><p className="avaliacao-percentual" role="status">{resultado.percentual}%</p><span>de acertos</span></div>
       <div><span className="avaliacao-estado">✓ Questionário concluído</span><h2 id="resultado-titulo">Você acertou todas!</h2><p>{resultado.acertos} de {resultado.total} {resultado.total === 1 ? 'resposta correta' : 'respostas corretas'}. Revise o que aprendeu ou continue seus estudos.</p></div>
     </div>
+    {resultado.recompensa && <p className="avaliacao-recompensa" role="status">+{resultado.recompensa.xpGanho} XP pela primeira aprovação deste questionário.{resultado.recompensa.subiuNivel && (' Você subiu para o nível ' + resultado.recompensa.nivelAtual + '!')}</p>}
     <h3 className="avaliacao-revisao-titulo">Suas respostas, em detalhes</h3>
     <ol className="avaliacao-correcoes">{resultado.correcoes.map((item) => <li key={item.pergunta}>
       <div className="avaliacao-correcao-cabecalho"><span className="avaliacao-numero">Pergunta {item.pergunta + 1}</span><span className="avaliacao-acerto">✓ Resposta correta</span></div>
