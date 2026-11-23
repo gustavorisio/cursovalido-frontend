@@ -45,7 +45,6 @@ function GestaoConteudo({ idCurso, idModulo }) {
   const [editando, setEditando] = useState(null);
   const [excluindo, setExcluindo] = useState(null);
   const [processando, setProcessando] = useState(false);
-  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
   const acaoEmAndamento = useRef(false);
 
   useEffect(() => {

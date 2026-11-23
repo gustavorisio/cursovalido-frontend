@@ -61,7 +61,6 @@ export default function Cadastro() {
   async function enviar(evento) {
     evento.preventDefault();
     if (carregando) return;
-    // Mostra exatamente o que falta, em vez de apenas manter o botão bloqueado.
     if (problema) { setErro(problema); return; }
     if (!politica?.versao || carregandoPolitica) { setErro('A versão atual dos documentos ainda não foi carregada.'); return; }
     await executar(async () => {

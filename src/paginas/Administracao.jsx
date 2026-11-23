@@ -15,7 +15,7 @@ import { buscarPermissoesAdministrativas, buscarUsuariosAdministrativos } from '
 import { atualizarVideoInicio, buscarVideoInicio } from '../servicos/servicoVideoInicio';
 import { useAutenticacao } from '../contextos/useAutenticacao';
 import { validarDocumento } from '../servicos/validacoesFormulario';
-import { textoSimples } from '../componentes/comuns/ConteudoLegal';
+import { textoSimples } from '../servicos/textoSimples';
 
 
 export default function Administracao({ tela = 'geral' }) {
@@ -61,7 +61,7 @@ export default function Administracao({ tela = 'geral' }) {
           setConteudoPolitica(textoSimples(atual?.conteudo ?? ''));
         }));
       }
-      if (tela === 'convites') {
+      if (permissoes.principal && tela === 'convites') {
         tarefas.push(buscarConvites().then(setConvites), buscarConvitesPendentes().then(setPendentes));
       }
       if (permissoes.principal && tela === 'video') {
@@ -87,7 +87,6 @@ export default function Administracao({ tela = 'geral' }) {
     setFiltroRestricao(valor);
   }
 
-  // A trava por referencia barra cliques repetidos antes de o botao ser desabilitado na tela.
   async function acionar(acao, sucesso) {
     if (emAndamento.current) return;
     emAndamento.current = true;
@@ -114,6 +113,7 @@ export default function Administracao({ tela = 'geral' }) {
 
   function convidar(evento) {
     evento.preventDefault();
+    if (!principal) return;
     if (!email.trim()) return;
     acionar(async () => { await criarConvite(email.trim(), perfil); setEmail(''); }, 'Convite enviado. A pessoa convidada cria a conta pelo link recebido no e-mail.');
   }
@@ -157,7 +157,7 @@ export default function Administracao({ tela = 'geral' }) {
     <nav className="administracao-navegacao" aria-label="Ferramentas administrativas">
       <NavLink to="/administracao/usuarios">Usuários</NavLink>
       <NavLink to="/administracao/forum/denuncias">Denúncias do fórum</NavLink>
-      <NavLink to="/administracao/convites">Convites</NavLink>
+      {principal && <NavLink to="/administracao/convites">Convites</NavLink>}
       {principal && <><NavLink to="/administracao/termos">Termos de Aceite</NavLink><NavLink to="/administracao/privacidade">Privacidade</NavLink></>}
       {principal && <NavLink to="/administracao/inicio">Vídeo da página inicial</NavLink>}
       <NavLink to="/administracao/dashboard">Dashboard</NavLink>
@@ -177,11 +177,11 @@ export default function Administracao({ tela = 'geral' }) {
         </dl>
         <Link className="btn btn-secondary" to="/configuracoes">Configurações da minha conta</Link>
       </section> : null}
-      {['termos', 'privacidade', 'video'].includes(tela) && !principal ? <p className="mensagem-erro" role="alert">Esta tela está disponível apenas para o root.</p> : null}
-      {(principal || tela === 'convites') ? <>
+      {['termos', 'privacidade', 'video', 'convites'].includes(tela) && !principal ? <p className="mensagem-erro" role="alert">Esta tela está disponível apenas para o root.</p> : null}
+      {principal ? <>
         {tela === 'convites' ? <>
           <section className="card configuracoes-conta">
-            <h2 className="titulo-detalhe">{principal ? 'Convidar professor ou administrador' : 'Convidar professor'}</h2>
+            <h2 className="titulo-detalhe">Convidar professor ou administrador</h2>
             <form className="formulario-publico" onSubmit={convidar}>
               <label>E-mail<input required type="email" maxLength={254} value={email} onChange={(evento) => setEmail(evento.target.value)} /></label>
               <label>Perfil<select value={perfil} onChange={(evento) => setPerfil(evento.target.value)}><option value="PROFESSOR">Professor</option>{principal && <option value="ADMINISTRADOR">Administrador</option>}</select></label>

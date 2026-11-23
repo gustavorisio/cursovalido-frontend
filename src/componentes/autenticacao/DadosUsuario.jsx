@@ -12,7 +12,6 @@ function formatarDataHoraAceite(valor) {
 export default function DadosUsuario({ desabilitado = false }) {
   const { sessao } = useAutenticacao();
   const [baixando, setBaixando] = useState(false);
-  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
   const acaoEmAndamento = useRef(false);
   const [dados, setDados] = useState(null);
   const [carregando, setCarregando] = useState(true);

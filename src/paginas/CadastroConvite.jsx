@@ -58,7 +58,6 @@ function ConfirmarConvite({ token }) {
   function alterar(campo, valor) { setDados((atual) => ({ ...atual, [campo]: valor })); setErro(''); }
   async function enviar(evento) {
     evento.preventDefault();
-    // A trava por referencia impede um segundo envio antes de o estado ser atualizado.
     if (emEnvio.current) return;
     if (problema) { setErro(problema); return; }
     emEnvio.current = true;

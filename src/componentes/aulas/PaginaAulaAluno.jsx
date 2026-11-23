@@ -41,7 +41,6 @@ function ConteudoAula({ dados }) {
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [concluindo, setConcluindo] = useState(false);
-  // Trava sincrona: barra o segundo clique antes de o botao ser desabilitado na tela.
   const acaoEmAndamento = useRef(false);
   const [executar] = useState(criarFilaProgresso);
   const ativo = useRef(true);

@@ -31,7 +31,7 @@ export default function CampoSenha({ rotulo = 'Senha', autoComplete = 'new-passw
       </button>
     </div>
     {exibirRegras && <ul className="regras-senha" id={idRegras} aria-live="polite">
-      {REGRAS_SENHA.map((regra) => {
+      {REGRAS_SENHA.filter((regra) => regra.texto).map((regra) => {
         const atendida = regra.atende(valor);
         return <li key={regra.id} className={atendida ? 'regra-atendida' : 'regra-pendente'}>
           {regra.texto}<span className="sr-only">{atendida ? ' (atendido)' : ' (pendente)'}</span>
