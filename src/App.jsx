@@ -72,7 +72,7 @@ const titulosPaginas = [
   ['/aluno/cursos', 'Catálogo de cursos'],
   ['/cursos', 'Cursos'],
   ['/suporte', 'Suporte'],
-  ['/forum', 'Fórum'],
+  ['/forum/:idTopico?', 'Fórum'],
 ];
 
 function TituloPagina() {
@@ -160,7 +160,7 @@ export default function App() {
           </Route>
           <Route path="/cursos" element={<InicioCursos />} />
           <Route path="/suporte" element={<PaginaSuporte />} />
-          <Route path="/forum" element={<PaginaForum />} />
+          <Route path="/forum/:idTopico?" element={<PaginaForum />} />
         </Routes></Suspense></div></AutenticacaoProvedor>
       </div>
     </BrowserRouter>

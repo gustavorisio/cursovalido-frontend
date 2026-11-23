@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { censurarConteudo } from '../../../servicos/filtroConteudo';
 import PerfilAutor from './PerfilAutor';
 import { perfilDoUsuario } from '../hooks/useForum';
@@ -9,7 +10,7 @@ function formatarData(valor) {
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(data);
 }
 
-export default function ListaTopicos({ topicos, usuarios, onSelecionar }) {
+export default function ListaTopicos({ topicos, usuarios }) {
   if (topicos.length === 0) {
     return <div className="card empty-list">Nenhum tópico encontrado.</div>;
   }
@@ -17,13 +18,10 @@ export default function ListaTopicos({ topicos, usuarios, onSelecionar }) {
   return (
     <div className="lista-topicos">
       {topicos.map((topico) => (
-        <div
+        <Link
           key={topico.id}
           className="card topic-list-item"
-          role="button"
-          tabIndex={0}
-          onKeyDown={(evento) => { if (evento.key === 'Enter' || evento.key === ' ') { evento.preventDefault(); onSelecionar(topico); } }}
-          onClick={() => onSelecionar(topico)}
+          to={`/forum/${topico.id}`}
         >
           <div className="topic-summary">
             <h3 className="topic-title" title={censurarConteudo(topico.titulo)}>{censurarConteudo(topico.titulo)}</h3>
@@ -43,7 +41,7 @@ export default function ListaTopicos({ topicos, usuarios, onSelecionar }) {
               <span className="meta-value">{formatarData(topico.criadoEm)}</span>
             </div>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );

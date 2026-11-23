@@ -32,3 +32,11 @@ test('evento de atualização dos termos abre a rota de aceite', async () => {
   await clicar('Voltar');
   assert.equal(window.location.pathname, '/');
 });
+
+
+test('URL de tópico do fórum mantém a rota e identifica a página', async () => {
+  await renderizar(App, { navegador: true, url: '/forum/12' });
+  assert.equal(window.location.pathname, '/forum/12');
+  assert.equal(document.title, 'Curso Valido - Fórum');
+  assert.match(document.querySelector('[role="alert"]').textContent, /Para acessar o fórum/);
+});
