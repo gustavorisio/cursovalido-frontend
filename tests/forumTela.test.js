@@ -1,12 +1,24 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { act } from 'react';
+import { act, createElement as h } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { prepararTela, botao, clicar, preencher, simularApi } from './apoio/tela.js';
 
 let Forum;
-const { renderizar } = prepararTela(async (carregar) => {
+const { renderizar: montar } = prepararTela(async (carregar) => {
   Forum = (await carregar('componentes/forum/PaginaForum.jsx')).default;
 });
+
+function ForumComNavegacao() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  return h('div', null, h('output', { 'data-testid': 'url' }, location.pathname),
+    h('button', { onClick: () => navigate(-1) }, 'Voltar no navegador'),
+    h('button', { onClick: () => navigate(1) }, 'Avançar no navegador'), h(Forum));
+}
+function renderizar(_Pagina, opcoes = {}) {
+  return montar(ForumComNavegacao, { url: '/forum', rota: '/forum/:idTopico?', ...opcoes });
+}
 
 const sessao = { perfil: 'ADMINISTRADOR', idUsuario: 5 };
 const topico = { id: 12, idAutor: 5, gamertagAutor: '#1a3b5c7d', titulo: 'Dúvida sobre React', descricao: 'Como uso o estado?', criadoEm: '2026-04-10' };
@@ -23,6 +35,7 @@ function prepararApi(lista = [topico]) {
       topicos = [novo];
       return Response.json(novo);
     }
+    if (rota === '/forum/topicos/12' && metodo === 'GET') return Response.json(topicos[0]);
     if (rota === '/forum/topicos/12' && metodo === 'PUT') {
       const atualizado = { ...topicos[0], ...dados };
       topicos = [atualizado];
@@ -60,7 +73,8 @@ test('publica e edita um tópico a partir da listagem do fórum', async () => {
   const item = document.querySelector('.topic-list-item');
   assert.match(item.textContent, /Dúvida sobre React/);
   assert.doesNotMatch(item.textContent, /Gamertag|#1a3b5c7d/);
-  await act(async () => item.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })));
+  assert.equal(item.getAttribute('href'), '/forum/12');
+  await act(async () => item.click());
   assert.match(document.querySelector('.detalhe-topico .meta-detalhe').textContent, /#1a3b5c7d/);
   await clicar('Editar tópico');
   await preencher('[aria-label="Título da postagem"]', 'Dúvida resolvida');
@@ -179,6 +193,7 @@ test('alerta sobre o intervalo de comentários sem apagar a resposta', async () 
   simularApi(({ rota, metodo }) => {
     if (rota === '/autenticacao/restricoes' || rota === '/forum/users') return Response.json([]);
     if (rota === '/forum/topicos') return Response.json([topico]);
+    if (rota === '/forum/topicos/12') return Response.json(topico);
     if (rota === '/forum/topicos/12/comentarios' && metodo === 'GET') return Response.json([]);
     if (rota === '/forum/topicos/12/comentarios' && metodo === 'POST') return Response.json({
       codigo: 'OPERACAO_RECUSADA', mensagem: 'Aguarde 20 segundos entre comentários.',
@@ -209,6 +224,7 @@ test('respostas paginadas carregam somente a página escolhida', async () => {
   const chamadas = simularApi(({ rota, busca }) => {
     if (rota === '/autenticacao/restricoes' || rota === '/forum/users') return Response.json([]);
     if (rota === '/forum/topicos') return Response.json([topico]);
+    if (rota === '/forum/topicos/12') return Response.json(topico);
     if (rota === '/forum/topicos/12/comentarios') {
       const pagina = Number(busca.get('page'));
       assert.equal(busca.get('size'), '20');
@@ -235,6 +251,7 @@ test('nova resposta abre a última página sem carregar todas as anteriores', as
   simularApi(({ rota, busca, metodo }) => {
     if (rota === '/autenticacao/restricoes' || rota === '/forum/users') return Response.json([]);
     if (rota === '/forum/topicos') return Response.json([topico]);
+    if (rota === '/forum/topicos/12') return Response.json(topico);
     if (rota === '/forum/topicos/12/comentarios') {
       if (metodo === 'POST') { publicou = true; return Response.json({ id: 21 }); }
       const pagina = Number(busca.get('page'));
@@ -251,4 +268,48 @@ test('nova resposta abre a última página sem carregar todas as anteriores', as
   assert.equal(document.querySelectorAll('.comment-card').length, 1);
   assert.match(document.querySelector('.comment-card').textContent, /Resposta nova/);
   assert.match(document.querySelector('[aria-label="Páginas de respostas"]').textContent, /Página 2 de 2/);
+});
+
+
+test('abrir tópico altera a URL e permite voltar e avançar pelo histórico', async () => {
+  prepararApi();
+  await renderizar(Forum, { sessao });
+  await act(async () => document.querySelector('.topic-list-item').click());
+  assert.equal(document.querySelector('[data-testid="url"]').textContent, '/forum/12');
+  assert.equal(document.querySelector('.detalhe-topico h3').textContent, topico.titulo);
+  await clicar('Voltar no navegador');
+  assert.equal(document.querySelector('[data-testid="url"]').textContent, '/forum');
+  assert.ok(document.querySelector('.topic-list-item'));
+  await clicar('Avançar no navegador');
+  assert.equal(document.querySelector('.detalhe-topico h3').textContent, topico.titulo);
+  await clicar('Voltar para a lista');
+  assert.equal(document.querySelector('[data-testid="url"]').textContent, '/forum');
+});
+
+test('link direto carrega tópico fora da página atual e permite editar', async () => {
+  simularApi(({ rota, metodo, dados }) => {
+    if (rota === '/autenticacao/restricoes' || rota === '/forum/users' || rota === '/forum/topicos') return Response.json([]);
+    if (rota === '/forum/topicos/12') return Response.json(metodo === 'PUT' ? { ...topico, ...dados } : topico);
+    if (rota === '/forum/topicos/12/comentarios') return Response.json([]);
+    throw new Error('Rota inesperada: ' + rota);
+  });
+  await renderizar(Forum, { sessao, url: '/forum/12' });
+  assert.equal(document.querySelector('.detalhe-topico h3').textContent, topico.titulo);
+  await clicar('Editar tópico');
+  await preencher('[aria-label="Título da postagem"]', 'Título atualizado por link direto');
+  await clicar('Salvar alterações');
+  assert.equal(document.querySelector('.detalhe-topico h3').textContent, 'Título atualizado por link direto');
+  assert.equal(document.querySelector('[data-testid="url"]').textContent, '/forum/12');
+});
+
+test('link de tópico indisponível exibe erro e permite voltar ao fórum', async () => {
+  simularApi(({ rota }) => {
+    if (rota === '/forum/topicos/999') return Response.json({ mensagem: 'Tópico não encontrado.' }, { status: 404 });
+    return Response.json([]);
+  });
+  await renderizar(Forum, { sessao, url: '/forum/999' });
+  assert.ok(document.querySelector('[role="alert"]'));
+  assert.equal(document.querySelector('.detalhe-topico'), null);
+  await clicar('Voltar para a lista');
+  assert.equal(document.querySelector('[data-testid="url"]').textContent, '/forum');
 });

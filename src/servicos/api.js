@@ -1,4 +1,5 @@
-import { obterTokenSessao, tokenValido } from './sessaoNavegador';
+import { dadosDoToken, obterTokenSessao, tokenValido } from './sessaoNavegador';
+import { avisarIntervalo, prazoDaAcao } from './intervaloRequisicoes';
 
 export const URL_API = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api';
 export const URL_BACKEND = URL_API.replace(/\/api\/?$/, '');
@@ -70,21 +71,33 @@ function mensagemDeErro(status, dados) {
 
 const requisicoesEmAndamento = new Map();
 
-// Envios iguais disparados ao mesmo tempo (duplo clique, Enter repetido, dois botões ligados à
-// mesma ação) compartilham uma única requisição. Consultas GET não passam por esta trava.
+// O intervalo é por ação, não pelo corpo: alterar o formulário não contorna a espera.
+// Requisições simultâneas idênticas continuam compartilhando o mesmo envio.
 export function requisitar(caminho, opcoes = {}) {
   const metodo = String(opcoes.method ?? 'GET').toUpperCase();
-  if (metodo === 'GET' || metodo === 'HEAD') return executarRequisicao(caminho, opcoes);
+  const token = opcoes.semAutenticacao ? null : opcoes.tokenAutenticacao ?? obterTokenSessao();
+  const usuario = dadosDoToken(token);
+  const identidade = usuario?.idUsuario ?? 'publico';
+  const chaveIntervalo = `${identidade} ${metodo === 'HEAD' ? 'GET' : metodo} ${caminho.split('?')[0]}`;
   const corpo = typeof opcoes.body === 'string' ? opcoes.body : '';
-  const chave = `${metodo} ${caminho} ${opcoes.tokenAutenticacao ?? ''} ${corpo}`;
+  const chave = `${chaveIntervalo} ${opcoes.tokenAutenticacao ?? ''} ${corpo}`;
   const existente = requisicoesEmAndamento.get(chave);
-  if (existente) return existente;
-  const requisicao = executarRequisicao(caminho, opcoes).finally(() => requisicoesEmAndamento.delete(chave));
+  if (existente) {
+    return existente;
+  }
+  const restante = prazoDaAcao(chaveIntervalo);
+  if (restante > 0) {
+    const mensagem = `Aguarde ${restante} segundos antes de repetir esta ação.`;
+    avisarIntervalo(mensagem, restante);
+    return Promise.reject(new ErroApi(429, mensagem, { codigo: 'LIMITE_REQUISICOES_ATINGIDO', segundos: restante }));
+  }
+  if (['GET', 'HEAD', 'OPTIONS'].includes(metodo)) return executarRequisicao(caminho, opcoes, chaveIntervalo);
+  const requisicao = executarRequisicao(caminho, opcoes, chaveIntervalo).finally(() => requisicoesEmAndamento.delete(chave));
   requisicoesEmAndamento.set(chave, requisicao);
   return requisicao;
 }
 
-async function executarRequisicao(caminho, opcoes = {}) {
+async function executarRequisicao(caminho, opcoes = {}, chaveIntervalo) {
   const { semAutenticacao = false, tokenAutenticacao, ...opcoesFetch } = opcoes;
   const token = tokenAutenticacao ?? obterTokenSessao();
   const cabecalhos = { Accept: 'application/json', ...opcoesFetch.headers };
@@ -111,6 +124,9 @@ async function executarRequisicao(caminho, opcoes = {}) {
     throw new ErroApi(409, 'Sua sessão foi encerrada. Entre novamente.', { codigo: 'SESSAO_ALTERADA' });
   }
 
+  const intervalo = Number(resposta.headers.get('X-Intervalo-Acao'));
+  const espera = resposta.status === 429 ? Number(resposta.headers.get('Retry-After')) : 0;
+  if (intervalo > 0 || espera > 0) prazoDaAcao(chaveIntervalo, Math.max(intervalo, espera));
   const texto = await resposta.text();
   let dados = null;
   if (texto) {
@@ -122,8 +138,9 @@ async function executarRequisicao(caminho, opcoes = {}) {
   }
 
   if (!resposta.ok) {
+    if (resposta.status === 429 && espera > 0) avisarIntervalo(mensagemDeErro(429, dados), espera);
     const mensagensServico = {
-      LIMITE_SUPORTE_ATINGIDO: 'Já recebemos uma solicitação sua recentemente. Aguarde 24 horas após o último envio para tentar novamente.',
+      LIMITE_SUPORTE_ATINGIDO: 'Já recebemos uma solicitação sua recentemente. Aguarde 1 hora após o último envio para tentar novamente.',
       SUPORTE_INDISPONIVEL: 'O suporte está temporariamente indisponível. Tente novamente mais tarde.',
       SERVICO_EMAIL_INDISPONIVEL: 'Não foi possível enviar o e-mail. Tente novamente em instantes.',
     };

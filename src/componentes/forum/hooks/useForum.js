@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   apagarComentario, atualizarComentario, atualizarTopico, buscarComentarios,
-  buscarTopicos, buscarMeusTopicos, buscarUsuarios, criarComentario, criarTopico, fecharTopico, arquivarTopico,
+  buscarTopico, buscarTopicos, buscarMeusTopicos, buscarUsuarios, criarComentario, criarTopico, fecharTopico, arquivarTopico,
   denunciarTopico, denunciarComentario
 } from '../servicos/servicoForum';
 import { useAutenticacao } from '../../../contextos/useAutenticacao';
@@ -28,7 +28,7 @@ export function perfilDoUsuario(usuario) {
   return typeof perfil === 'object' ? perfil.nome ?? perfil.descricao ?? perfil.codigo : perfil;
 }
 
-export function useForum() {
+export function useForum(idTopico) {
   const { sessao, autenticado } = useAutenticacao();
   const { bloqueado } = useRestricoes();
   const topicosBloqueados = bloqueado('TOPICOS');
@@ -39,6 +39,7 @@ export function useForum() {
   const [topicos, setTopicos] = useState([]);
   const [pagina, setPagina] = useState(0);
   const [totalPaginas, setTotalPaginas] = useState(1);
+  const [carregandoTopico, setCarregandoTopico] = useState(Boolean(idTopico));
   const [topicoSelecionado, setTopicoSelecionado] = useState(null);
   const [comentarios, setComentarios] = useState([]);
   const [paginaComentarios, setPaginaComentarios] = useState(0);
@@ -88,7 +89,7 @@ export function useForum() {
     setMensagemSucesso('');
   }
 
-  async function carregarComentarios(idTopico, numeroPagina = 0) {
+  const carregarComentarios = useCallback(async (idTopico, numeroPagina = 0) => {
     if (comentariosBloqueados) return;
     const consulta = ++consultaComentarios.current;
     setCarregandoComentarios(true);
@@ -105,7 +106,28 @@ export function useForum() {
     } finally {
       if (consulta === consultaComentarios.current) setCarregandoComentarios(false);
     }
-  }
+  }, [comentariosBloqueados, tratarErro]);
+
+  useEffect(() => {
+    if (!idTopico) return;
+    let ativa = true;
+    const consulta = consultaComentarios;
+    queueMicrotask(async () => {
+      if (!ativa) return;
+      if (topicosBloqueados) { setCarregandoTopico(false); return; }
+      try {
+        const topico = await buscarTopico(idTopico);
+        if (!ativa) return;
+        setTopicoSelecionado(topico);
+        await carregarComentarios(topico.id);
+      } catch (erro) {
+        if (ativa) tratarErro(erro);
+      } finally {
+        if (ativa) setCarregandoTopico(false);
+      }
+    });
+    return () => { ativa = false; consulta.current++; };
+  }, [idTopico, topicosBloqueados, carregarComentarios, tratarErro]);
 
   async function selecionarTopico(topico) {
     if (topicosBloqueados) return;
@@ -151,7 +173,8 @@ export function useForum() {
 
   async function editarTopico(idTopico, titulo, descricao) {
     limparMensagem();
-    const atual = topicos.find((item) => Number(item.id) === Number(idTopico));
+    const atual = Number(topicoSelecionado?.id) === Number(idTopico)
+      ? topicoSelecionado : topicos.find((item) => Number(item.id) === Number(idTopico));
     if (!podeEditarTopico(atual)) { setMensagemErro('Você só pode editar os seus tópicos quando sua conta tem permissão para participar.'); return false; }
     try {
       const resposta = await atualizarTopico(idTopico, { titulo, descricao });
@@ -206,7 +229,7 @@ export function useForum() {
   }
 
   return {
-    meusTopicos, setMeusTopicos, topicosBloqueados, comentariosBloqueados,
+    carregandoTopico, meusTopicos, setMeusTopicos, topicosBloqueados, comentariosBloqueados,
     paginaComentarios, totalPaginasComentarios, totalComentarios, carregandoComentarios, mudarPaginaComentarios,
     autenticado, sessao, topicos, usuarios, pagina, totalPaginas, carregando, topicoSelecionado, comentarios, mensagemErro, mensagemSucesso,
     limparMensagem, carregarTopicos, selecionarTopico, salvarTopico, salvarComentario,
