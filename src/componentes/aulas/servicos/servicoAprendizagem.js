@@ -2,7 +2,8 @@ import { requisitar } from '../../../servicos/api';
 
 export function rotaQuestionario(perfil, idCurso, idModulo) {
   const base = `/${perfil}/cursos/${idCurso}`;
-  return idModulo ? `${base}/modulos/${idModulo}/questionario` : `${base}/diagnostico`;
+  if (!idModulo) throw new Error("Selecione um módulo para o questionário.");
+  return `${base}/modulos/${idModulo}/questionario`;
 }
 
 export function consultarQuestionario(perfil, idCurso, idModulo) {

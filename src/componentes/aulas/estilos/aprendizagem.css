@@ -277,3 +277,4 @@
 .avaliacao-opcao:has(input:checked) {
   @apply border-accent bg-brand-50;
 }
+.editor-explicacao { grid-column: 1 / -1; }

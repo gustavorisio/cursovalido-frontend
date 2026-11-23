@@ -1,4 +1,5 @@
 import Cabecalho from './componentes/comuns/Cabecalho';
+import AvisoIntervaloAcao from './componentes/comuns/AvisoIntervaloAcao';
 import PaginaSuporte from './componentes/suporte/PaginaSuporte';
 import InicioCursos from './componentes/aulas/InicioCursos';
 import { lazy, Suspense, useEffect } from 'react';
@@ -57,16 +58,13 @@ const titulosPaginas = [
   ['/administracao/convites', 'Convites'],
   ['/administracao/inicio', 'Vídeo da página inicial'],
   ['/administracao/cursos/:idCurso/aulas/:idAula', 'Administrar aula'],
-  ['/administracao/cursos/:idCurso/diagnostico', 'Editar avaliação'],
   ['/administracao/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
   ['/administracao/cursos/*', 'Administrar cursos'],
   ['/professor/cursos/:idCurso/modulos/:idModulo/aulas', 'Gerenciar aulas'],
-  ['/professor/cursos/:idCurso/diagnostico', 'Editar avaliação'],
   ['/professor/cursos/:idCurso/modulos/:idModulo/questionario', 'Editar questionário'],
   ['/professor/cursos/:idCurso/modulos', 'Gerenciar módulos'],
   ['/professor/cursos', 'Gerenciar cursos'],
   ['/aluno/cursos/:idCurso/aulas/:idAula', 'Aula'],
-  ['/aluno/cursos/:idCurso/diagnostico', 'Avaliação do curso'],
   ['/aluno/cursos/:idCurso/modulos/:idModulo/questionario', 'Questionário do módulo'],
   ['/aluno/cursos/:idCurso', 'Curso'],
   ['/aluno/cursos', 'Catálogo de cursos'],
@@ -106,6 +104,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <TituloPagina />
+      <AvisoIntervaloAcao />
       <div className="min-h-screen bg-page">
         <AutenticacaoProvedor><RedirecionarTermosAtualizados /><Cabecalho /><div className="min-h-[calc(100vh-56px)] pt-14"><Suspense fallback={<p role="status" className="main-content">Carregando página...</p>}><Routes>
           <Route path="/" element={<Inicio />} />
@@ -140,14 +139,12 @@ export default function App() {
             <Route path="/administracao/cursos" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso" element={<PaginaAulasAdministrador />} />
             <Route path="/administracao/cursos/:idCurso/aulas/:idAula" element={<PaginaAulasAdministrador />} />
-            <Route path="/administracao/cursos/:idCurso/diagnostico" element={<PaginaEditorQuestionario />} />
             <Route path="/administracao/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaEditorQuestionario />} />
           </Route>
           <Route element={<RotaProtegida perfis={['PROFESSOR']} />}>
             <Route path="/professor/cursos" element={<PaginaGestaoCursos />} />
             <Route path="/professor/cursos/:idCurso/modulos" element={<PaginaGestaoCursos />} />
             <Route path="/professor/cursos/:idCurso/modulos/:idModulo/aulas" element={<PaginaGestaoCursos />} />
-            <Route path="/professor/cursos/:idCurso/diagnostico" element={<PaginaEditorQuestionario />} />
             <Route path="/professor/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaEditorQuestionario />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -155,7 +152,6 @@ export default function App() {
             <Route path="/aluno/cursos" element={<PaginaCatalogo />} />
             <Route path="/aluno/cursos/:idCurso" element={<PaginaCursoAluno />} />
             <Route path="/aluno/cursos/:idCurso/aulas/:idAula" element={<PaginaAulaAluno />} />
-            <Route path="/aluno/cursos/:idCurso/diagnostico" element={<PaginaQuestionarioAluno />} />
             <Route path="/aluno/cursos/:idCurso/modulos/:idModulo/questionario" element={<PaginaQuestionarioAluno />} />
           </Route>
           <Route path="/cursos" element={<InicioCursos />} />

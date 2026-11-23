@@ -686,3 +686,11 @@
     .page-actions > * { max-width: 100%; }
   }
 }
+
+.aviso-intervalo-acao {
+  position: fixed;
+  z-index: 1000;
+  top: 72px;
+  right: 16px;
+  max-width: min(420px, calc(100vw - 32px));
+}

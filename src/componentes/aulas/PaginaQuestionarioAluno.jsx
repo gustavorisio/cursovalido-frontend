@@ -19,7 +19,7 @@ function Questionario({ idCurso, idModulo }) {
   const carga = useCarregamento(carregar);
   return <LayoutAulas>
     <Link className="btn btn-link" to={`/aluno/cursos/${idCurso}`}>Voltar ao curso</Link>
-    <CabecalhoAulas etiqueta={idModulo ? 'Confira seu entendimento' : 'Avaliação do curso'} titulo={carga.dados?.titulo ?? (idModulo ? 'Questionário do módulo' : 'Avaliação do curso')} descricao="Responda às perguntas e tente novamente até acertar todas. A porcentagem de acertos será exibida a cada tentativa." />
+    <CabecalhoAulas etiqueta="Confira seu entendimento" titulo={carga.dados?.titulo ?? 'Questionário do módulo'} descricao="Responda às perguntas e tente novamente até acertar todas. A porcentagem de acertos será exibida a cada tentativa." />
     <EstadoCarregamento carga={carga} />
     {!carga.carregando && !carga.erro && (carga.dados ? <ResponderQuestionario dados={carga.dados} idCurso={idCurso} idModulo={idModulo} onRecarregar={carga.tentarNovamente} /> : <p className="card empty-list">Esta avaliação ainda não está disponível. Continue explorando as aulas do curso.</p>)}
   </LayoutAulas>;
