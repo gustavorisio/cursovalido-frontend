@@ -136,7 +136,7 @@ for (const { fluxo, perfil } of [
     async function verificarEnvioBloqueado() {
       assert.equal(botao('Aceitar termos e continuar'), undefined);
       if (!reativacao) {
-        // O botao fica clicavel e o envio informa o que falta, sem chamar a API.
+        // Valida os campos antes de chamar a API.
         assert.equal(botao(textoFinal).getAttribute('aria-disabled'), 'true');
         await act(async () => document.querySelector('form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })));
       }

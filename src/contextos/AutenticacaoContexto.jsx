@@ -11,8 +11,7 @@ async function revogarToken(token) {
   try {
     await requisitar('/autenticacao/logout', { method: 'POST', tokenAutenticacao: token, keepalive: true });
   } catch {
-    // A conta ja foi removida da interface. Tokens expirados/revogados retornam 401;
-    // uma falha de rede nao pode restaurar a sessao local.
+    // Mantém a sessão local encerrada mesmo se a revogação falhar.
   }
 }
 

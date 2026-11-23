@@ -40,7 +40,7 @@ test('cadastro comum solicita somente os dados necessarios e mantem maioridade',
   assert.doesNotMatch(document.body.textContent, /telefone/i);
   assert.deepEqual([...document.querySelectorAll('input')].map(input => input.type), ['text', 'email', 'password', 'password', 'checkbox', 'checkbox']);
   assert.match(document.body.textContent, /18 anos ou mais/);
-  // O botao continua clicavel para que o envio explique o que falta preencher.
+  // Mantém o botão disponível para informar erros de preenchimento.
   const cadastrar = document.querySelector('button[type=submit], button:not([type])');
   assert.equal(cadastrar.disabled, false);
   assert.equal(cadastrar.getAttribute('aria-disabled'), 'true');

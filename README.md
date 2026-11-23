@@ -44,7 +44,7 @@ A aplicação reúne cursos, aulas, acompanhamento de progresso, fórum, suporte
 ### Administração
 
 - Dashboard com indicadores e gráficos.
-- Consulta de usuários e aplicação ou revogação de suspensões.
+- Consulta de usuários e aplicação ou revogação de suspensões. A exclusão administrativa de contas de alunos, professores e outros administradores é exclusiva do root; a conta root continua protegida contra exclusão.
 - Convites e aprovação de cadastros da equipe pelo administrador principal.
 - Gestão dos termos de uso e da política de privacidade pelo administrador principal.
 - Publicação de comunicados para todos os alunos, com título de até 255 caracteres e conteúdo de até 5.000 caracteres.
@@ -74,7 +74,7 @@ As operações dependem da API do back-end, responsável por validar permissões
 | Chart.js 4 | Gráficos do dashboard |
 | Fetch API | Comunicação HTTP com o back-end |
 | ESLint 10 | Análise estática do código |
-| Node.js Test Runner e jsdom | Testes automatizados |
+| Vitest, Istanbul e jsdom | Testes automatizados e cobertura |
 
 ## Como executar localmente
 
@@ -149,7 +149,16 @@ Acesse [http://localhost:3000](http://localhost:3000). A porta está fixada em `
 | `npm run build` | Gera os arquivos de produção em `dist/` |
 | `npm run preview` | Disponibiliza uma prévia local do build de produção |
 | `npm run lint` | Executa a análise estática com ESLint |
-| `node --test` | Executa os testes automatizados em `tests/` |
+| `npm test` | Executa os testes automatizados com Vitest |
+| `npm run test:coverage` | Gera o relatório Istanbul e verifica os mínimos de cobertura configurados no Vitest |
+
+### Cobertura de testes
+
+A cobertura é verificada pela configuração nativa do Vitest em `vitest.config.js`, com o provedor Istanbul. O comando `npm run test:coverage` exige no mínimo 75% de linhas cobertas no projeto e 50% em cada um dos seis arquivos com regra específica. Não há limite máximo de cobertura.
+
+Os mínimos por arquivo se aplicam ao player de aulas, à tabela de ranking, ao vídeo de apresentação, à página de ranking, à moderação de denúncias e ao formulário de denúncia. O relatório HTML fica em `coverage/index.html`, e o relatório JSON em `coverage/coverage-final.json`.
+
+Para explicar à banca: “O Vitest executa os testes e usa o Istanbul para medir a cobertura. Os percentuais mínimos ficam na configuração do próprio Vitest. Se a cobertura ficar abaixo do mínimo, o comando retorna uma falha.” A configuração usa a opção oficial [coverage.thresholds do Vitest](https://vitest.dev/config/coverage#coverage-thresholds).
 
 Para visualizar o build localmente:
 

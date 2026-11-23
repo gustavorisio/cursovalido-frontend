@@ -71,8 +71,7 @@ function mensagemDeErro(status, dados) {
 
 const requisicoesEmAndamento = new Map();
 
-// O intervalo é por ação, não pelo corpo: alterar o formulário não contorna a espera.
-// Requisições simultâneas idênticas continuam compartilhando o mesmo envio.
+// Aplica o intervalo por ação e compartilha envios idênticos em andamento.
 export function requisitar(caminho, opcoes = {}) {
   const metodo = String(opcoes.method ?? 'GET').toUpperCase();
   const token = opcoes.semAutenticacao ? null : opcoes.tokenAutenticacao ?? obterTokenSessao();

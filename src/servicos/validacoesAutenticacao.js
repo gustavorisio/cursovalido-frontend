@@ -45,7 +45,6 @@ export function validarCodigo(codigo) {
   return '';
 }
 
-// Retorna o primeiro problema do cadastro, na ordem dos campos da tela.
 export function validarCadastro(dados) {
   const erroNome = validarNome(dados.nomeCompleto);
   if (erroNome) return erroNome;

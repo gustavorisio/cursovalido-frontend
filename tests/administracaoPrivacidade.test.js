@@ -31,10 +31,10 @@ function dados(principal = true) {
     { id: 4, nome: 'Estudante', gamertag: 'CV-GGGG2345HHHH', email: 'estudante@gmail.com', perfil: 'ALUNO', ativo: true, podeModerar: true, podeExcluir: false, suspensoes: [] },
   ];
 }
-async function renderizar(principal = true) {
+async function renderizar(principal = true, tela = 'usuarios') {
   await act(async () => raiz.render(createElement(MemoryRouter, null,
     createElement(Contexto.Provider, { value: { sessao: { idUsuario: principal ? 1 : 3, nome: 'Administrador' } } },
-      createElement(Administracao, { tela: 'usuarios' })))));
+      createElement(Administracao, { tela })))));
 }
 function artigo(nome) {
   return [...document.querySelectorAll('article')].find(elemento => elemento.querySelector('h3')?.textContent === nome);
@@ -78,6 +78,28 @@ test('administrador comum nao recebe opcao para excluir membros da equipe', asyn
   await renderizar(false);
   assert.equal([...document.querySelectorAll('button')].filter(item => item.textContent === 'Excluir conta').length, 0);
   assert.match(document.body.textContent, /CV-GGGG2345HHHH/);
+});
+
+test('administrador comum nao carrega nem gerencia convites pela URL direta', async () => {
+  const chamadas = [];
+  globalThis.fetch = async url => {
+    chamadas.push(String(url));
+    return Response.json({ principal: false });
+  };
+  await renderizar(false, 'convites');
+  assert.equal(chamadas.length, 1);
+  assert.ok(chamadas[0].endsWith('/permissoes'));
+  assert.equal(document.querySelector('a[href="/administracao/convites"]'), null);
+  assert.match(document.querySelector('[role="alert"]').textContent, /apenas para o root/);
+  assert.equal(document.querySelector('form'), null);
+});
+
+test('root mantem formulario de convite para professor e administrador', async () => {
+  globalThis.fetch = async url => Response.json(String(url).endsWith('/permissoes') ? { principal: true } : []);
+  await renderizar(true, 'convites');
+  assert.ok(document.querySelector('a[href="/administracao/convites"]'));
+  assert.deepEqual([...document.querySelectorAll('select option')].map(item => item.value), ['PROFESSOR', 'ADMINISTRADOR']);
+  assert.ok(botao(document.querySelector('form'), 'Enviar convite'));
 });
 
 test('falha ao excluir mantem o usuario na lista e informa o erro', async () => {

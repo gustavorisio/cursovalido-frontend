@@ -4,6 +4,11 @@ import { decidirDenunciaForum, listarDenunciasForum } from '../forum/servicos/se
 
 const ROTULOS_MOTIVO = { OFENSA: 'Ofensa', ASSEDIO: 'Assédio', DISCRIMINACAO: 'Discriminação', CONTEUDO_IMPROPRIO: 'Conteúdo impróprio', DADOS_PESSOAIS: 'Dados pessoais', SPAM: 'Spam', OUTRO: 'Outro' };
 
+function converterPrazoRestricao(valor) {
+  const data = new Date(valor);
+  return Number.isFinite(data.getTime()) && data.getTime() > Date.now() ? data.toISOString() : null;
+}
+
 export default function DenunciasForum() {
   const [status, setStatus] = useState('PENDENTE');
   const [denuncias, setDenuncias] = useState([]);
@@ -31,9 +36,8 @@ export default function DenunciasForum() {
     let expiraEm = null;
     if (procedente && restricao.aplicar) {
       if (!restricao.permanente) {
-        const data = new Date(restricao.expiraEm);
-        if (!Number.isFinite(data.getTime()) || data.getTime() <= Date.now()) { setErro('Informe uma data de término futura para a restrição.'); return; }
-        expiraEm = data.toISOString();
+        expiraEm = converterPrazoRestricao(restricao.expiraEm);
+        if (!expiraEm) { setErro('Informe uma data de término futura para a restrição.'); return; }
       }
     }
     setProcessando(denuncia.id); setErro('');

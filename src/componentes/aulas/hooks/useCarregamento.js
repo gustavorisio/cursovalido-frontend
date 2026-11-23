@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-// A função de carga deve ser estável (declarada fora do componente ou com useCallback).
+// Recebe uma função de carga estável para evitar recarregamentos.
 export default function useCarregamento(carregar) {
   const [dados, setDados] = useState(null);
   const [erro, setErro] = useState('');
